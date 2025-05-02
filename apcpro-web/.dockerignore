@@ -1,0 +1,12 @@
+/apcpro-web/prisma
+/apcpro-web/prisma/migrations
+/apcpro-web/**/*.env*
+/apcpro-web/prisma/schema.prisma
+/apcpro-web/src
+
+
+
+
+
+
+

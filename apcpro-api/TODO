@@ -1,0 +1,54 @@
+Validações Necessárias (em Lógica de Aplicação):
+Promoção a Professor
+
+typescript
+async function promoverAProfessor(userPerfilId: string) {
+  await prisma.userPerfil.update({
+    where: { id: userPerfilId },
+    data: { role: "professor" }
+  });
+}
+Atribuir Aluno a Professor
+
+typescript
+async function atribuirAluno(alunoPerfilId: string, professorPerfilId: string) {
+  if (alunoPerfilId === professorPerfilId) {
+    throw new Error("Um professor não pode ser aluno de si mesmo");
+  }
+
+  await prisma.userPerfil.update({
+    where: { id: alunoPerfilId },
+    data: { professorId: professorPerfilId }
+  });
+}
+Criação de Grupo
+
+typescript
+async function criarGrupo(nome: string, professorPerfilId: string) {
+  const perfil = await prisma.userPerfil.findUnique({
+    where: { id: professorPerfilId }
+  });
+
+  if (perfil?.role !== "professor") {
+    throw new Error("Apenas professores podem criar grupos");
+  }
+
+  return prisma.grupo.create({
+    data: {
+      nome,
+      criadoPorId: professorPerfilId
+    }
+  });
+}
+
+// TODO: implementar as funções acima
+Testes Recomendados:
+Tentar criar grupo com usuário não-professor
+
+Tentar atribuir um aluno a si mesmo como professor
+
+Verificar se alunos têm apenas um professor
+
+Validar exclusão em cascata (ex: se professor é deletado)
+
+Essa estrutura resolve os problemas identificados e mantém a integridade do sistema.

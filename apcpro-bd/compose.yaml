@@ -1,0 +1,13 @@
+services:
+  postgres:
+    container_name: postgres-apcpro
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PW}
+      - POSTGRES_DB=${POSTGRES_DB} #optional (specify default database instead of $POSTGRES_DB)
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - ./postgres:/var/lib/postgresql/data

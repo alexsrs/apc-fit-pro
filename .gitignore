@@ -1,0 +1,12 @@
+/apcpro-api/node_modules/
+/apcpro-api/.env
+/apcpro-bd/postgres
+/apcpro-bd/.env
+/apcpro-api/generated
+/apcpro-web/prisma/migrations
+/apcpro-api/prisma/migrations
+/apcpro-api/dist/
+/apcpro-web/.env-azure
+/apcpro-web/prisma/*
+/apcpro-web/.exemplo.env
+/apcpro-web/.exemplo.env.local
