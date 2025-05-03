@@ -8,30 +8,36 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  perfil        UserPerfil?  // Relação 1:1 (um User tem um UserPerfil)
+
+  id             String   @id @default(cuid())
+  name           String?
+  email          String   @unique
+  image          String?
+  emailVerified  DateTime? // Adiciona a propriedade como opcional
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+// Adiciona a propriedade 'image' como opcional
+  Account  Account[] // Relação com o modelo Account
+  Session Session[]
+  UserPerfil UserPerfil[]
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String  // Adicione esta coluna
+  provider           String
+  providerAccountId  String
+  refresh_token      String? // Opcional
+  access_token       String? // Opcional
+  expires_at         Int?    // Opcional
+  token_type         String? // Opcional
+  scope              String? // Opcional
+  id_token           String? // Opcional
+  session_state      String? // Opcional
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
@@ -52,30 +58,29 @@ model VerificationToken {
 }
 
 model UserPerfil {
-  id              String        @id @default(uuid())
-  role            String     @default("aluno")
-  telefone        String?
-  dataNascimento  DateTime
-  genero          String
-  professorId     String?       // Permitir null
-  grupoId         String?       // Permitir null
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  userId          String     @unique
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  gruposCriados   Grupo[]    @relation("GrupoCriado")
-  professor       UserPerfil? @relation("ProfessorAluno", fields: [professorId], references: [id])
-  alunos          UserPerfil[] @relation("ProfessorAluno")
-  grupos          Grupo[]    @relation("MembroGrupo")
+  id             String       @id @default(cuid())
+  userId         String       @unique
+  role           String       @default("aluno")
+  telefone       String?
+  dataNascimento DateTime?    // Use DateTime para campos de data
+  genero         String?      // Torna o campo opcional
+  professorId    String?
+  grupoId        String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  gruposCriados  Grupo[]      @relation("GrupoCriado")
+  professor      UserPerfil?  @relation("ProfessorAluno", fields: [professorId], references: [id])
+  alunos         UserPerfil[] @relation("ProfessorAluno")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grupos         Grupo[]      @relation("MembroGrupo")
 }
 
 model Grupo {
-  id          String   @id @default(uuid()) // Alterado para usar uuid()
-  nome        String
-  criadoPorId String?  // Referência opcional ao UserPerfil do professor
-  criadoPor   UserPerfil? @relation(fields: [criadoPorId], references: [id], onDelete: SetNull, name: "GrupoCriado")
-  membros     UserPerfil[] @relation("MembroGrupo")
+  id           String       @id @default(uuid())
+  nome         String
+  criadoPorId  String?
+  atualizadoEm DateTime     @updatedAt
+  criadoEm     DateTime     @default(now())
+  criadoPor    UserPerfil?  @relation("GrupoCriado", fields: [criadoPorId], references: [id])
+  membros      UserPerfil[] @relation("MembroGrupo")
 }
-

@@ -1,41 +1,30 @@
-import { PrismaClient, User, UserPerfil } from '@prisma/client';
+import { PrismaClient, User, UserPerfil, Grupo, Prisma } from "@prisma/client";
+import prisma from "../prisma";
 
-const prisma = new PrismaClient();
-
-export class UserRepository {
-  
+export class UserRepositoryClass {
+  getCurrentUser() {
+    throw new Error('Method not implemented.');
+  }
   async getAll(): Promise<User[]> {
     return prisma.user.findMany({
       include: {
-        accounts: true,
-        sessions: true,
+        Account: true, // Use o nome correto da relação
+        Session: true,
       },
     });
   }
 
   async getById(id: string): Promise<User | null> {
-    if (!id) {
-        console.error("O parâmetro 'id' está vazio ou nulo.");
-        throw new Error("ID inválido.");
-    }
-
-    console.log(`Buscando usuário com ID: ${id}`);
-    const user = await prisma.user.findUnique({
-        where: { id },
-        include: {
-            accounts: true,
-            sessions: true,
-        },
+    return prisma.user.findUnique({
+      where: { id },
+      include: {
+        Account: true, // Use o nome correto da relação
+        Session: true,
+      },
     });
-
-    if (!user) {
-        console.warn(`Nenhum usuário encontrado com o ID: ${id}`);
-    }
-
-    return user;
   }
 
-  async create(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
+  async createUser(data: Prisma.UserCreateInput): Promise<User> {
     return prisma.user.create({ data });
   }
 
@@ -54,31 +43,23 @@ export class UserRepository {
     return userProfiles;
   }
 
-  async createUserProfile(userId: string, data: any): Promise<any> {
-    if (data.professorId) {
-      const professorExists = await prisma.userPerfil.findUnique({
-        where: { id: data.professorId },
-      });
-
-      if (!professorExists) {
-        throw new Error("O professorId fornecido não é válido.");
-      }
-    }
-
+  async createUserProfile(
+    userId: string,
+    data: Partial<UserPerfil>
+  ): Promise<UserPerfil> {
     return prisma.userPerfil.create({
       data: {
+        ...data,
         userId,
-        role: data.role,
-        telefone: data.telefone,
-        dataNascimento: data.dataNascimento,
-        genero: data.genero,
-        professorId: data.professorId || null, // Permitir null
-        grupoId: data.grupoId || null, // Permitir null
       },
     });
   }
 
-  async updateUserProfile(userId: string, profileId: string, data: Partial<UserPerfil>): Promise<UserPerfil> {
+  async updateUserProfile(
+    userId: string,
+    profileId: string,
+    data: Partial<UserPerfil>
+  ): Promise<UserPerfil> {
     return prisma.userPerfil.update({
       where: {
         id: profileId,
@@ -143,10 +124,24 @@ export class UserRepository {
   }
 
   // Métodos para grupos
-  async getUserGroups(userId: string) {
+  async getUserGroups(userId: string): Promise<Grupo[]> {
     return prisma.grupo.findMany({
       where: { criadoPorId: userId },
-      include: { membros: true },
+      select: {
+        id: true,
+        nome: true,
+        criadoPorId: true,
+        criadoEm: true, // Certifique-se de incluir criadoEm
+        atualizadoEm: true, // Certifique-se de incluir atualizadoEm
+        membros: {
+          select: {
+            id: true,
+            telefone: true,
+            professorId: true,
+            grupoId: true,
+          },
+        },
+      },
     });
   }
 
@@ -174,4 +169,38 @@ export class UserRepository {
       where: { id: groupId },
     });
   }
+
+  async getUserWithAccounts(userId: string): Promise<User | null> {
+    return prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        Account: true, // Certifique-se de usar o nome correto da relação
+      },
+    });
+  }
+
+  async create(
+    data: Prisma.UserPerfilUncheckedCreateInput
+  ): Promise<UserPerfil> {
+    return prisma.userPerfil.create({
+      data: {
+        ...data,
+        genero: data.genero || "não especificado", // Define um valor padrão
+        dataNascimento:
+          data.dataNascimento instanceof Date
+            ? data.dataNascimento.toISOString()
+            : data.dataNascimento,
+      },
+    });
+  }
 }
+
+// Ensure this file exports findUserByEmail as a named export
+export async function findUserByEmail(email: string): Promise<User | null> {
+  // Busca o usuário pelo email usando o método findUnique do Prisma
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+  return user || null;
+}
+export { User };

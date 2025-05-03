@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function TabsProfile() {
+export default function TabsProfile() {
   return (
     <Tabs defaultValue="professional" className="w-[460px]">
       <TabsList className="grid w-full grid-cols-2">

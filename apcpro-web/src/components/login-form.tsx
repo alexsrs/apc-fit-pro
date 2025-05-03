@@ -58,7 +58,7 @@ export function LoginForm({
                   variant="outline"
                   type="button"
                   className="w-full"
-                  onClick={() => signIn("google")}
+                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -96,10 +96,10 @@ export function LoginForm({
           </form>
           <div className="bg-muted relative hidden md:block">
             <Image
-              src="/path/to/image.jpg"
+              src="/images/logo-na-capa.png"
               alt="Descrição da imagem"
-              width={500}
-              height={300}
+              width={1000}
+              height={600}
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />
           </div>

@@ -1,14 +1,29 @@
 "use client";
 
-import { TabsProfile } from "@/components/ui/tabs-profile";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
+import DashboardLayout from "@/components/dashboard-layout"; // Certifique-se de que o caminho está correto
+import TabsProfile from "@/components/ui/tabs-profile"; // Atualize o caminho para o componente TabsProfile
 
-export default function SetupProfilePage() {
+export default function AvaliacaoPage() {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <p>Carregando...</p>;
+  }
+
+  if (!session) {
+    redirect("/"); // Redireciona para a página inicial se não houver sessão
+  }
+
   return (
-    <div className="container mx-auto p-4 flex justify-center items-start min-h-screen">
-      <div>
-        <h1 className="text-2xl font-bold mb-4 text-center"></h1>
-        <TabsProfile />
+    <DashboardLayout>
+      <div className="container mx-auto p-4 flex items-start min-h-screen">
+        <div>
+          <h1 className="text-2xl font-bold mb-4 text-center">Perfil</h1>
+          <TabsProfile />
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

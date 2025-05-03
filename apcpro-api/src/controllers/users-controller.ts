@@ -1,54 +1,105 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from "express";
 import { UsersService } from '../services/users-service';
+import prisma from '../prisma';
+import { ok, created, noContent, notFound } from '../utils/http-helper';
+import { z } from "zod";
 
 const usersService = new UsersService();
 
+const userSchema = z.object({
+  name: z.string(),
+  email: z.string().email(),
+});
+
 // Usuários
 export async function getUser(req: Request, res: Response) {
-  const users = await usersService.getAllUsers();
-  res.json(users);
-}
-
-export async function getUserById(req: Request, res: Response) {
-  const id = req.params.id;
-  const user = await usersService.getUserById(id);
-  if (user) {
-    res.json(user);
-  } else {
-    res.status(404).json({ message: 'User not found' });
+  try {
+    const users = await usersService.getAllUsers();
+    const response = await ok(users);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar usuários.", error });
   }
 }
 
-export async function createUser(req: Request, res: Response) {
-  const user = await usersService.createUser(req.body);
-  res.status(201).json(user);
+export async function getUserById(req: Request, res: Response): Promise<void> {
+  const userId = req.params.id;
+  const user = await usersService.findUserById(userId);
+  if (user === null || user === undefined) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+  res.status(200).json(user);
+}
+
+export async function createUser(req: Request, res: Response): Promise<void> {
+  const { id, name, email, image } = req.body;
+
+  if (!id || !email) {
+    res.status(400).json({ error: "ID e email são obrigatórios" });
+  }
+
+  try {
+    const user = await prisma.user.upsert({
+      where: { id },
+      update: { name, email, image },
+      create: { id, name, email, image },
+    });
+
+    res.status(201).json(user);
+  } catch (error) {
+    console.error("Erro ao criar usuário:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
 }
 
 export async function updateUser(req: Request, res: Response) {
-  const id = req.params.id;
-  const user = await usersService.updateUser(id, req.body);
-  res.json(user);
+  try {
+    const id = req.params.id;
+    const user = await usersService.updateUser(id, req.body);
+    const response = await ok(user);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao atualizar usuário.", error });
+  }
 }
 
 export async function deleteUser(req: Request, res: Response) {
-  const id = req.params.id;
-  await usersService.deleteUser(id);
-  res.status(204).send();
+  try {
+    const id = req.params.id;
+    await usersService.deleteUser(id);
+    const response = await noContent();
+    res.status(response.statusCode).send();
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao deletar usuário.", error });
+  }
 }
 
 // Perfis de usuário
 export async function getUserProfiles(req: Request, res: Response) {
-  const userId = req.params.id;
-  const userProfiles = await usersService.getUserProfiles(userId);
-  res.json(userProfiles);
+  try {
+    const userId = req.params.id;
+    const userProfiles = await usersService.getUserProfiles(userId);
+    const response = await ok(userProfiles);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar perfis do usuário.", error });
+  }
 }
 
 export async function createUserProfile(req: Request, res: Response) {
-  const userId = req.params.id;
-
   try {
+    const userId = req.params.id;
     const userProfile = await usersService.createUserProfile(userId, req.body);
-    res.status(201).json(userProfile);
+    const response = await created({ 
+      ...userProfile, 
+      name: '', 
+      email: '', 
+      emailVerified: null, 
+      image: null, 
+      telefone: userProfile.telefone ?? '' // Garante que telefone seja uma string válida
+    });
+    res.status(response.statusCode).json(response.body);
   } catch (error: any) {
     if (error.message === "O professorId fornecido não é válido.") {
       res.status(400).json({ message: error.message });
@@ -58,20 +109,20 @@ export async function createUserProfile(req: Request, res: Response) {
   }
 }
 
-export async function updateUserProfile(req: Request, res: Response) {
-  const userId = req.params.id;
-  const profileId = req.params.perfilId; // Certifique-se de que o nome do parâmetro corresponde ao definido na rota
-  const data = req.body;
-
+export async function updateUserProfile(req: Request, res: Response): Promise<void> {
   try {
-    const updatedProfile = await usersService.updateUserProfile(userId, profileId, data);
-    if (!updatedProfile) {
-      return res.status(404).json({ message: "Perfil não encontrado." });
-    }
-    res.json(updatedProfile);
+    const { userId, profileData } = req.body;
+
+    // Lógica para atualizar o perfil do usuário
+    // Exemplo: Atualizar no banco de dados usando Prisma
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: profileData,
+    });
+
+    res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
-    console.error("Erro ao atualizar perfil:", error);
-    res.status(500).json({ message: "Erro ao atualizar perfil." });
+    res.status(500).json({ success: false, message: "Erro ao atualizar o perfil do usuário." });
   }
 }
 

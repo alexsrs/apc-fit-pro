@@ -1,11 +1,30 @@
 import express from "express";
+import cors from "cors";
 import router from "./routes";
 
-function createApp(){
-    const app = express();
-    app.use(express.json());
-    app.use("/api", router);
-    return app;
+function createApp() {
+  const app = express();
+
+  const allowedOrigins = ["http://localhost:3000", "http://meu-dominio.com"];
+
+  // Configuração do CORS
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Não permitido pelo CORS"));
+        }
+      },
+      methods: ["GET", "POST", "PUT", "DELETE"], // Métodos permitidos
+      credentials: true, // Permitir envio de cookies
+    })
+  );
+
+  app.use(express.json());
+  app.use("/api", router);
+  return app;
 }
 
 export default createApp;

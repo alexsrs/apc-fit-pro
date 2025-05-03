@@ -1,73 +1,116 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/auth";
-import { redirect } from "next/navigation";
-import { AppSidebar } from "@/components/app-sidebar"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+"use client";
 
-export default async function Dashboard() {
-  const session = await getServerSession(authOptions);
+import { useSession } from "next-auth/react";
+// Extende o tipo Session para incluir a propriedade 'id' no usuári
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import DashboardLayout from "../../components/dashboard-layout";
+import { fetchUserData } from "../../lib/fetchUserData"; // Atualizado
 
-  if (!session) {
-    // Redireciona para a página de login se o usuário não estiver autenticado
-    redirect("/");
+export default function HomePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "loading") return; // Aguarde até que o status da sessão seja resolvido
+
+
+  }, [session, status, router]);
+
+  if (status === "loading") {
+    return <p>Carregando...</p>; // Exibe um estado de carregamento enquanto a sessão está sendo carregada
   }
-  console.log(session);
-
-  //const userProfile = session.user?.id ? await fetchUserProfile(session.user.id) : null;
-  //console.log(userProfile);
-
-  //if (!userProfile || (Array.isArray(userProfile) && userProfile.length === 0)) {
-  //  redirect("/setup-profile");
-  //}
 
   return (
-    
-<SidebarProvider>
-<AppSidebar />
-<SidebarInset>
-  <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-    <div className="flex items-center gap-2 px-4">
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-2 h-4" />
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem className="hidden md:block">
-            <BreadcrumbLink href="/dashboard">
-              Home
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator className="hidden md:block" />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Dashboard</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-    </div>
-  </header>
-  <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-    <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-      <div className="aspect-video rounded-xl bg-muted/50" />
-      <div className="aspect-video rounded-xl bg-muted/50" />
-      <div className="aspect-video rounded-xl bg-muted/50" />
-    </div>
-    <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
-  </div>
-</SidebarInset>
-</SidebarProvider>
+    <DashboardLayout>
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="grid auto-rows-min gap-4 md:grid-cols-2">
+          <div className="aspect-video rounded-xl bg-muted/50 pl-6">
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">Bem-vindo ao seu dashboard!</p>
+            {session?.user?.id ? (
+                  <UserProfile userId={session.user.id} />
+                ) : (
+                  <div className="text-center">
+                    {session?.user.image && (
+                      <img
+                        src={session.user.image}
+                        alt={`Foto de ${session.user.name}`}
+                        className="mx-auto mb-4 h-24 w-24 rounded-full object-cover"
+                      />
+                    )}
+                    <p className="text-lg font-semibold">{session?.user.name || "Nome não disponível"}</p>
+                    <p className="text-sm text-muted-foreground">{session?.user.email || "Email não disponível"}</p>
+                  </div>
+                )}
+          </div>
+          <div className="aspect-video rounded-xl bg-muted/50 pl-6">
+              
+                
+          </div>
+          
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
 
+function UserProfile({ userId }: { userId: string }) {
+  interface UserData {
+    name: string;
+    email: string;
+  }
 
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function loadUserData() {
+      try {
+        const data = await fetchUserData(userId);
+        setUserData(data);
+      } catch (error) {
+        console.error("Erro ao carregar dados do usuário:", error);
+        setError("Não foi possível carregar os dados do usuário.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadUserData();
+  }, [userId]);
+
+  if (isLoading) {
+    return <p>Carregando...</p>;
+  }
+
+  if (error) {
+    return <p>Erro ao carregar os dados do usuário.</p>;
+  }
+
+  if (!userData) {
+    return <p aria-live="polite">Carregando informações do usuário...</p>; // Pode ser substituído por um spinner
+  }
+
+  return (
+    <section>
+      <h2 className="text-xl font-bold">Informações do Usuário</h2>
+      {userData ? (
+        <>
+          <p>
+            <strong>Nome:</strong> {userData.name || "Nome não disponível"}
+          </p>
+          <p>
+            <strong>Email:</strong> {userData.email || "Email não disponível"}
+          </p>
+        </>
+      ) : (
+        <p>Dados do usuário não encontrados.</p>
+      )}
+      <p>
+        <strong>ID:</strong> {userId || "ID não disponível"}
+      </p>
+    </section>
   );
 }

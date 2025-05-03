@@ -1,12 +1,13 @@
-import 'dotenv/config'
+import "dotenv/config";
 import { Router } from "express";
-import { 
-  getUser, 
-  getUserById, 
-  createUser, 
-  updateUser, 
+import { authenticateToken } from "./middlewares/auth-middleware"; // Ensure this matches the export
+
+import {
+  getUser,
+  getUserById,
+  createUser,
+  updateUser,
   deleteUser,
-  getUserProfiles,
   createUserProfile,
   updateUserProfile,
   deleteUserProfile,
@@ -17,23 +18,27 @@ import {
   getUserGroups,
   createUserGroup,
   updateUserGroup,
-  deleteUserGroup
+  deleteUserGroup,
 } from "./controllers/users-controller";
+import { persistSession } from "./controllers/auth-controller";
 
 const router = Router();
 
-// Rotas básicas de usuários
+// Rotas protegidas
+router.get("/users/:id", authenticateToken, getUserById);
+router.post("/users/:id/perfis", authenticateToken, createUserProfile);
+router.put("/users/:id/perfis/:perfilId", authenticateToken, updateUserProfile);
+router.delete(
+  "/users/:id/perfis/:perfilId",
+  authenticateToken,
+  deleteUserProfile
+);
+
+// Outras rotas públicas
 router.get("/users", getUser);
-router.get("/users/:id", getUserById);
 router.post("/users", createUser);
 router.put("/users/:id", updateUser);
 router.delete("/users/:id", deleteUser);
-
-// Rotas de perfis de usuário
-router.get("/users/:id/perfis", getUserProfiles);
-router.post("/users/:id/perfis", createUserProfile);
-router.put("/users/:id/perfis/:perfilId", updateUserProfile);
-router.delete("/users/:id/perfis/:perfilId", deleteUserProfile);
 
 // Rotas de alunos (relacionamentos)
 router.get("/users/:id/alunos", getUserStudents);
@@ -46,5 +51,11 @@ router.get("/users/:id/grupos", getUserGroups);
 router.post("/users/:id/grupos", createUserGroup);
 router.put("/users/:id/grupos/:groupId", updateUserGroup);
 router.delete("/users/:id/grupos/:groupId", deleteUserGroup);
+
+// Rota para autenticação
+//router.post("/auth/google", authenticateUser);
+//router.post("/auth/validate", validateToken);
+router.post("/auth/sessions", persistSession as any);
+// Certifique-se de importar ou definir o authMiddleware corretamenteAjuste o caminho conforme necessário
 
 export default router;
