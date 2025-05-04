@@ -7,6 +7,5 @@
 /apcpro-api/prisma/migrations
 /apcpro-api/dist/
 /apcpro-web/.env-azure
-/apcpro-web/prisma/*
 /apcpro-web/.exemplo.env
 /apcpro-web/.exemplo.env.local

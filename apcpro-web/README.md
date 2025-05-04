@@ -20,6 +20,33 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+# Estrutura do Frontend
+
+O frontend é responsável pela interface do usuário, permitindo que os usuários interajam com o sistema. Ele foi desenvolvido utilizando **Next.js**, um framework React que suporta renderização no servidor (SSR) e geração de sites estáticos (SSG).
+
+## Camadas e Estrutura
+
+1. **Páginas (`app/`)**:
+   - Diretório principal onde as páginas do sistema são definidas.
+   - Cada subdiretório representa uma rota (ex.: `/dashboard`, `/setup-profile`).
+   - Arquivo `page.tsx` em cada pasta define o conteúdo da página.
+
+2. **Componentes (`components/`)**:
+   - Contém componentes reutilizáveis, como botões, formulários e layouts.
+   - Subdiretório `ui/` organiza componentes de interface, como `form.tsx` e `tabs.tsx`.
+
+3. **Bibliotecas (`lib/`)**:
+   - Funções utilitárias e abstrações para facilitar a comunicação com a API e outras operações.
+
+4. **Serviços (`services/`)**:
+   - Contém funções para interagir com a API backend, como `user-service.ts`.
+
+5. **Estáticos (`public/`)**:
+   - Armazena arquivos estáticos, como imagens e ícones.
+
+6. **Configuração (`next.config.ts`)**:
+   - Configurações específicas do Next.js, como otimizações e variáveis de ambiente.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

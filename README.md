@@ -1,3 +1,18 @@
+<div align="center">
+  <h1>APC PRO - Backend</h1>
+  <p>Gerenciamento da lógica de negócios, autenticação e comunicação com o banco de dados.</p>
+</div>
+
+<div align="center">
+  <!-- Badges -->
+  ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+  ![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
+  ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+</div>
+
+---
+
 # Introdução 
 O APC PRO é o aplicativo que une ciência e tecnologia para revolucionar a prescrição de treinos físicos, oferecendo avaliação detalhada, planejamento personalizado e controle preciso de carga em uma única plataforma. Baseado no método “Avaliar, Planejar e Controlar” (APC), ele garante treinos mais eficazes, seguros e adaptados às necessidades individuais de cada aluno. Diferente de outros apps, o APC PRO se destaca pela personalização avançada e integração completa, permitindo ajustes contínuos e otimizando o trabalho de profissionais de educação física, tudo para transformar a experiência de treino e elevar os resultados a outro nível.
 
@@ -57,6 +72,43 @@ Aqui está uma proposta de diagrama de arquitetura em camadas para o sistema APC
 - **ORM:** Prisma
 - **Consultas:** SQL personalizadas
 - **Mapeamento:** Objeto-relacional
+
+---
+
+# Estrutura do Backend
+
+O backend é responsável por gerenciar a lógica de negócios, autenticação e comunicação com o banco de dados. Ele foi desenvolvido utilizando **Node.js**, **Express** e **Prisma**.
+
+## Camadas e Estrutura
+
+1. **Rotas (`routes.ts`)**:
+   - Define os endpoints da API.
+   - Cada rota é associada a um controlador específico.
+
+2. **Controladores (`controllers/`)**:
+   - Gerenciam as requisições recebidas pelas rotas.
+   - Exemplo: `users-controller.ts` processa requisições relacionadas a usuários.
+
+3. **Serviços (`services/`)**:
+   - Contêm a lógica de negócios.
+   - Exemplo: `auth-service.ts` gerencia autenticação e geração de tokens.
+
+4. **Repositórios (`repositories/`)**:
+   - Abstraem o acesso ao banco de dados utilizando o Prisma.
+   - Exemplo: `users-repository.ts` contém consultas relacionadas a usuários.
+
+5. **Middlewares (`middlewares/`)**:
+   - Interceptam requisições para validação, autenticação ou outras verificações.
+   - Exemplo: `auth-middleware.ts` verifica se o usuário está autenticado.
+
+6. **Modelos (`models/`)**:
+   - Definem as interfaces e tipos utilizados no sistema.
+
+7. **Prisma (`prisma/`)**:
+   - Contém o esquema do banco de dados (`schema.prisma`) e migrações.
+
+8. **Utilitários (`utils/`)**:
+   - Funções auxiliares para operações comuns, como formatação de dados ou manipulação de erros.
 
 ---
 
@@ -152,9 +204,107 @@ copy /apcpro-web/.example.env.local /apcpro-api/.env.local
 ---
 
 # Build and Test
-TODO: Descreva e mostre como construir o código e executar os testes.
+
+## Build
+Para construir o projeto, siga os passos abaixo:
+
+1. Certifique-se de que todas as dependências estão instaladas no backend e no frontend:
+   ```bash
+   # Backend
+   cd apcpro-api
+   npm install
+
+   # Frontend
+   cd ../apcpro-web
+   npm install
+   ```
+
+2. Execute os scripts de build:
+   ```bash
+   # Backend
+   cd apcpro-api
+   npm run build
+
+   # Frontend
+   cd ../apcpro-web
+   npm run build
+   ```
+
+3. Após o build, os arquivos gerados estarão disponíveis nos diretórios de saída (`/dist` para o backend e `.next` para o frontend).
+
+## Test
+Para executar os testes do projeto:
+
+1. Certifique-se de que as dependências de desenvolvimento estão instaladas:
+   ```bash
+   # Backend
+   cd apcpro-api
+   npm install
+
+   # Frontend
+   cd ../apcpro-web
+   npm install
+   ```
+
+2. Execute os testes:
+   ```bash
+   # Backend
+   cd apcpro-api
+   npm run test
+
+   # Frontend
+   cd ../apcpro-web
+   npm run test
+   ```
+
+3. Verifique os relatórios de teste gerados para garantir que tudo está funcionando corretamente.
+
+---
+
+# Scripts Disponíveis
+
+- `npm run dist`: Compila os arquivos TypeScript para JavaScript no diretório `dist`.
+- `npm run start:dev`: Executa o servidor em modo de desenvolvimento.
+- `npm run start:watch`: Executa o servidor com suporte a recarregamento automático.
+- `npm run start:dist`: Compila o projeto e executa a versão compilada.
 
 ---
 
 # Contribute
-TODO: Explique como outros usuários e desenvolvedores podem contribuir para melhorar o código.
+
+Contribuições são bem-vindas! Siga as etapas abaixo para contribuir com o projeto:
+
+1. **Faça um fork do repositório**:
+   - Clique no botão "Fork" no repositório para criar uma cópia em sua conta.
+
+2. **Clone o repositório forkado**:
+   ```bash
+   git clone https://github.com/seu-usuario/APC-PRO.git
+   cd APC-PRO
+   ```
+
+3. **Crie uma nova branch para sua contribuição**:
+   ```bash
+   git checkout -b minha-contribuicao
+   ```
+
+4. **Faça suas alterações**:
+   - Certifique-se de seguir as práticas recomendadas e manter o código limpo e documentado.
+
+5. **Teste suas alterações**:
+   - Execute os testes para garantir que suas alterações não quebram o código existente.
+
+6. **Envie suas alterações**:
+   ```bash
+   git add .
+   git commit -m "Descrição das alterações"
+   git push origin minha-contribuicao
+   ```
+
+7. **Abra um Pull Request**:
+   - Vá até o repositório original e clique em "New Pull Request".
+   - Descreva suas alterações e envie o Pull Request para revisão.
+
+Agradecemos por contribuir para o APC PRO! 😊
+
+---

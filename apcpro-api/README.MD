@@ -1,81 +1,108 @@
 <div align="center">
-
-  <img src="./.github/assets/blue-saiyan-bg.png" alt="Logo" height="200">
-  <h1 align="center"><strong>NODE BOILERPLATE - BLUE EDITION</strong></h1>
+  <img src="https://github.com/alexsrs/apc-fit-pro/blob/main/apcpro-web/public/images/logo-na-capa.png" alt="Logo" height="200">
+  <h1 align="center"><strong>APC FIT Pro - Backend</strong></h1>
   <p align="center">
-	  Don't start a new Node project from zero!<br> Use this simple <b>Nodejs</b> boilerplate with pre-configured <b>Typescript</b> in a modern way.
+    🚀 Backend desenvolvido com Node.js, TypeScript, Express e Prisma para o gerenciamento de lógica de negócios e comunicação com o banco de dados.
   </p>
-
 </div>
 
-<br />
-
-  <!-- Badges -->
 <div align="center">
-  
-  [![TypeScript version][ts-badge]][typescript-5-4]
-  [![Node.js version][nodejs-badge]][nodejs]
-
+  <img src="\apcpro-web\public\images\logo-na-capa.png" alt="Logo" height="200">
+  <h1 align="center"><strong>APC FIT Pro - Backend</strong></h1>
+  <p align="center">
+    🚀 Backend desenvolvido com Node.js, TypeScript, Express e Prisma para o gerenciamento de lógica de negócios e comunicação com o banco de dados.
+  </p>
 </div>
 
-# 🚀 Technologies
+![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue.svg?style=for-the-badge&logo=typescript)
+![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg?style=for-the-badge&logo=nodedotjs)
+![Express](https://img.shields.io/badge/Express.js-4.x-lightgrey.svg?style=for-the-badge&logo=express)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748.svg?style=for-the-badge&logo=prisma)
 
-This code source was developed with the following items:
+---
 
-### 📦 Dependencies
+# 🚀 Tecnologias
 
-- [typescript][typescript-npm] - Superset for application scale JavaScript development
-- [tsx][tsx-npm] - TypeScript Execute (tsx): Enable Node.js to run TypeScript
-- [tsup][tsup-npm] - Bundle your TypeScript library with no config, powered by esbuild
-- [@types/node][@types/node-npm] - type definitions for node
+Este projeto foi desenvolvido utilizando as seguintes tecnologias:
 
-### 📄 Files
+- **[TypeScript](https://www.typescriptlang.org/):** Superset para desenvolvimento JavaScript em escala.
+- **[Node.js](https://nodejs.org/):** Ambiente de execução JavaScript no lado do servidor.
+- **[Express](https://expressjs.com/):** Framework minimalista para criação de APIs.
+- **[Prisma](https://www.prisma.io/):** ORM moderno para interagir com o banco de dados.
 
-- `.gitignore` - Ignore folders like node_modules
-- `.env` - Enviroment variables
-- `tsconfig.json` - Typescript configure Options
+---
 
-### ⚡ Scripts
+# 📂 Estrutura do Backend
 
-- `npm run dist`: Compiles TypeScript files to JavaScript in the dist directory.
-- `npm run start:dev`: Runs the server in development mode with environment variables loaded from the .env file.
-- `npm run start:watch`: Runs the server in development mode with support for automatic reload on file changes.
-- `npm run start:dist`: Compiles the project and runs the compiled version from the dist directory.
+O backend é responsável por gerenciar a lógica de negócios, autenticação e comunicação com o banco de dados. Ele foi desenvolvido utilizando **Node.js**, **Express** e **Prisma**.
 
-# 👨‍💻 How To Use
+## Camadas e Estrutura
 
-click in **[Use this template]** OR
+1. **Rotas (`routes.ts`)**:
+   - Define os endpoints da API.
+   - Cada rota é associada a um controlador específico.
 
-To clone and run this application, you'll need [Git](https://git-scm.com), [Node.js v20+](https://nodejs.org/en/) + [NPM v10+](https://nodejs.org/en/) installed on your computer. From your command line:
+2. **Controladores (`controllers/`)**:
+   - Gerenciam as requisições recebidas pelas rotas.
+   - Exemplo: `users-controller.ts` processa requisições relacionadas a usuários.
+
+3. **Serviços (`services/`)**:
+   - Contêm a lógica de negócios.
+   - Exemplo: `auth-service.ts` gerencia autenticação e geração de tokens.
+
+4. **Repositórios (`repositories/`)**:
+   - Abstraem o acesso ao banco de dados utilizando o Prisma.
+   - Exemplo: `users-repository.ts` contém consultas relacionadas a usuários.
+
+5. **Middlewares (`middlewares/`)**:
+   - Interceptam requisições para validação, autenticação ou outras verificações.
+   - Exemplo: `auth-middleware.ts` verifica se o usuário está autenticado.
+
+6. **Modelos (`models/`)**:
+   - Definem as interfaces e tipos utilizados no sistema.
+
+7. **Prisma (`prisma/`)**:
+   - Contém o esquema do banco de dados (`schema.prisma`) e migrações.
+
+8. **Utilitários (`utils/`)**:
+   - Funções auxiliares para operações comuns, como formatação de dados ou manipulação de erros.
+
+---
+
+# ⚡ Scripts Disponíveis
+
+- `npm run dist`: Compila os arquivos TypeScript para JavaScript no diretório `dist`.
+- `npm run start:dev`: Executa o servidor em modo de desenvolvimento.
+- `npm run start:watch`: Executa o servidor com suporte a recarregamento automático.
+- `npm run start:dist`: Compila o projeto e executa a versão compilada.
+
+---
+
+# 👨‍💻 Como Usar
+
+Este projeto foi desenvolvido com base em um boilerplate Node.js para acelerar o desenvolvimento. Para clonar e executar esta aplicação, você precisará do [Git](https://git-scm.com), [Node.js v20+](https://nodejs.org/en/) e [NPM v10+](https://nodejs.org/en/) instalados no seu computador. A partir do terminal:
 
 ```bash
-# Clone this repository
-$ git clone https://github.com/felipeAguiarCode/node-blue-boilerplate
+# Clone este repositório
+git clone https://github.com/felipeAguiarCode/node-blue-boilerplate
 
-# Go into the repository
-$ cd node-blue-boilerplate
+# Acesse o diretório do projeto
+cd node-blue-boilerplate
 
-# Install dependencies
-$ npm install
+# Instale as dependências
+npm install
+
+# Inicie o servidor em modo de desenvolvimento
+npm run start:dev
 ```
 
-## Author
+---
 
-| [<img src="https://avatars3.githubusercontent.com/u/37452836?s=96&v=4"><br><sub>Felipe Aguiar</sub>](https://github.com/felipeAguiarCode) |
-| :---------------------------------------------------------------------------------------------------------------------------------------: |
-|                                            [Linkedin](www.linkedin.com/in/felipe-aguiar-exe/)                                             |
+# ✨ Créditos
 
-# Credits
 
-icons by [Pino Lamanna][dribble-icon]
+---
 
-[typescript]: https://www.typescriptlang.org/
-[typescript-5-4]: https://www.typescriptlang.org/
-[ts-badge]: https://img.shields.io/badge/TypeScript-5.4-blue.svg
-[nodejs-badge]: https://img.shields.io/badge/Node.js->=%2020.00-blue.svg
-[nodejs]: https://nodejs.org/
-[dribble-icon]: https://dribbble.com/Schakalwal
-[typescript-npm]: https://www.npmjs.com/package/typescript
-[tsx-npm]: https://www.npmjs.com/package/tsx
-[tsup-npm]: https://www.npmjs.com/package/tsup
-[@types/node-npm]: https://www.npmjs.com/package/@types/node
+<div align="center">
+  <p><sub>Feito com 💙 por <a href="https://github.com/alexsrs">Alex Sandro R. de Souza</a></sub></p>
+</div>

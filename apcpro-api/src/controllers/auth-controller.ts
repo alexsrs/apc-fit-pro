@@ -59,7 +59,6 @@ export const getUserProfile = (req: Request, res: Response) => {
   if (!req.user) { // Check if the user property exists
     return res.status(401).json({ message: 'Usuário não autenticado' });
   }
-
   res.json({ user: req.user });
 };
 

@@ -25,7 +25,7 @@ import { persistSession } from "./controllers/auth-controller";
 const router = Router();
 
 // Rotas protegidas
-router.get("/users/:id", authenticateToken, getUserById);
+router.get("/users/:id", getUserById);
 router.post("/users/:id/perfis", authenticateToken, createUserProfile);
 router.put("/users/:id/perfis/:perfilId", authenticateToken, updateUserProfile);
 router.delete(
@@ -37,8 +37,8 @@ router.delete(
 // Outras rotas públicas
 router.get("/users", getUser);
 router.post("/users", createUser);
-router.put("/users/:id", updateUser);
-router.delete("/users/:id", deleteUser);
+router.put("/users/:id", authenticateToken, updateUser);
+router.delete("/users/:id", authenticateToken, deleteUser);
 
 // Rotas de alunos (relacionamentos)
 router.get("/users/:id/alunos", getUserStudents);

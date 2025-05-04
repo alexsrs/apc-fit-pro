@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+
+  id             String   @id @default(cuid())
+  name           String?
+  email          String   @unique
+  image          String?
+  emailVerified  DateTime? // Adiciona a propriedade como opcional
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+// Adiciona a propriedade 'image' como opcional
+  Account  Account[] // Relação com o modelo Account
+  Session Session[]
+  UserPerfil UserPerfil[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String  // Adicione esta coluna
+  provider           String
+  providerAccountId  String
+  refresh_token      String? // Opcional
+  access_token       String? // Opcional
+  expires_at         Int?    // Opcional
+  token_type         String? // Opcional
+  scope              String? // Opcional
+  id_token           String? // Opcional
+  session_state      String? // Opcional
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserPerfil {
+  id             String       @id @default(cuid())
+  userId         String       @unique
+  role           String       @default("aluno")
+  telefone       String?
+  dataNascimento DateTime?    // Use DateTime para campos de data
+  genero         String?      // Torna o campo opcional
+  professorId    String?
+  grupoId        String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  gruposCriados  Grupo[]      @relation("GrupoCriado")
+  professor      UserPerfil?  @relation("ProfessorAluno", fields: [professorId], references: [id])
+  alunos         UserPerfil[] @relation("ProfessorAluno")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grupos         Grupo[]      @relation("MembroGrupo")
+}
+
+model Grupo {
+  id           String       @id @default(uuid())
+  nome         String
+  criadoPorId  String?
+  atualizadoEm DateTime     @updatedAt
+  criadoEm     DateTime     @default(now())
+  criadoPor    UserPerfil?  @relation("GrupoCriado", fields: [criadoPorId], references: [id])
+  membros      UserPerfil[] @relation("MembroGrupo")
+}
