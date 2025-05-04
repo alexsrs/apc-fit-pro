@@ -1,4 +1,6 @@
 <div align="center">
+  <img src="apcpro-web/public/images/logo-na-capa.png" alt="Logo" height="200">
+
   <h1>APC FIT PRO</h1>
 
 </div>
@@ -19,7 +21,9 @@ O APC PRO é o aplicativo que une ciência e tecnologia para revolucionar a pres
 
 Aqui está uma proposta de diagrama de arquitetura em camadas para o sistema APC PRO, separando frontend e backend:
 
-![Diagrama de Arquitetura](docs/assets/architeture-diagram.png)
+<div align="center">
+   <img src="docs/assets/architeture-diagram.png" alt="Diagrama de Arquitetura">
+</div>
 
 ---
 
