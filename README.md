@@ -1,22 +1,19 @@
 <div align="center">
-  <h1>APC PRO - Backend</h1>
-  <p>Gerenciamento da lógica de negócios, autenticação e comunicação com o banco de dados.</p>
-</div>
+  <h1>APC FIT PRO</h1>
 
-<div align="center">
-  <!-- Badges -->
-  ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-  ![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
-  ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 </div>
-
----
 
 # Introdução 
 O APC PRO é o aplicativo que une ciência e tecnologia para revolucionar a prescrição de treinos físicos, oferecendo avaliação detalhada, planejamento personalizado e controle preciso de carga em uma única plataforma. Baseado no método “Avaliar, Planejar e Controlar” (APC), ele garante treinos mais eficazes, seguros e adaptados às necessidades individuais de cada aluno. Diferente de outros apps, o APC PRO se destaca pela personalização avançada e integração completa, permitindo ajustes contínuos e otimizando o trabalho de profissionais de educação física, tudo para transformar a experiência de treino e elevar os resultados a outro nível.
 
----
+<div align="center">
+   <img src="https://img.shields.io/badge/API-Express.js-339933?style=for-the-badge&logo=express&logoColor=white" alt="API">
+   <img src="https://img.shields.io/badge/Frontend-Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Frontend">
+   <img src="https://img.shields.io/badge/Database-PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="Database">
+   <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
+   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+</div>
+
 
 # Diagrama de Arquitetura em Camadas
 
@@ -44,6 +41,34 @@ Aqui está uma proposta de diagrama de arquitetura em camadas para o sistema APC
 ---
 
 ## 🖥️ Backend (Node.js/Express)
+
+### 🌐 1 - API REST:
+- **Estrutura:** Rotas Express organizadas por recursos.
+- **Middlewares:** Autenticação, validação, etc.
+
+### 🛠️ 2 - Camada de Controllers:
+- **Função:** Recebe requisições HTTP.
+- **Validação:** Dados de entrada.
+- **Serviços:** Chama serviços apropriados.
+- **Respostas:** Retorna respostas formatadas.
+
+### 🧠 3 - Camada de Services:
+- **Lógica:** Regras de negócio do APC PRO.
+- **Cálculos:** Carga de treino.
+- **Planos:** Geração de planos personalizados.
+- **Processamento:** Avaliações detalhadas.
+
+### 🔑 4 - NextAuth.js (Backend):
+- **Autenticação:** Geração e validação de sessões.
+- **Autorização:** Controle de acesso baseado em sessões.
+- **Integração:** Provedores OAuth, como Google e outros.
+- **Callbacks:** Personalização de comportamento, como redirecionamentos e manipulação de sessões.
+
+### 🗄️ 5 - Data Access Layer:
+- **Estrutura:** Repositórios/Models.
+- **ORM:** Prisma.
+- **Consultas:** SQL personalizadas.
+- **Mapeamento:** Objeto-relacional.
 
 ### 🌐 1 - API REST:
 - **Estrutura:** Rotas Express organizadas por recursos
@@ -308,3 +333,6 @@ Contribuições são bem-vindas! Siga as etapas abaixo para contribuir com o pro
 Agradecemos por contribuir para o APC PRO! 😊
 
 ---
+<div align="center">
+  <p><sub>Feito com 💙 por <a href="https://github.com/alexsrs">Alex Sandro R. de Souza</a></sub></p>
+</div>

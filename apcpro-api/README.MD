@@ -6,14 +6,6 @@
   </p>
 </div>
 
-<div align="center">
-  <img src="\apcpro-web\public\images\logo-na-capa.png" alt="Logo" height="200">
-  <h1 align="center"><strong>APC FIT Pro - Backend</strong></h1>
-  <p align="center">
-    🚀 Backend desenvolvido com Node.js, TypeScript, Express e Prisma para o gerenciamento de lógica de negócios e comunicação com o banco de dados.
-  </p>
-</div>
-
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue.svg?style=for-the-badge&logo=typescript)
 ![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg?style=for-the-badge&logo=nodedotjs)
 ![Express](https://img.shields.io/badge/Express.js-4.x-lightgrey.svg?style=for-the-badge&logo=express)
