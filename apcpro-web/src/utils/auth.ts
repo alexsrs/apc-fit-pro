@@ -47,8 +47,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  debug: false, // Desative em produção
-
-  
+  debug: process.env.NODE_ENV === "development", // Desative em produção
 };
 

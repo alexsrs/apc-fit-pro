@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
+
 import { AppSidebar } from "@/components/app-sidebar";
 import {
   Breadcrumb,
@@ -16,6 +16,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { redirect } from "next/navigation";
+
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -61,3 +63,4 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     </SidebarProvider>
   );
 }
+

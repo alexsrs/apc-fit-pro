@@ -21,6 +21,9 @@ export default function HomePage() {
     return <p>Carregando...</p>; // Exibe um estado de carregamento enquanto a sessão está sendo carregada
   }
 
+  
+
+
   return (
     <DashboardLayout>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
