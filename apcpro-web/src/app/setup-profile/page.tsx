@@ -16,11 +16,13 @@ export default function AvaliacaoPage() {
     redirect("/"); // Redireciona para a página inicial se não houver sessão
   }
 
+  
   return (
     <DashboardLayout>
       <div className="container mx-auto p-4 flex items-start min-h-screen">
         <div>
-          <h1 className="text-2xl font-bold mb-4 text-center">Perfil</h1>
+          <h1 className="text-2xl font-bold mb-4 ">Complete seu perfil</h1>
+          <h2 className="mb-4 pb-4">Isso nos ajuda a personalizar sua experiência na plataforma..</h2>
           <TabsProfile />
         </div>
       </div>

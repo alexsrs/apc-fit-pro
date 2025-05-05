@@ -14,6 +14,7 @@ model User {
   email          String   @unique
   image          String?
   emailVerified  DateTime? // Adiciona a propriedade como opcional
+  profileComplete Boolean @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 // Adiciona a propriedade 'image' como opcional

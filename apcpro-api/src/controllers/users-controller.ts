@@ -3,6 +3,7 @@ import { UsersService } from '../services/users-service';
 import prisma from '../prisma';
 import { ok, created, noContent, notFound } from '../utils/http-helper';
 import { z } from "zod";
+import { UserPerfil } from "@prisma/client";
 
 const usersService = new UsersService();
 
@@ -97,7 +98,7 @@ export async function createUserProfile(req: Request, res: Response) {
       email: '', 
       emailVerified: null, 
       image: null, 
-      telefone: userProfile.telefone ?? '' // Garante que telefone seja uma string válida
+      telefone: (userProfile as any).telefone ?? '' // Garante que telefone seja uma string válida
     });
     res.status(response.statusCode).json(response.body);
   } catch (error: any) {
@@ -132,6 +133,49 @@ export async function deleteUserProfile(req: Request, res: Response) {
   const result = await usersService.deleteUserProfile(userId, profileId);
   res.json({ message: 'User profile deleted successfully' });
 }
+
+// Novo endpoint para buscar perfil do usuário por userId
+export const getUserProfileByUserId = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.params.userId; // Obtém o ID do usuário da rota
+
+    // Lógica para buscar o perfil do usuário
+    const userProfile = await usersService.getUserProfile(userId);
+
+    if (!userProfile) {
+      res.status(404).json({ message: "Perfil não encontrado" });
+      return;
+    }
+
+    res.status(200).json(userProfile);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro interno do servidor" });
+  }
+};
+
+export const postUserProfileByUserId = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.params.userId;
+    const { role, telefone, dataNascimento, genero, professorId, grupoId } = req.body;
+
+    // Lógica para criar o perfil do usuário
+    const profile = await usersService.createUserProfile(userId, {
+      role,
+      telefone,
+      dataNascimento,
+      genero,
+      professorId,
+      grupoId,
+    });
+
+    // Envia a resposta com o perfil criado
+    res.status(201).json(profile);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro interno do servidor" });
+  }
+};
 
 // Alunos relacionados
 export async function getUserStudents(req: Request, res: Response) {

@@ -9,12 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -23,34 +18,94 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { useState } from "react";
+import { getSession } from "next-auth/react";
+
 export default function TabsProfile() {
+  const [formData, setFormData] = useState({
+    role: "",
+    telefone: "",
+    dataNascimento: "",
+    genero: "",
+    professorId: "",
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectChange = (id: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSubmit = async () => {
+    const session = await getSession();
+    if (!session || !session.user || !session.user.id) {
+      alert("Usuário não autenticado");
+      return;
+    }
+    const userId = session.user.id;
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao salvar os dados");
+      }
+
+      alert("Dados salvos com sucesso!");
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao salvar os dados");
+    }
+  };
+
   return (
     <Tabs defaultValue="professional" className="w-[460px]">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="professional">Profissional</TabsTrigger>
-        <TabsTrigger value="student">Aluno</TabsTrigger>
+        <TabsTrigger value="professional">Sou profissional</TabsTrigger>
+        <TabsTrigger value="student">Sou aluno</TabsTrigger>
       </TabsList>
       <TabsContent value="professional">
         <Card>
           <CardHeader>
-            <CardTitle>Você é profissional de educação física</CardTitle>
-            <CardDescription>
-              Faça alterações na sua conta aqui. Clique em salvar quando terminar.
-            </CardDescription>
+            <CardTitle>Estamos quase lá!</CardTitle>
+            <CardDescription>Complete as informações abaixo para finalizar seu cadastro como profissional de Educação Física. Não se esqueça de clicar em Salvar no final.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone celular</Label>
-              <Input id="telefone" defaultValue="(21) 9xxxx-xxxx" />
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input
+                id="telefone"
+                value={formData.telefone}
+                onChange={handleInputChange}
+                placeholder="(DDD) 9xxxx-xxxx"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="dataNascimento">Data de Nascimento</Label>
-              <Input id="dataNascimento" type="Date" />
+              <Input
+                id="dataNascimento"
+                type="date"
+                value={formData.dataNascimento}
+                onChange={handleInputChange}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="genero">Gênero</Label>
-              <Select>
-                <SelectTrigger className="">
+              <Select
+                onValueChange={(value) => handleSelectChange("genero", value)}
+              >
+                <SelectTrigger>
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -61,31 +116,36 @@ export default function TabsProfile() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button>Salvar</Button>
+            <Button onClick={handleSubmit}>Salvar</Button>
           </CardFooter>
         </Card>
       </TabsContent>
       <TabsContent value="student">
         <Card>
           <CardHeader>
-            <CardTitle>Você é aluno com acompanhamento profissional</CardTitle>
-            <CardDescription>
-              Faça alterações na sua conta aqui. Clique em salvar quando terminar.
-            </CardDescription>
+            <CardTitle>Estamos quase lá!</CardTitle>
+            <CardDescription>Complete as informações abaixo para finalizar seu cadastro como aluno. Não se esqueça de clicar em Salvar no final.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="telefone">Telefone celular</Label>
-              <Input id="telefone" defaultValue="(21) 9xxxx-xxxx" />
+              <Input id="telefone" value={formData.telefone} onChange={handleInputChange} placeholder="(21) 9xxxx-xxxx"/>
             </div>
             <div className="space-y-2">
               <Label htmlFor="dataNascimento">Data de Nascimento</Label>
-              <Input id="dataNascimento" type="Date" />
+              <Input
+                id="dataNascimento"
+                type="date"
+                value={formData.dataNascimento}
+                onChange={handleInputChange}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="genero">Gênero</Label>
-              <Select>
-                <SelectTrigger className="">
+              <Select
+                onValueChange={(value) => handleSelectChange("genero", value)}
+              >
+                <SelectTrigger>
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -96,11 +156,16 @@ export default function TabsProfile() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="professorId">Professor ID</Label>
-              <Input id="professorId" type="text" defaultValue="xxxx-xxxx-xxxx" />
+              <Input
+                id="professorId"
+                value={formData.professorId}
+                onChange={handleInputChange}
+                placeholder="xxxx-xxxx-xxxx"
+              />
             </div>
           </CardContent>
           <CardFooter>
-            <Button>Salvar</Button>
+            <Button onClick={handleSubmit}>Salvar</Button>
           </CardFooter>
         </Card>
       </TabsContent>

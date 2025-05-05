@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 declare module "next-auth" {
   interface Session {
-    user: DefaultUser & { id: string; email: string };
+    user: DefaultUser & { id: string; email: string; userId: string };
   }
 }
 
@@ -34,18 +34,21 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
+
     async session({ session, token }) {
       // Passa os dados do token para a sessão
       if (token) {
         session.user = {
           ...session.user,
-          id: token.id as string,
           email: token.email as string,
+          userId: token.id as string, // Inclui o userId
         };
       }
       return session;
     },
   },
   debug: false, // Desative em produção
+
+  
 };
 

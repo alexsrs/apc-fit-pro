@@ -2,12 +2,13 @@ import { z } from "zod";
 import { Request, Response } from "express";
 
 export const userProfileSchema = z.object({
-  role: z.string(),
-  telefone: z.string().optional(),
-  dataNascimento: z.date(),
-  genero: z.string(),
+  id: z.string().optional(),
   professorId: z.string().optional(),
   grupoId: z.string().optional(),
+  telefone: z.string().optional(),
+  dataNascimento: z.string().optional(), // Certifique-se de que o formato da data está correto
+  genero: z.enum(["masculino", "feminino", "outro"]).optional(),
+  role: z.enum(["aluno", "professor", "admin"]).optional(),
 });
 
 export async function handleCreateUserProfile(req: Request, res: Response) {

@@ -1,18 +1,6 @@
 import { z } from "zod";
 
 // Base para perfis de usuários
-interface BaseUserPerfil {
-  id: string;
-  userId: string;
-  role: string;
-  telefone?: string | null; // Permitir null e undefined
-  dataNascimento: Date;
-  genero: string;
-  professorId?: string; // Permitir null
-  grupoId?: string;     // Permitir null
-  createdAt: Date; // Obrigatório
-  updatedAt: Date; // Obrigatório
-}
 
 // Base para grupos
 interface BaseGrupo {
@@ -30,19 +18,26 @@ export interface User {
   email: string;
   emailVerified: Date | null;
   image: string | null;
+  createdAt: Date; // Adicionado para corrigir o erro
+  updatedAt: Date; // Adicionado para corrigir o erro
   accounts?: Account[]; // Relacionamento com contas
   sessions?: Session[]; // Relacionamento com sessões
-  telefone?: string | null;   // Propriedade opcional
-  perfil?: UserPerfil;  // Relacionamento 1:1 com UserPerfil
+  telefone?: string | null; // Propriedade opcional
+  perfil?: UserPerfil; // Relacionamento 1:1 com UserPerfil
 }
 
 // Interface completa para perfis de usuários
-export interface UserPerfil extends BaseUserPerfil {
-  user?: User; // Relacionamento com o usuário
-  professor?: UserPerfil; // Relacionamento com o professor
-  alunos?: UserPerfil[]; // Relacionamento com os alunos
-  grupos?: Grupo[]; // Grupos em que o usuário é membro
-  gruposCriados?: Grupo[]; // Grupos criados pelo usuário
+export interface UserPerfil {
+  id: string;
+  userId: string;
+  role: string;
+  telefone: string | null;
+  dataNascimento: Date | null;
+  genero: string | null;
+  professorId: string | null;
+  grupoId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Interface completa para grupos

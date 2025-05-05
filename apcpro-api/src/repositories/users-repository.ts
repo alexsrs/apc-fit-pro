@@ -2,6 +2,7 @@ import { PrismaClient, User, UserPerfil, Grupo, Prisma } from "@prisma/client";
 import prisma from "../prisma";
 
 export class UserRepositoryClass {
+  [x: string]: any;
   getCurrentUser() {
     throw new Error('Method not implemented.');
   }

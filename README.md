@@ -110,36 +110,50 @@ O backend é responsável por gerenciar a lógica de negócios, autenticação e
 
 ## Camadas e Estrutura
 
-1. **Rotas (`routes.ts`)**:
-   - Define os endpoints da API.
-   - Cada rota é associada a um controlador específico.
-
-2. **Controladores (`controllers/`)**:
-   - Gerenciam as requisições recebidas pelas rotas.
-   - Exemplo: `users-controller.ts` processa requisições relacionadas a usuários.
-
-3. **Serviços (`services/`)**:
-   - Contêm a lógica de negócios.
-   - Exemplo: `auth-service.ts` gerencia autenticação e geração de tokens.
-
-4. **Repositórios (`repositories/`)**:
-   - Abstraem o acesso ao banco de dados utilizando o Prisma.
-   - Exemplo: `users-repository.ts` contém consultas relacionadas a usuários.
-
-5. **Middlewares (`middlewares/`)**:
-   - Interceptam requisições para validação, autenticação ou outras verificações.
-   - Exemplo: `auth-middleware.ts` verifica se o usuário está autenticado.
-
-6. **Modelos (`models/`)**:
-   - Definem as interfaces e tipos utilizados no sistema.
-
-7. **Prisma (`prisma/`)**:
-   - Contém o esquema do banco de dados (`schema.prisma`) e migrações.
-
-8. **Utilitários (`utils/`)**:
-   - Funções auxiliares para operações comuns, como formatação de dados ou manipulação de erros.
+Para indexar seu projeto, você pode criar um arquivo README.md ou outro documento que liste a estrutura do projeto, explicando os diretórios e arquivos principais. Aqui está um exemplo de como você pode organizar a indexação do seu projeto:
 
 ---
+
+### **Estrutura do Projeto**
+
+#### **Raiz do Projeto**
+- **apcpro-api**: Diretório do backend, desenvolvido com Node.js, Express e Prisma.
+- **apcpro-web**: Diretório do frontend, desenvolvido com Next.js e Shadcn.
+- **`.github/`**: Arquivos de configuração e workflows do GitHub Actions.
+- **`README.md`**: Documentação principal do projeto.
+
+---
+
+#### **Backend (apcpro-api)**
+- **`src/`**: Código-fonte principal do backend.
+  - **`controllers/`**: Controladores para gerenciar requisições.
+  - **`services/`**: Lógica de negócios.
+  - **`repositories/`**: Acesso ao banco de dados com Prisma.
+  - **`middlewares/`**: Middlewares para autenticação e validação.
+  - **`models/`**: Interfaces e tipos do sistema.
+  - **`utils/`**: Funções utilitárias.
+  - **`routes.ts`**: Definição das rotas da API.
+- **`prisma/`**: Configuração do Prisma.
+  - **`schema.prisma`**: Esquema do banco de dados.
+  - **`migrations/`**: Migrações do banco de dados.
+- **`.env`**: Variáveis de ambiente.
+- **`package.json`**: Dependências e scripts do backend.
+
+---
+
+#### **Frontend (apcpro-web)**
+- **`src/`**: Código-fonte principal do frontend.
+  - **`app/`**: Estrutura de páginas do Next.js.
+    - **`dashboard/`**: Página principal do dashboard.
+    - **`setup-profile/`**: Página de configuração de perfil.
+  - **`components/`**: Componentes reutilizáveis.
+    - **`ui/`**: Componentes de interface (ex.: botões, formulários).
+  - **`lib/`**: Funções utilitárias e abstrações.
+  - **`services/`**: Comunicação com a API backend.
+- **`public/`**: Arquivos estáticos (imagens, ícones, etc.).
+- **`.env`**: Variáveis de ambiente.
+- **`package.json`**: Dependências e scripts do frontend.
+
 
 ## 📅 Banco de Dados - MySQL
 - **Armazenamento Persistente:** Tabelas para usuários, treinos, avaliações, etc.
