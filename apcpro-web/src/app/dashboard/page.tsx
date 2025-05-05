@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 // Extende o tipo Session para incluir a propriedade 'id' no usuári
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import DashboardLayout from "../../components/dashboard-layout";
 import { fetchUserData } from "../../lib/fetchUserData"; // Atualizado
 
@@ -34,17 +35,19 @@ export default function HomePage() {
             {session?.user?.id ? (
                   <UserProfile userId={session.user.id} />
                 ) : (
-                  <div className="text-center">
+                    <div className="text-center">
                     {session?.user.image && (
-                      <img
-                        src={session.user.image}
-                        alt={`Foto de ${session.user.name}`}
-                        className="mx-auto mb-4 h-24 w-24 rounded-full object-cover"
+                      <Image
+                      src={session.user.image}
+                      alt={`Foto de ${session.user.name}`}
+                      width={96}
+                      height={96}
+                      className="mx-auto mb-4 h-24 w-24 rounded-full object-cover"
                       />
                     )}
                     <p className="text-lg font-semibold">{session?.user.name || "Nome não disponível"}</p>
                     <p className="text-sm text-muted-foreground">{session?.user.email || "Email não disponível"}</p>
-                  </div>
+                    </div>
                 )}
           </div>
           <div className="aspect-video rounded-xl bg-muted/50 pl-6">
