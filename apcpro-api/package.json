@@ -11,7 +11,8 @@
     "start:watch": "tsx watch src/server.ts",
     "start:dist": "prisma generate && npm run dist",
     "build": "prisma generate && npm run dist",
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "npx prisma migrate reset --force && npx prisma migrate dev --name create_profileComplete"
   },
   "keywords": [],
   "author": "",
