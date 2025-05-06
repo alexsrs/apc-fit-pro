@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prebuild": "npm install",
+    "prebuild": "npm install && npm install -g npm@11.3.0 && npm install -g typescript@5.4.3 && npm install -g tsup@8.0.2",
     "prestart": "npm run build",
     "dist": "tsup src/server.ts --format cjs,esm --dts --out-dir dist",
     "start:dev": "tsx src/server.ts",
