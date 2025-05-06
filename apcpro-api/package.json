@@ -4,13 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prebuild": "npm install -g npm@11.3.0 && npm install -g typescript@5.4.3 && npm install -g tsup@8.0.2",
-    "prestart": "npm run build",
     "dist": "tsup src/server.ts --format cjs,esm --dts --out-dir dist",
     "start:dev": "tsx src/server.ts",
     "start:watch": "tsx watch src/server.ts",
     "start:dist": "npm run dist && node dist/server.js",
-    "build": "prisma generate && npm run dist",
     "start": "node dist/server.js"
   },
   "keywords": [],
@@ -24,9 +21,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/next-auth": "^3.13.0",
     "@types/node": "^20.17.41",
-    "prisma": "^6.7.0",
-    "tsup": "^8.0.2",
-    "tsx": "^4.7.1"
+    "prisma": "^6.7.0"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -40,6 +35,8 @@
     "next-auth": "^4.24.11",
     "typescript": "^5.8.3",
     "uuid": "^11.1.0",
-    "zod": "^3.24.3"
+    "zod": "^3.24.3",
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.1"
   }
 }
