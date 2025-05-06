@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   // Verifica se a rota acessada é /dashboard
   if (request.nextUrl.pathname === '/dashboard') {
     // Redireciona para uma página de teste
-    return NextResponse.rewrite(new URL('/stup-profile', request.url));
+    return NextResponse.rewrite(new URL('/setup-profile', request.url));
   }
 
   return NextResponse.next();
