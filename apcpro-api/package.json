@@ -26,8 +26,7 @@
     "@types/node": "^20.11.30",
     "prisma": "^6.7.0",
     "tsup": "^8.0.2",
-    "tsx": "^4.7.1",
-    "typescript": "^5.8.3"
+    "tsx": "^4.7.1"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -40,6 +39,7 @@
     "jsonwebtoken": "^9.0.2",
     "next-auth": "^4.24.11",
     "uuid": "^11.1.0",
-    "zod": "^3.24.3"
+    "zod": "^3.24.3",
+    "typescript": "^5.8.3"
   }
 }
