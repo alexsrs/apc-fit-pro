@@ -11,7 +11,8 @@
     "start:watch": "tsx watch src/server.ts",
     "start:dist": "npm run dist && node dist/server.js",
     "build": "prisma generate && npm run dist",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "render": "npm run prebuild $$ npm run build"
   },
   "keywords": [],
   "author": "",
