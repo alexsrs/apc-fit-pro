@@ -6,7 +6,7 @@
   "scripts": {
     "prebuild": "npm install && npm install -g tsup@8.0.2",
     "prestart": "npm run build",
-    "dist": "tsc src/server.ts --format cjs,esm --dts --out-dir dist",
+    "dist": "tsup src/server.ts --format cjs,esm --dts --out-dir dist",
     "start:dev": "tsx src/server.ts",
     "start:watch": "tsx watch src/server.ts",
     "start:dist": "npm run dist && node dist/server.js",
