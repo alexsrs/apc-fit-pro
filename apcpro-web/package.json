@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate && npx prisma migrate dev --name create_ProfileComplete"
+    "postinstall": "prisma generate && prisma migrate dev --name create_ProfileComplete"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.9.0",
