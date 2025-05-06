@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "prebuild": "npm install -g npm@11.3.0",
     "dist": "tsup src/server.ts --format cjs,esm --dts --out-dir dist",
     "start:dev": "tsx src/server.ts",
     "start:watch": "tsx watch src/server.ts",
@@ -24,6 +25,7 @@
     "prisma": "^6.7.0",
     "tsup": "^8.0.2",
     "tsx": "^4.7.1",
+    "dotenv": "^16.5.0",
     "typescript": "^5.4.3"
   },
   "dependencies": {
@@ -32,7 +34,6 @@
     "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "next-auth": "^4.24.11",
