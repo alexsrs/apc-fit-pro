@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prebuild": "npm install -g npm@11.3.0 && npm install -g typescript@5.4.3 && npm install -g tsup@8.0.2",
+    "prebuild": "npm install",
     "prestart": "npm run build",
     "dist": "tsup src/server.ts --format cjs,esm --dts --out-dir dist",
     "start:dev": "tsx src/server.ts",
@@ -17,7 +17,16 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.1",
+    "@types/node": "^20.17.41",
+    "@types/axios": "^0.9.36",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/next-auth": "^3.13.0",
+    "prisma": "^6.7.0"   
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -31,16 +40,6 @@
     "next-auth": "^4.24.11",
     "typescript": "^5.8.3",
     "uuid": "^11.1.0",
-    "zod": "^3.24.3",
-    "tsup": "^8.0.2",
-    "tsx": "^4.7.1",
-    "@types/node": "^20.17.41",
-    "@types/axios": "^0.9.36",
-    "@types/bcrypt": "^5.0.2",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.1",
-    "@types/jsonwebtoken": "^9.0.9",
-    "@types/next-auth": "^3.13.0",
-    "prisma": "^6.7.0"
+    "zod": "^3.24.3"
   }
 }
