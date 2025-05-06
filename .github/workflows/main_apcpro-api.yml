@@ -25,12 +25,13 @@ jobs:
 
       - name: npm install, build, and test
         run: |
+          npm run prebuild
           npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm run build 
+          npm run postinstall
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./apcpro-api/* -r
+        run: zip release.zip ./apcpro-api/dist/* -r
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
