@@ -8,34 +8,32 @@ datasource db {
 }
 
 model User {
-
-  id             String   @id @default(cuid())
-  name           String?
-  email          String   @unique
-  image          String?
-  emailVerified  DateTime? // Adiciona a propriedade como opcional
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
   profileComplete Boolean @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-// Adiciona a propriedade 'image' como opcional
-  Account  Account[] // Relação com o modelo Account
-  Session Session[]
-  UserPerfil UserPerfil[]
+  accounts Account[]
+  sessions Session[]
+  userPerfil UserPerfil[]
 }
 
 model Account {
   id                 String  @id @default(cuid())
   userId             String
-  type               String  // Adicione esta coluna
+  type               String
   provider           String
   providerAccountId  String
-  refresh_token      String? // Opcional
-  access_token       String? // Opcional
-  expires_at         Int?    // Opcional
-  token_type         String? // Opcional
-  scope              String? // Opcional
-  id_token           String? // Opcional
-  session_state      String? // Opcional
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -47,7 +45,8 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
