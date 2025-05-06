@@ -9,7 +9,7 @@
     "dist": "tsup src/server.ts --format cjs,esm --dts --out-dir dist",
     "start:dev": "tsx src/server.ts",
     "start:watch": "tsx watch src/server.ts",
-    "start:dist": "prisma generate && npm run dist && node dist/server.js",
+    "start:dist": "prisma generate && npm run dist",
     "build": "prisma generate && npm run dist",
     "start": "node dist/server.js"
   },
