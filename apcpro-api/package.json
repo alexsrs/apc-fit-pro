@@ -9,7 +9,7 @@
     "start:dev": "tsx src/server.ts",
     "start:watch": "tsx watch src/server.ts",
     "start:dist": "npm run dist && node dist/server.js",
-    "build": "npm run dist && node dist/server.js"
+    "build": "prisma generate && npm run dist && node dist/server.js"
   },
   "keywords": [],
   "author": "",
