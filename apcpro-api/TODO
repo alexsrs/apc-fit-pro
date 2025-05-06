@@ -10,6 +10,7 @@ async function promoverAProfessor(userPerfilId: string) {
 }
 Atribuir Aluno a Professor
 
+
 typescript
 async function atribuirAluno(alunoPerfilId: string, professorPerfilId: string) {
   if (alunoPerfilId === professorPerfilId) {
