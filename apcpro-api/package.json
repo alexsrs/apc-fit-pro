@@ -11,7 +11,7 @@
     "start:watch": "tsx watch src/server.ts",
     "start:dist": "prisma generate && npm run dist",
     "build": "prisma generate && npm run dist",
-    "start": "node api/server.js",
+    "start": "node server.js",
     "postinstall": "echo 'build complete'"
   },
   "keywords": [],
