@@ -41,6 +41,7 @@ export class UsersService {
       return {
         ...user,
         name: user.name ?? "sem nome", // Substitui null por um valor padrão
+        email: user.email ?? "", // Garante que email seja sempre uma string
       };
     }
     return null;
@@ -54,7 +55,7 @@ export class UsersService {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         name: user.name ?? "Nome Padrão", // Substitui null por um valor padrão
-        email: user.email,
+        email: user.email ?? "", // Substitui null por uma string vazia
         image: user.image ?? null, // Substitui undefined por null
         emailVerified: user.emailVerified ?? null, // Substitui undefined por null
       }));

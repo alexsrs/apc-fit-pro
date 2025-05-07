@@ -9,8 +9,8 @@ export class UserRepositoryClass {
   async getAll(): Promise<User[]> {
     return prisma.user.findMany({
       include: {
-        Account: true, // Use o nome correto da relação
-        Session: true,
+        accounts: true, // Use o nome correto da relação
+        sessions: true,
       },
     });
   }
@@ -19,8 +19,8 @@ export class UserRepositoryClass {
     return prisma.user.findUnique({
       where: { id },
       include: {
-        Account: true, // Use o nome correto da relação
-        Session: true,
+        accounts: true, // Use o nome correto da relação
+        sessions: true,
       },
     });
   }
@@ -175,7 +175,7 @@ export class UserRepositoryClass {
     return prisma.user.findUnique({
       where: { id: userId },
       include: {
-        Account: true, // Certifique-se de usar o nome correto da relação
+        accounts: true, // Certifique-se de usar o nome correto da relação
       },
     });
   }
