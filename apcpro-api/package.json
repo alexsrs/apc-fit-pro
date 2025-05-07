@@ -12,7 +12,7 @@
     "start:dist": "prisma generate && npm run dist",
     "build": "prisma generate && npm run dist",
     "start": "node server.js",
-    "postALEXinstall": "npx prisma migrate reset --force && npx prisma migrate dev --name create_profileComplete"
+    "postinstall": "echo 'build complete'"
   },
   "keywords": [],
   "author": "",
