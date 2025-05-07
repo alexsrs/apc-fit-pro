@@ -6,12 +6,12 @@
   "scripts": {
     "prebuild": "npm install && npm install -g npm@11.3.0 && npm install -g typescript@5.4.3 && npm install -g tsup@8.0.2",
     "prestart": "npm run build",
-    "dist": "tsup src/server.ts --format cjs,esm --dts --out-dir dist",
+    "dist": "tsup src/server.ts --format cjs,esm --dts --out-dir api",
     "start:dev": "tsx src/server.ts",
     "start:watch": "tsx watch src/server.ts",
     "start:dist": "prisma generate && npm run dist",
     "build": "prisma generate && npm run dist",
-    "start": "node server.js",
+    "start": "node api/server.js",
     "postinstall": "echo 'build complete'"
   },
   "keywords": [],
