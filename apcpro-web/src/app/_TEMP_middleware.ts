@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
   // Busca a sessão no banco de dados
   const session = await prisma.session.findUnique({
     where: { sessionToken },
-    include: { user: true },
+    include: { user: true }, 
   });
 
   if (!session) {

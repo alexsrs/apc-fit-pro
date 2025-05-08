@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { UsersService } from '../services/users-service';
-import prisma from '../prisma';
-import { ok, created, noContent, notFound } from '../utils/http-helper';
+import { UsersService } from "../services/users-service";
+import prisma from "../prisma";
+import { ok, created, noContent, notFound } from "../utils/http-helper";
 import { z } from "zod";
 import { UserPerfil } from "@prisma/client";
 
@@ -76,6 +76,33 @@ export async function deleteUser(req: Request, res: Response) {
   }
 }
 
+export async function getUserIdBySessionToken(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const { sessionToken } = req.params;
+
+    if (!sessionToken) {
+      res.status(400).json({ error: "Session token is required" });
+      return;
+    }
+
+    // Simulação de busca no banco de dados (substitua pelo Prisma ou outra lógica real)
+    const userId = await usersService.findUserIdBySessionToken(sessionToken); // Função fictícia
+
+    if (!userId) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.status(200).json({ userId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 // Perfis de usuário
 export async function getUserProfiles(req: Request, res: Response) {
   try {
@@ -84,7 +111,9 @@ export async function getUserProfiles(req: Request, res: Response) {
     const response = await ok(userProfiles);
     res.status(response.statusCode).json(response.body);
   } catch (error) {
-    res.status(500).json({ message: "Erro ao buscar perfis do usuário.", error });
+    res
+      .status(500)
+      .json({ message: "Erro ao buscar perfis do usuário.", error });
   }
 }
 
@@ -92,25 +121,30 @@ export async function createUserProfile(req: Request, res: Response) {
   try {
     const userId = req.params.id;
     const userProfile = await usersService.createUserProfile(userId, req.body);
-    const response = await created({ 
-      ...userProfile, 
-      name: '', 
-      email: '', 
-      emailVerified: null, 
-      image: null, 
-      telefone: (userProfile as any).telefone ?? '' // Garante que telefone seja uma string válida
+    const response = await created({
+      ...userProfile,
+      name: "",
+      email: "",
+      emailVerified: null,
+      image: null,
+      telefone: (userProfile as any).telefone ?? "", // Garante que telefone seja uma string válida
     });
     res.status(response.statusCode).json(response.body);
   } catch (error: any) {
     if (error.message === "O professorId fornecido não é válido.") {
       res.status(400).json({ message: error.message });
     } else {
-      res.status(500).json({ message: "Erro ao criar o perfil do usuário.", error });
+      res
+        .status(500)
+        .json({ message: "Erro ao criar o perfil do usuário.", error });
     }
   }
 }
 
-export async function updateUserProfile(req: Request, res: Response): Promise<void> {
+export async function updateUserProfile(
+  req: Request,
+  res: Response
+): Promise<void> {
   try {
     const { userId, profileData } = req.body;
 
@@ -123,7 +157,10 @@ export async function updateUserProfile(req: Request, res: Response): Promise<vo
 
     res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Erro ao atualizar o perfil do usuário." });
+    res.status(500).json({
+      success: false,
+      message: "Erro ao atualizar o perfil do usuário.",
+    });
   }
 }
 
@@ -131,11 +168,14 @@ export async function deleteUserProfile(req: Request, res: Response) {
   const userId = req.params.id;
   const profileId = req.params.profileId;
   const result = await usersService.deleteUserProfile(userId, profileId);
-  res.json({ message: 'User profile deleted successfully' });
+  res.json({ message: "User profile deleted successfully" });
 }
 
 // Novo endpoint para buscar perfil do usuário por userId
-export const getUserProfileByUserId = async (req: Request, res: Response): Promise<void> => {
+export const getUserProfileByUserId = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.params.userId; // Obtém o ID do usuário da rota
 
@@ -154,10 +194,14 @@ export const getUserProfileByUserId = async (req: Request, res: Response): Promi
   }
 };
 
-export const postUserProfileByUserId = async (req: Request, res: Response): Promise<void> => {
+export const postUserProfileByUserId = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.params.userId;
-    const { role, telefone, dataNascimento, genero, professorId, grupoId } = req.body;
+    const { role, telefone, dataNascimento, genero, professorId, grupoId } =
+      req.body;
 
     // Lógica para criar o perfil do usuário
     const profile = await usersService.createUserProfile(userId, {
@@ -193,7 +237,11 @@ export async function addStudentToUser(req: Request, res: Response) {
 export async function updateUserStudent(req: Request, res: Response) {
   const userId = req.params.id;
   const studentId = req.params.alunoId;
-  const student = await usersService.updateUserStudent(userId, studentId, req.body);
+  const student = await usersService.updateUserStudent(
+    userId,
+    studentId,
+    req.body
+  );
   res.json(student);
 }
 

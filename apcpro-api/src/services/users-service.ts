@@ -1,16 +1,19 @@
-import { UserRepositoryClass as ExternalUserRepositoryClass, UserRepositoryClass } from '../repositories/users-repository';
-import { UserProfileRepository } from '../repositories/user-profile-repository';
-import { Grupo, User, UserPerfil } from '../models/user-model';
-import { normalizeUserPerfil } from '../utils/normalize';
-import { sanitizeUserPerfil } from '../utils/sanitize';
-import { userProfileSchema } from '../validators/user-profile.validator';
+import {
+  UserRepositoryClass as ExternalUserRepositoryClass,
+  UserRepositoryClass,
+} from "../repositories/users-repository";
+import { UserProfileRepository } from "../repositories/user-profile-repository";
+import { Grupo, User, UserPerfil } from "../models/user-model";
+import { normalizeUserPerfil } from "../utils/normalize";
+import { sanitizeUserPerfil } from "../utils/sanitize";
+import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 
 function processUserPerfil(profile: Partial<UserPerfil>): UserPerfil {
   return normalizeUserPerfil(
     sanitizeUserPerfil({
       ...profile,
-      id: profile.id ?? '',
+      id: profile.id ?? "",
       professorId: profile.professorId ?? undefined,
       grupoId: profile.grupoId ?? undefined,
       telefone: profile.telefone ?? undefined,
@@ -46,7 +49,7 @@ export class UsersService {
     }
     return null;
   }
-  
+
   async getAllUsers(): Promise<User[]> {
     try {
       const users = await this.userRepository.getAll(); // Certifique-se de que getAll retorna o tipo correto
@@ -74,7 +77,11 @@ export class UsersService {
     return user;
   }
 
-  async getUser(): Promise<{ id: string; name: string | null; email: string } | null> {
+  async getUser(): Promise<{
+    id: string;
+    name: string | null;
+    email: string;
+  } | null> {
     try {
       const user = await this.userRepository.getUser(); // Certifique-se de que getUser retorna o tipo correto
       return user ?? null; // Retorne null se user for undefined
@@ -100,16 +107,24 @@ export class UsersService {
     return this.userProfileRepository.findProfilesByUserId(userId);
   }
 
-  async createUserProfile(userId: string, data: Partial<UserPerfil>): Promise<UserPerfil> {
+  async createUserProfile(
+    userId: string,
+    data: Partial<UserPerfil>
+  ): Promise<UserPerfil> {
     try {
       const validatedData = userProfileSchema.parse(data);
       return await this.userRepository.createUserProfile(userId, {
         ...validatedData,
         telefone: validatedData.telefone ?? undefined,
-        dataNascimento: validatedData.dataNascimento ? new Date(validatedData.dataNascimento) : undefined,
+        dataNascimento: validatedData.dataNascimento
+          ? new Date(validatedData.dataNascimento)
+          : undefined,
       });
     } catch (error) {
-      handleServiceError(error, "Dados inválidos para criar o perfil do usuário.");
+      handleServiceError(
+        error,
+        "Dados inválidos para criar o perfil do usuário."
+      );
     }
   }
 
@@ -118,17 +133,27 @@ export class UsersService {
       const groups = await this.userRepository.getUserGroups(userId);
       return groups.map((group) => this.processGroup(group));
     } catch (error) {
-      handleServiceError(error, "Não foi possível buscar os grupos do usuário.");
+      handleServiceError(
+        error,
+        "Não foi possível buscar os grupos do usuário."
+      );
     }
   }
 
   async getUserProfile(userId: string): Promise<UserPerfil | null> {
     try {
-      const userProfile = await this.userProfileRepository.findProfileByUserId(userId);
+      const userProfile = await this.userProfileRepository.findProfileByUserId(
+        userId
+      );
       return userProfile ?? null; // Retorna null se o perfil não for encontrado
     } catch (error) {
       handleServiceError(error, "Não foi possível buscar o perfil do usuário.");
     }
+  }
+
+  async findUserIdBySessionToken(sessionToken: string): Promise<string | null> {
+    const session = await this.userRepository.findSessionByToken(sessionToken);
+    return session?.userId || null;
   }
 
   getUserStudents(userId: string) {
@@ -152,7 +177,6 @@ export class UsersService {
   deleteUserGroup(userId: string, groupId: string) {
     throw new Error("Method not implemented.");
   }
-
 
   private processGroup(group: Grupo): Grupo {
     return {
@@ -179,11 +203,18 @@ class LocalUserRepositoryClass {
     return [] as User[]; // Replace with actual database fetching logic
   }
 
-  async getCurrentUser(): Promise<{ id: string; name: string | null; email: string } | null> {
+  async getCurrentUser(): Promise<{
+    id: string;
+    name: string | null;
+    email: string;
+  } | null> {
     // Implementation here
-    return { id: 'default-id', name: 'Default User', email: 'default@example.com' }; // Replace with actual logic
+    return {
+      id: "default-id",
+      name: "Default User",
+      email: "default@example.com",
+    }; // Replace with actual logic
   }
 }
 
 export { UserRepositoryClass };
-
