@@ -2,7 +2,7 @@ import axios from "axios";
 import { getSession } from "next-auth/react";
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL, // URL do backend
+  baseURL: process.env.APC_PRO_PUBLIC_API_URL, // URL do backend
 });
 
 // Intercepta as requisições para adicionar o token JWT

@@ -48,7 +48,7 @@ export default function TabsProfile() {
     const userId = session.user.id;
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile`,
+        `${process.env.APC_PRO_PUBLIC_API_URL}/api/${userId}/profile`,
         {
           method: "POST",
           headers: {
@@ -79,7 +79,11 @@ export default function TabsProfile() {
         <Card>
           <CardHeader>
             <CardTitle>Estamos quase lá!</CardTitle>
-            <CardDescription>Complete as informações abaixo para finalizar seu cadastro como profissional de Educação Física. Não se esqueça de clicar em Salvar no final.</CardDescription>
+            <CardDescription>
+              Complete as informações abaixo para finalizar seu cadastro como
+              profissional de Educação Física. Não se esqueça de clicar em
+              Salvar no final.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -124,12 +128,20 @@ export default function TabsProfile() {
         <Card>
           <CardHeader>
             <CardTitle>Estamos quase lá!</CardTitle>
-            <CardDescription>Complete as informações abaixo para finalizar seu cadastro como aluno. Não se esqueça de clicar em Salvar no final.</CardDescription>
+            <CardDescription>
+              Complete as informações abaixo para finalizar seu cadastro como
+              aluno. Não se esqueça de clicar em Salvar no final.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="telefone">Telefone celular</Label>
-              <Input id="telefone" value={formData.telefone} onChange={handleInputChange} placeholder="(21) 9xxxx-xxxx"/>
+              <Input
+                id="telefone"
+                value={formData.telefone}
+                onChange={handleInputChange}
+                placeholder="(21) 9xxxx-xxxx"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="dataNascimento">Data de Nascimento</Label>

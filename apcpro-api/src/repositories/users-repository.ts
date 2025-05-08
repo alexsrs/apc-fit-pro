@@ -1,10 +1,17 @@
-import { PrismaClient, User, UserPerfil, Grupo, Prisma } from "@prisma/client";
+import {
+  PrismaClient,
+  User,
+  UserPerfil,
+  Grupo,
+  Prisma,
+  Session,
+} from "@prisma/client";
 import prisma from "../prisma";
 
 export class UserRepositoryClass {
   [x: string]: any;
   getCurrentUser() {
-    throw new Error('Method not implemented.');
+    throw new Error("Method not implemented.");
   }
   async getAll(): Promise<User[]> {
     return prisma.user.findMany({
@@ -191,6 +198,15 @@ export class UserRepositoryClass {
           data.dataNascimento instanceof Date
             ? data.dataNascimento.toISOString()
             : data.dataNascimento,
+      },
+    });
+  }
+
+  async findSessionByToken(sessionToken: string): Promise<Session | null> {
+    return prisma.session.findUnique({
+      where: { sessionToken },
+      include: {
+        user: true, // Inclui os dados do usuário associado à sessão, se necessário
       },
     });
   }
