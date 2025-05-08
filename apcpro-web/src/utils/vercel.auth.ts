@@ -29,7 +29,7 @@ export const authOptions: NextAuthOptions = {
     sessionToken: {
       name: `__Secure-next-auth.session-token`,
       options: {
-        httpOnly: false,
+        httpOnly: true,
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
@@ -58,6 +58,5 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  debug: process.env.NODE_ENV === "development", // Desative em produção
+  debug: process.env.NODE_ENV === "production", // Desative em produção
 };
-
