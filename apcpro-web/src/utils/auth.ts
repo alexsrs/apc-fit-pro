@@ -25,6 +25,17 @@ export const authOptions: NextAuthOptions = {
   jwt: {
     secret: process.env.NEXTAUTH_SECRET, // Certifique-se de definir esta variável no .env
   },
+  cookies: {
+    sessionToken: {
+      name: "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production", // Apenas em produção
+        domain: "localhost", // Certifique-se de que está configurado para localhost
+      },
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       // Adiciona informações do usuário ao token JWT
@@ -41,7 +52,7 @@ export const authOptions: NextAuthOptions = {
         session.user = {
           ...session.user,
           email: token.email as string,
-          userId: token.id as string, // Inclui o userId
+          id: token.id as string, // Garante que o campo id seja mapeado corretamente
         };
       }
       return session;

@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
 
-
 interface DashboardLayoutProps {
   children: ReactNode;
 }
@@ -63,4 +62,3 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     </SidebarProvider>
   );
 }
-
