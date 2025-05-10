@@ -25,35 +25,28 @@ export const authOptions: NextAuthOptions = {
   jwt: {
     secret: process.env.NEXTAUTH_SECRET, // Certifique-se de definir esta variável no .env
   },
-  cookies: {
-    sessionToken: {
-      name: "next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production", // Apenas em produção
-        domain: "localhost", // Certifique-se de que está configurado para localhost
-      },
-    },
-  },
+
   callbacks: {
     async jwt({ token, user }) {
-      // Adiciona informações do usuário ao token JWT
+      // Quando o usuário faz login pela primeira vez, user está presente
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        token.userId = user.id; // Garante que userId também seja salvo
       }
       return token;
     },
 
-    async session({ session, token }) {
-      // Passa os dados do token para a sessão
+    async session({ session, token, user }) {
+      // Sempre que a sessão for criada, pega o id do token ou mantém o do banco
       if (token) {
-        session.user = {
-          ...session.user,
-          email: token.email as string,
-          id: token.id as string, // Garante que o campo id seja mapeado corretamente
-        };
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.userId = token.userId as string; // Garante que userId também seja salvo
+      } else {
+        session.user.id = user.id;
+        session.user.email = user.email;
+        session.user.userId = user.id; // Garante que userId também seja salvo
       }
       return session;
     },
