@@ -5,7 +5,10 @@ import router from "./routes";
 function createApp() {
   const app = express();
 
-  const allowedOrigins = ["http://localhost:3000", "http://meu-dominio.com"];
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://apc-fit-pro.vercel.app",
+  ];
 
   // Configuração do CORS
   app.use(
