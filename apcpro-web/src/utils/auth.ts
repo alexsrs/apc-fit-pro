@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 declare module "next-auth" {
   interface Session {
-    user: DefaultUser & { id: string; email: string; userId: string };
+    user: DefaultUser & { id: string; email: string };
   }
 }
 
@@ -25,9 +25,10 @@ export const authOptions: NextAuthOptions = {
   jwt: {
     secret: process.env.NEXTAUTH_SECRET, // Certifique-se de definir esta variável no .env
   },
+
   callbacks: {
     async jwt({ token, user }) {
-      // Adiciona informações do usuário ao token JWT
+      // Quando o usuário faz login pela primeira vez, user está presente
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -35,14 +36,14 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
-    async session({ session, token }) {
-      // Passa os dados do token para a sessão
+    async session({ session, token, user }) {
+      // Sempre que a sessão for criada, pega o id do token ou mantém o do banco
       if (token) {
-        session.user = {
-          ...session.user,
-          email: token.email as string,
-          userId: token.id as string, // Inclui o userId
-        };
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+      } else {
+        session.user.id = user.id;
+        session.user.email = user.email;
       }
       return session;
     },
