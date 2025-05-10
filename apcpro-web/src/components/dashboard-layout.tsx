@@ -17,6 +17,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
+import { useEffect } from "react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -32,6 +33,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   if (!session) {
     redirect("/"); // Redireciona para a página inicial se não houver sessão
   }
+
+  // Exibe o userId no topo da página para confirmação
 
   return (
     <SidebarProvider>

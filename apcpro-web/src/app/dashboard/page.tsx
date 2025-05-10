@@ -2,25 +2,71 @@
 
 import { useSession } from "next-auth/react";
 // Extende o tipo Session para incluir a propriedade 'id' no usuári
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import DashboardLayout from "../../components/dashboard-layout";
 
 export default function HomePage() {
   const { data: session, status } = useSession();
-  console.log("SESSION NO FRONTEND", session, status);
   const router = useRouter();
+  const [verificandoPerfil, setVerificandoPerfil] = useState(true);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const userId = session?.user?.id;
+        if (!userId) {
+          setVerificandoPerfil(false);
+          return;
+        }
+        const apiResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.expires}`,
+            },
+          }
+        );
+
+        console.log("API Response:", apiResponse);
+
+        if (apiResponse.status === 404) {
+          router.push("/setup-profile"); // Redireciona para a página de configuração de perfil
+          return;
+        }
+
+        const userProfile = await apiResponse.json();
+        console.log("Perfil do usuário:", userProfile);
+        setVerificandoPerfil(false);
+      } catch (error) {
+        console.error("Erro ao buscar o perfil do usuário:", error);
+        setVerificandoPerfil(false);
+      }
+    };
+
+    if (status === "authenticated") {
+      fetchUserProfile();
+    } else if (status !== "loading") {
+      setVerificandoPerfil(false);
+    }
+  }, [session, status, router]);
 
   useEffect(() => {
     if (status === "loading") return; // Aguarde até que o status da sessão seja resolvido
-  }, [session, status, router]);
-
-  if (status === "loading") {
-    return <p>Carregando...</p>; // Exibe um estado de carregamento enquanto a sessão está sendo carregada
-  }
+  }, [status]);
 
   // Exibe o userId no topo da página para confirmação
+  if (
+    status === "loading" ||
+    verificandoPerfil ||
+    (status === "authenticated" && !session?.user?.id)
+  ) {
+    return <p>Carregando...</p>; // Exibe um estado de carregamento enquanto verifica a sessão
+  }
+
   return (
     <>
       <DashboardLayout>
@@ -33,7 +79,6 @@ export default function HomePage() {
               </p>
 
               <pre>{JSON.stringify(status, null, 2)}</pre>
-              <pre>{JSON.stringify(session, null, 2)}</pre>
               <pre>{JSON.stringify(session?.user, null, 2)}</pre>
 
               <div className="text-center">
