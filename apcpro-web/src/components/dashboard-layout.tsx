@@ -17,6 +17,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
+import Loading from "./ui/Loading";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -26,7 +27,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
-    return <p>Carregando...</p>;
+    return <Loading />; // Exibe o componente de loading enquanto a sessão está sendo verificada
   }
 
   if (!session) {

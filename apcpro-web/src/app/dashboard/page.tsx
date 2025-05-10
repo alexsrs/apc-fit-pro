@@ -1,11 +1,11 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-// Extende o tipo Session para incluir a propriedade 'id' no usuári
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import DashboardLayout from "../../components/dashboard-layout";
+import Loading from "@/components/ui/Loading"; // Importa o componente reutilizável de loading
 
 export default function HomePage() {
   const { data: session, status } = useSession();
@@ -64,7 +64,7 @@ export default function HomePage() {
     verificandoPerfil ||
     (status === "authenticated" && !session?.user?.id)
   ) {
-    return <p>Carregando...</p>; // Exibe um estado de carregamento enquanto verifica a sessão
+    return <Loading />; // Usa o componente reutilizável de loading
   }
 
   return (
