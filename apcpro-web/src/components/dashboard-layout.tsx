@@ -17,7 +17,6 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
-import { useEffect } from "react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
