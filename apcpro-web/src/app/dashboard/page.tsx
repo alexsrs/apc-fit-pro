@@ -1,13 +1,11 @@
 "use client";
 
-import { getSession, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 // Extende o tipo Session para incluir a propriedade 'id' no usuári
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import DashboardLayout from "../../components/dashboard-layout";
-import { Session } from "next-auth";
-import { DefaultUser } from "next-auth";
 
 export default function HomePage() {
   const { data: session, status } = useSession();
