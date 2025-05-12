@@ -112,19 +112,29 @@ export class UsersService {
     data: Partial<UserPerfil>
   ): Promise<UserPerfil> {
     try {
+      console.log("Validando dados:", data);
+
       const validatedData = userProfileSchema.parse(data);
-      return await this.userRepository.createUserProfile(userId, {
-        ...validatedData,
-        telefone: validatedData.telefone ?? undefined,
-        dataNascimento: validatedData.dataNascimento
-          ? new Date(validatedData.dataNascimento)
-          : undefined,
-      });
-    } catch (error) {
-      handleServiceError(
-        error,
-        "Dados inválidos para criar o perfil do usuário."
+
+      console.log("Dados validados:", validatedData);
+
+      const newProfile = await this.userProfileRepository.createProfile(
+        userId,
+        {
+          ...validatedData,
+          telefone: validatedData.telefone ?? undefined,
+          dataNascimento: validatedData.dataNascimento
+            ? new Date(validatedData.dataNascimento)
+            : undefined,
+        }
       );
+
+      console.log("Perfil criado com sucesso:", newProfile);
+
+      return newProfile;
+    } catch (error) {
+      console.error("Erro na camada de serviço:", error);
+      throw new Error("Erro ao criar o perfil do usuário.");
     }
   }
 
@@ -142,10 +152,10 @@ export class UsersService {
 
   async getUserProfile(userId: string): Promise<UserPerfil | null> {
     try {
-      const userProfile = await this.userProfileRepository.findProfileByUserId(
+      const userProfile = await this.userProfileRepository.findProfilesByUserId(
         userId
       );
-      return userProfile ?? null; // Retorna null se o perfil não for encontrado
+      return userProfile.length > 0 ? userProfile[0] : null; // Retorna o primeiro perfil ou null se não houver perfis
     } catch (error) {
       handleServiceError(error, "Não foi possível buscar o perfil do usuário.");
     }

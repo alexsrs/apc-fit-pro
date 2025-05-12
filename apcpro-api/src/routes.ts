@@ -5,9 +5,6 @@ import { authenticateToken } from "./middlewares/auth-middleware"; // Ensure thi
 import {
   getUser,
   getUserById,
-  updateUser,
-  deleteUser,
-  createUserProfile,
   updateUserProfile,
   deleteUserProfile,
   getUserStudents,
@@ -29,14 +26,12 @@ const router = Router();
 // Outras rotas públicas
 router.get("/users", getUser);
 router.get("/users/:id", getUserById);
+router.post("/:userId/profile", postUserProfileByUserId);
+router.get("/:userId/profile", getUserProfileByUserId);
 
 router.get("/session/:sessionToken", getUserIdBySessionToken);
-
 // Rotas para definição de usuários
-router.get("/:userId/profile/", getUserProfileByUserId);
-router.post("/:userId/profile", postUserProfileByUserId);
 
-router.post("/users/:id/perfis", authenticateToken, createUserProfile);
 router.put("/users/:id/perfis/:perfilId", authenticateToken, updateUserProfile);
 router.delete(
   "/users/:id/perfis/:perfilId",

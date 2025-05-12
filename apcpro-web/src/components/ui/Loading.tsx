@@ -17,7 +17,7 @@ export default function Loading() {
   return (
     <div className="flex items-center justify-center h-screen">
       <Progress.Root
-        className="relative h-4 w-64 overflow-hidden rounded-full bg-muted"
+        className="relative h-3 w-34 overflow-hidden rounded-full bg-muted"
         value={progress}
       >
         <Progress.Indicator
