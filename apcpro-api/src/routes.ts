@@ -1,15 +1,9 @@
 import "dotenv/config";
 import { Router } from "express";
-import { authenticateToken } from "./middlewares/auth-middleware"; // Ensure this matches the export
 
 import {
   getUser,
   getUserById,
-  updateUser,
-  deleteUser,
-  createUserProfile,
-  updateUserProfile,
-  deleteUserProfile,
   getUserStudents,
   addStudentToUser,
   updateUserStudent,
@@ -19,8 +13,7 @@ import {
   updateUserGroup,
   deleteUserGroup,
   getUserProfileByUserId,
-  postUserProfileByUserId,
-  getUserIdBySessionToken, // Adicionado aqui
+  postUserProfileByUserId, // Adicionado aqui
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 
@@ -29,20 +22,9 @@ const router = Router();
 // Outras rotas públicas
 router.get("/users", getUser);
 router.get("/users/:id", getUserById);
-
-router.get("/session/:sessionToken", getUserIdBySessionToken);
-
-// Rotas para definição de usuários
-router.get("/:userId/profile/", getUserProfileByUserId);
 router.post("/:userId/profile", postUserProfileByUserId);
+router.get("/:userId/profile", getUserProfileByUserId);
 
-router.post("/users/:id/perfis", authenticateToken, createUserProfile);
-router.put("/users/:id/perfis/:perfilId", authenticateToken, updateUserProfile);
-router.delete(
-  "/users/:id/perfis/:perfilId",
-  authenticateToken,
-  deleteUserProfile
-);
 
 // Rotas de alunos (relacionamentos)
 router.get("/users/:id/alunos", getUserStudents);

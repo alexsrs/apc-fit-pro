@@ -1,11 +1,11 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
+import DashboardLayout from "@/components/dashboard-layout";
 
-export default function DashboardLayout({
+export default function DashboardPageLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return <DashboardLayout>{children}</DashboardLayout>;
 }

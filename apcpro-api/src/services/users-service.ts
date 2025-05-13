@@ -9,20 +9,6 @@ import { sanitizeUserPerfil } from "../utils/sanitize";
 import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 
-function processUserPerfil(profile: Partial<UserPerfil>): UserPerfil {
-  return normalizeUserPerfil(
-    sanitizeUserPerfil({
-      ...profile,
-      id: profile.id ?? "",
-      professorId: profile.professorId ?? undefined,
-      grupoId: profile.grupoId ?? undefined,
-      telefone: profile.telefone ?? undefined,
-      dataNascimento: profile.dataNascimento ?? undefined,
-      genero: profile.genero ?? undefined,
-    })
-  );
-}
-
 function handleServiceError(error: unknown, message: string): never {
   console.error(message, error);
   throw new Error(message);
@@ -67,16 +53,6 @@ export class UsersService {
     }
   }
 
-  async getUserById(id: string): Promise<User> {
-    const user = await findUserInDatabase(id);
-
-    if (user === null || user === undefined) {
-      throw new Error("Usuário não encontrado.");
-    }
-
-    return user;
-  }
-
   async getUser(): Promise<{
     id: string;
     name: string | null;
@@ -112,19 +88,29 @@ export class UsersService {
     data: Partial<UserPerfil>
   ): Promise<UserPerfil> {
     try {
+      console.log("Validando dados:", data);
+
       const validatedData = userProfileSchema.parse(data);
-      return await this.userRepository.createUserProfile(userId, {
-        ...validatedData,
-        telefone: validatedData.telefone ?? undefined,
-        dataNascimento: validatedData.dataNascimento
-          ? new Date(validatedData.dataNascimento)
-          : undefined,
-      });
-    } catch (error) {
-      handleServiceError(
-        error,
-        "Dados inválidos para criar o perfil do usuário."
+
+      console.log("Dados validados:", validatedData);
+
+      const newProfile = await this.userProfileRepository.createProfile(
+        userId,
+        {
+          ...validatedData,
+          telefone: validatedData.telefone ?? undefined,
+          dataNascimento: validatedData.dataNascimento
+            ? new Date(validatedData.dataNascimento)
+            : undefined,
+        }
       );
+
+      console.log("Perfil criado com sucesso:", newProfile);
+
+      return newProfile;
+    } catch (error) {
+      console.error("Erro na camada de serviço:", error);
+      throw new Error("Erro ao criar o perfil do usuário.");
     }
   }
 
@@ -142,18 +128,13 @@ export class UsersService {
 
   async getUserProfile(userId: string): Promise<UserPerfil | null> {
     try {
-      const userProfile = await this.userProfileRepository.findProfileByUserId(
+      const userProfile = await this.userProfileRepository.findProfilesByUserId(
         userId
       );
-      return userProfile ?? null; // Retorna null se o perfil não for encontrado
+      return userProfile.length > 0 ? userProfile[0] : null; // Retorna o primeiro perfil ou null se não houver perfis
     } catch (error) {
       handleServiceError(error, "Não foi possível buscar o perfil do usuário.");
     }
-  }
-
-  async findUserIdBySessionToken(sessionToken: string): Promise<string | null> {
-    const session = await this.userRepository.findSessionByToken(sessionToken);
-    return session?.userId || null;
   }
 
   getUserStudents(userId: string) {
@@ -190,30 +171,6 @@ export class UsersService {
         professorId: membro.professorId ?? undefined,
       })),
     };
-  }
-}
-
-async function findUserInDatabase(this: any, id: string): Promise<User | null> {
-  return await this.userRepository.findById(id); // Certifique-se de que o método `findById` existe no repositório
-}
-
-class LocalUserRepositoryClass {
-  async getAll(): Promise<User[]> {
-    // Implementation here
-    return [] as User[]; // Replace with actual database fetching logic
-  }
-
-  async getCurrentUser(): Promise<{
-    id: string;
-    name: string | null;
-    email: string;
-  } | null> {
-    // Implementation here
-    return {
-      id: "default-id",
-      name: "Default User",
-      email: "default@example.com",
-    }; // Replace with actual logic
   }
 }
 

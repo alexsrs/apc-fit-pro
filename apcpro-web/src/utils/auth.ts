@@ -1,11 +1,18 @@
 import { PrismaClient } from "@prisma/client";
-import { DefaultUser, NextAuthOptions } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 declare module "next-auth" {
+  interface User {
+    role?: string; // Adicione a propriedade role aqui
+  }
+
   interface Session {
-    user: DefaultUser & { id: string; email: string };
+    user: User & {
+      id: string;
+      email: string;
+    };
   }
 }
 

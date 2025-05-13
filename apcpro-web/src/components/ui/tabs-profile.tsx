@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { getSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,12 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { useState } from "react";
-import { getSession } from "next-auth/react";
-
 export default function TabsProfile() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    role: "",
+    role: "professor", // Define o valor inicial como "professor"
     telefone: "",
     dataNascimento: "",
     genero: "",
@@ -39,16 +40,30 @@ export default function TabsProfile() {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
+  const handleTabChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: value === "professional" ? "professor" : "aluno",
+    }));
+  };
+
   const handleSubmit = async () => {
+    if (!formData.telefone || !formData.dataNascimento || !formData.genero) {
+      alert("Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+
     const session = await getSession();
     if (!session || !session.user || !session.user.id) {
       alert("Usuário não autenticado");
       return;
     }
+
     const userId = session.user.id;
+
     try {
       const response = await fetch(
-        `${process.env.APC_PRO_PUBLIC_API_URL}/api/${userId}/profile`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile`,
         {
           method: "POST",
           headers: {
@@ -59,10 +74,19 @@ export default function TabsProfile() {
       );
 
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Erro da API:", errorData);
         throw new Error("Erro ao salvar os dados");
       }
 
       alert("Dados salvos com sucesso!");
+
+      // Redireciona com base na role
+      if (formData.role === "professor") {
+        router.push("/dashboard/professores");
+      } else if (formData.role === "aluno") {
+        router.push("/dashboard/alunos");
+      }
     } catch (error) {
       console.error(error);
       alert("Erro ao salvar os dados");
@@ -70,7 +94,11 @@ export default function TabsProfile() {
   };
 
   return (
-    <Tabs defaultValue="professional" className="w-[460px]">
+    <Tabs
+      defaultValue="professional"
+      className="w-[460px]"
+      onValueChange={handleTabChange}
+    >
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="professional">Sou profissional</TabsTrigger>
         <TabsTrigger value="student">Sou aluno</TabsTrigger>

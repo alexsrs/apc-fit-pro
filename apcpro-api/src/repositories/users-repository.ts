@@ -1,11 +1,4 @@
-import {
-  PrismaClient,
-  User,
-  UserPerfil,
-  Grupo,
-  Prisma,
-  Session,
-} from "@prisma/client";
+import { PrismaClient, User, UserPerfil, Grupo, Prisma, Session } from "@prisma/client";
 import prisma from "../prisma";
 
 export class UserRepositoryClass {
@@ -45,10 +38,9 @@ export class UserRepositoryClass {
   }
 
   async getUserProfiles(userId: string): Promise<UserPerfil[]> {
-    const userProfiles = await prisma.userPerfil.findMany({
+    return prisma.userPerfil.findMany({
       where: { userId },
     });
-    return userProfiles;
   }
 
   async createUserProfile(
@@ -209,6 +201,32 @@ export class UserRepositoryClass {
         user: true, // Inclui os dados do usuário associado à sessão, se necessário
       },
     });
+  }
+
+  async createProfile(
+    userId: string,
+    data: Partial<UserPerfil>
+  ): Promise<UserPerfil> {
+    try {
+      console.log("Persistindo dados no banco:", data);
+
+      const newProfile = await prisma.userPerfil.create({
+        data: {
+          userId,
+          telefone: data.telefone,
+          dataNascimento: data.dataNascimento,
+          genero: data.genero,
+          role: data.role,
+        },
+      });
+
+      console.log("Dados persistidos no banco:", newProfile);
+
+      return newProfile;
+    } catch (error) {
+      console.error("Erro no repositório:", error);
+      throw new Error("Erro ao persistir os dados no banco.");
+    }
   }
 }
 

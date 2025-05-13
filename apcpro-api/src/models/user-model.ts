@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 // Base para perfis de usuários
 
 // Base para grupos
@@ -97,5 +95,3 @@ export type SimplifiedUser = {
   emailVerified: Date | null;
   image: string | null;
 };
-
-
