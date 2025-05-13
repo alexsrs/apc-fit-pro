@@ -31,8 +31,6 @@ export default function TabsProfile() {
     professorId: "",
   });
 
-  const [activeTab, setActiveTab] = useState("professional");
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -43,7 +41,6 @@ export default function TabsProfile() {
   };
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
     setFormData((prev) => ({
       ...prev,
       role: value === "professional" ? "professor" : "aluno",
