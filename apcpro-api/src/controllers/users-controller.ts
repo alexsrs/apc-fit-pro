@@ -1,17 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { UsersService } from "../services/users-service";
-import prisma from "../prisma";
-import { ok, created, noContent, notFound } from "../utils/http-helper";
-import { z } from "zod";
-import { UserPerfil } from "@prisma/client";
+import { ok } from "../utils/http-helper";
 
 const usersService = new UsersService();
-
-const userSchema = z.object({
-  name: z.string(),
-  email: z.string().email(),
-});
-
 // Usuários
 export async function getUser(req: Request, res: Response) {
   try {
@@ -63,12 +54,9 @@ export const postUserProfileByUserId = async (
   try {
     // Lógica para lidar com a requisição
     const userId = req.params.userId;
-    const profileData = req.body;
-
+    const profileData = await usersService.createUserProfile(userId, req.body);
     // Exemplo: salvar no banco de dados usando Prisma
-    // await prisma.userProfile.create({ data: { userId, ...profileData } });
-
-    res.status(201).json({ message: "Perfil criado com sucesso!" });
+    res.status(201).json(profileData);
   } catch (error) {
     next(error); // Passa o erro para o middleware de tratamento de erros
   }

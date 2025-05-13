@@ -9,20 +9,6 @@ import { sanitizeUserPerfil } from "../utils/sanitize";
 import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 
-function processUserPerfil(profile: Partial<UserPerfil>): UserPerfil {
-  return normalizeUserPerfil(
-    sanitizeUserPerfil({
-      ...profile,
-      id: profile.id ?? "",
-      professorId: profile.professorId ?? undefined,
-      grupoId: profile.grupoId ?? undefined,
-      telefone: profile.telefone ?? undefined,
-      dataNascimento: profile.dataNascimento ?? undefined,
-      genero: profile.genero ?? undefined,
-    })
-  );
-}
-
 function handleServiceError(error: unknown, message: string): never {
   console.error(message, error);
   throw new Error(message);
@@ -66,7 +52,6 @@ export class UsersService {
       handleServiceError(error, "Não foi possível buscar os usuários.");
     }
   }
-
 
   async getUser(): Promise<{
     id: string;
@@ -186,26 +171,6 @@ export class UsersService {
         professorId: membro.professorId ?? undefined,
       })),
     };
-  }
-}
-
-class LocalUserRepositoryClass {
-  async getAll(): Promise<User[]> {
-    // Implementation here
-    return [] as User[]; // Replace with actual database fetching logic
-  }
-
-  async getCurrentUser(): Promise<{
-    id: string;
-    name: string | null;
-    email: string;
-  } | null> {
-    // Implementation here
-    return {
-      id: "default-id",
-      name: "Default User",
-      email: "default@example.com",
-    }; // Replace with actual logic
   }
 }
 
