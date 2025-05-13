@@ -67,15 +67,6 @@ export class UsersService {
     }
   }
 
-  async getUserById(id: string): Promise<User> {
-    const user = await findUserInDatabase(id);
-
-    if (user === null || user === undefined) {
-      throw new Error("Usuário não encontrado.");
-    }
-
-    return user;
-  }
 
   async getUser(): Promise<{
     id: string;
@@ -161,11 +152,6 @@ export class UsersService {
     }
   }
 
-  async findUserIdBySessionToken(sessionToken: string): Promise<string | null> {
-    const session = await this.userRepository.findSessionByToken(sessionToken);
-    return session?.userId || null;
-  }
-
   getUserStudents(userId: string) {
     throw new Error("Method not implemented.");
   }
@@ -201,10 +187,6 @@ export class UsersService {
       })),
     };
   }
-}
-
-async function findUserInDatabase(this: any, id: string): Promise<User | null> {
-  return await this.userRepository.findById(id); // Certifique-se de que o método `findById` existe no repositório
 }
 
 class LocalUserRepositoryClass {

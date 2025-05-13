@@ -1,11 +1,4 @@
-import {
-  PrismaClient,
-  User,
-  UserPerfil,
-  Grupo,
-  Prisma,
-  Session,
-} from "@prisma/client";
+import { PrismaClient, User, UserPerfil, Grupo, Prisma, Session } from "@prisma/client";
 import prisma from "../prisma";
 
 export class UserRepositoryClass {
@@ -45,10 +38,9 @@ export class UserRepositoryClass {
   }
 
   async getUserProfiles(userId: string): Promise<UserPerfil[]> {
-    const userProfiles = await prisma.userPerfil.findMany({
+    return prisma.userPerfil.findMany({
       where: { userId },
     });
-    return userProfiles;
   }
 
   async createUserProfile(

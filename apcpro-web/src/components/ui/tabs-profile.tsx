@@ -55,7 +55,14 @@ export default function TabsProfile() {
     const userId = session.user.id;
     const role = activeTab === "professional" ? "prof" : "aluno";
 
+    // Atualiza o estado formData com o valor de role
+    setFormData((prev) => ({ ...prev, role }));
+
     try {
+      console.log(role);
+      console.log("Dados do formulário:", { ...formData, role });
+      console.log("ID do usuário:", userId);
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile`,
         {
@@ -63,7 +70,7 @@ export default function TabsProfile() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ ...formData, role }),
+          body: JSON.stringify({ ...formData, role }), // Inclui o campo role no objeto enviado
         }
       );
 
