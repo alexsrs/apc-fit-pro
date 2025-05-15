@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 
 export default function TabsProfile() {
+  const { update } = useSession();
   const router = useRouter();
   const [formData, setFormData] = useState({
     role: "professor", // Define o valor inicial como "professor"
@@ -78,9 +79,10 @@ export default function TabsProfile() {
         console.error("Erro da API:", errorData);
         throw new Error("Erro ao salvar os dados");
       }
-
+      await update();
       alert("Dados salvos com sucesso!");
-
+      // Garante que o loader recarregue o perfil antes do push
+      router.refresh();
       // Redireciona com base na role
       if (formData.role === "professor") {
         router.push("/dashboard/professores");

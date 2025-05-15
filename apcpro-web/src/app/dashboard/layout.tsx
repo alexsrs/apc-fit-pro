@@ -1,11 +1,19 @@
 "use client";
-
+import { UserProfileProvider } from "@/contexts/UserProfileContext";
+import { DashboardProfileLoader } from "@/components/dashboard-profile-loader";
 import DashboardLayout from "@/components/dashboard-layout";
 
-export default function DashboardPageLayout({
+import { ReactNode } from "react";
+
+export default function DashboardLayoutRoot({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <UserProfileProvider>
+      <DashboardProfileLoader />
+      <DashboardLayout>{children}</DashboardLayout>
+    </UserProfileProvider>
+  );
 }
