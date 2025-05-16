@@ -4,14 +4,10 @@ import * as React from "react";
 import {
   SlidersVertical,
   NotebookPen,
-  Frame,
   GalleryVerticalEnd,
-  Map,
-  PieChart,
   Waypoints,
 } from "lucide-react";
 
-import { useSession } from "next-auth/react"; // Importa o hook useSession
 import { useUserProfile } from "@/contexts/UserProfileContext"; // Importa o hook useUserProfile
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
@@ -24,6 +20,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useEffect, useState } from "react";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   type Profile = {
@@ -31,12 +28,53 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     email: string;
     image?: string;
     role: "professor" | "aluno";
+    userId?: string;
+    id?: string;
   };
 
   const { profile, error } = useUserProfile() as {
     profile: Profile | null;
     error: string | null;
   };
+
+  const [grupos, setGrupos] = useState([
+    {
+      name: profile?.role === "professor" ? "Professor" : "Aluno",
+      logo: GalleryVerticalEnd,
+      plan: "Academia XYZ",
+    },
+  ]);
+
+  useEffect(() => {
+    async function fetchGrupos() {
+      try {
+        const userId = profile?.userId || profile?.id;
+        if (!userId) return;
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/grupos`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+        if (response.ok) {
+          const gruposApi = await response.json();
+          if (Array.isArray(gruposApi) && gruposApi.length > 0) {
+            setGrupos(
+              gruposApi.map((g: { name?: string }) => ({
+                name: g.name || "Grupo sem nome",
+                logo: GalleryVerticalEnd,
+                plan: "Academia XYZ",
+              }))
+            );
+          }
+        }
+      } catch {
+        // Silencia erro, mantém grupo padrão
+      }
+    }
+    fetchGrupos();
+  }, [profile]);
 
   if (error) {
     return (
@@ -214,13 +252,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           ? profile.image
           : "https://github.com/shadcn.png",
     },
-    teams: [
-      {
-        name: profile.role === "professor" ? "Professor" : "Aluno",
-        logo: GalleryVerticalEnd,
-        plan: "Grupo: Academia XYZ",
-      },
-    ],
+    teams: grupos,
     navMain,
     projects: [
       // ...pode customizar projetos também se quiser

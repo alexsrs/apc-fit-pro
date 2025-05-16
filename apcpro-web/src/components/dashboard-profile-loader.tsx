@@ -36,6 +36,7 @@ export function DashboardProfileLoader() {
         if (response.ok) {
           const userProfile = await response.json();
           console.log("[Loader] Perfil encontrado:", userProfile);
+          localStorage.setItem("userProfileId", userProfile.id);
           // Preenche campos obrigatórios do perfil com fallback da sessão
           setProfile({
             ...userProfile,
@@ -56,13 +57,17 @@ export function DashboardProfileLoader() {
         } else {
           setError("Erro ao buscar perfil do usuário");
         }
-      } catch (err: any) {
-        setError(err.message || "Erro desconhecido ao buscar perfil");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Erro desconhecido ao buscar perfil");
+        }
       }
     };
 
     if (status === "authenticated" && session?.user?.id) fetchUserProfile();
-  }, [session, status, router, pathname]);
+  }, [session, status, router, pathname, setProfile, setError]);
 
   return null;
 }

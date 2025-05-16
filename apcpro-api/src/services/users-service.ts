@@ -107,6 +107,8 @@ export class UsersService {
 
       console.log("Perfil criado com sucesso:", newProfile);
 
+      localStorage.setItem("userProfileId", newProfile.id);
+
       return newProfile;
     } catch (error) {
       console.error("Erro na camada de serviço:", error);
@@ -149,8 +151,27 @@ export class UsersService {
   removeStudentFromUser(userId: string, studentId: string) {
     throw new Error("Method not implemented.");
   }
-  createUserGroup(userId: string, body: any) {
-    throw new Error("Method not implemented.");
+  async createUserGroup(userId: string, body: any) {
+    try {
+      // Validação dos dados do grupo
+      const validatedData = grupoSchema
+        .omit({
+          id: true,
+          criadoPorId: true,
+          criadoEm: true,
+          atualizadoEm: true,
+          membros: true,
+        })
+        .parse(body);
+      // Criação do grupo no repositório
+      const grupoCriado = await this.userRepository.createUserGroup(userId, {
+        ...validatedData,
+      });
+      // Busca o grupo completo para retornar com membros (se necessário)
+      return this.processGroup(grupoCriado);
+    } catch (error) {
+      handleServiceError(error, "Não foi possível criar o grupo.");
+    }
   }
   updateUserGroup(userId: string, groupId: string, body: any) {
     throw new Error("Method not implemented.");

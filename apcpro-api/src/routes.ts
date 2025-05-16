@@ -25,6 +25,9 @@ router.get("/users/:id", getUserById);
 router.post("/:userId/profile", postUserProfileByUserId);
 router.get("/:userId/profile", getUserProfileByUserId);
 
+// Rotas de grupos
+router.get("/users/:id/grupos", getUserGroups);
+router.post("/users/:id/grupos", createUserGroup);
 
 // Rotas de alunos (relacionamentos)
 router.get("/users/:id/alunos", getUserStudents);
@@ -33,6 +36,7 @@ router.put("/users/:id/alunos/:alunoId", updateUserStudent);
 router.delete("/users/:id/alunos/:alunoId", removeStudentFromUser);
 
 // Rotas de grupos
+
 router.get("/users/:id/grupos", getUserGroups);
 router.post("/users/:id/grupos", createUserGroup);
 router.put("/users/:id/grupos/:groupId", updateUserGroup);
