@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSession, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,11 @@ export default function TabsProfile() {
     professorId: "",
   });
 
+  const [professores, setProfessores] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [loadingProfessores, setLoadingProfessores] = useState(false);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -48,6 +53,19 @@ export default function TabsProfile() {
     }));
   };
 
+  useEffect(() => {
+    if (formData.role === "aluno") {
+      setLoadingProfessores(true);
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/professores`)
+        .then((res) => res.json())
+        .then((data) => {
+          setProfessores(data);
+        })
+        .catch(() => setProfessores([]))
+        .finally(() => setLoadingProfessores(false));
+    }
+  }, [formData.role]);
+
   const handleSubmit = async () => {
     if (!formData.telefone || !formData.dataNascimento || !formData.genero) {
       alert("Por favor, preencha todos os campos obrigatórios.");
@@ -62,6 +80,13 @@ export default function TabsProfile() {
 
     const userId = session.user.id;
 
+    const payload = {
+      ...formData,
+    };
+    if (formData.role === "professor" && "professorId" in payload) {
+      (payload as { professorId?: string }).professorId = undefined;
+    }
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile`,
@@ -70,7 +95,7 @@ export default function TabsProfile() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -197,13 +222,36 @@ export default function TabsProfile() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="professorId">Professor ID</Label>
-              <Input
-                id="professorId"
+              <Label htmlFor="professorId">Professor responsável</Label>
+              <Select
                 value={formData.professorId}
-                onChange={handleInputChange}
-                placeholder="xxxx-xxxx-xxxx"
-              />
+                onValueChange={(value) =>
+                  handleSelectChange("professorId", value)
+                }
+                disabled={loadingProfessores}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      loadingProfessores
+                        ? "Carregando..."
+                        : "Selecione o professor"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {professores.length === 0 && !loadingProfessores && (
+                    <SelectItem value="" disabled>
+                      Nenhum professor encontrado
+                    </SelectItem>
+                  )}
+                  {professores.map((prof) => (
+                    <SelectItem key={prof.id} value={prof.id}>
+                      {prof.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
           <CardFooter>

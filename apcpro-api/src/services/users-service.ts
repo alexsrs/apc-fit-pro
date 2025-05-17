@@ -4,8 +4,6 @@ import {
 } from "../repositories/users-repository";
 import { UserProfileRepository } from "../repositories/user-profile-repository";
 import { Grupo, User, UserPerfil } from "../models/user-model";
-import { normalizeUserPerfil } from "../utils/normalize";
-import { sanitizeUserPerfil } from "../utils/sanitize";
 import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 
@@ -102,12 +100,11 @@ export class UsersService {
           dataNascimento: validatedData.dataNascimento
             ? new Date(validatedData.dataNascimento)
             : undefined,
+          professorId: validatedData.professorId ?? undefined, // garantir que professorId é passado
         }
       );
 
       console.log("Perfil criado com sucesso:", newProfile);
-
-      localStorage.setItem("userProfileId", newProfile.id);
 
       return newProfile;
     } catch (error) {
@@ -136,6 +133,35 @@ export class UsersService {
       return userProfile.length > 0 ? userProfile[0] : null; // Retorna o primeiro perfil ou null se não houver perfis
     } catch (error) {
       handleServiceError(error, "Não foi possível buscar o perfil do usuário.");
+    }
+  }
+
+  async getProfessores(): Promise<User[]> {
+    try {
+      const professores = await this.getUsersByRole("professor");
+      return professores;
+    } catch (error) {
+      handleServiceError(error, "Não foi possível buscar os professores.");
+    }
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    try {
+      const users = await this.userRepository.getByRole(role);
+      return users.map((user) => ({
+        id: user.id,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        name: user.name ?? "Nome Padrão",
+        email: user.email ?? "",
+        image: user.image ?? null,
+        emailVerified: user.emailVerified ?? null,
+      }));
+    } catch (error) {
+      handleServiceError(
+        error,
+        "Não foi possível buscar os usuários por papel."
+      );
     }
   }
 

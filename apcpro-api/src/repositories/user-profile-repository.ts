@@ -2,7 +2,10 @@ import prisma from "../prisma"; // Certifique-se de que o Prisma está configura
 import { UserPerfil } from "../models/user-model";
 
 export class UserProfileRepository {
-  async createProfile(userId: string, data: Partial<UserPerfil>): Promise<UserPerfil> {
+  async createProfile(
+    userId: string,
+    data: Partial<UserPerfil>
+  ): Promise<UserPerfil> {
     return await prisma.userPerfil.create({
       data: {
         userId,
@@ -10,6 +13,7 @@ export class UserProfileRepository {
         dataNascimento: data.dataNascimento,
         genero: data.genero,
         role: data.role,
+        professorId: data.professorId ?? null, // <-- garantir que professorId é persistido
       },
     });
   }

@@ -19,6 +19,8 @@ model User {
   accounts Account[]
   sessions Session[]
   userPerfil UserPerfil[]
+
+  UserPerfil UserPerfil[] @relation("ProfessorUser")
 }
 
 model Account {
@@ -62,15 +64,14 @@ model UserPerfil {
   userId         String       @unique
   role           String       @default("aluno")
   telefone       String?
-  dataNascimento DateTime?    // Use DateTime para campos de data
-  genero         String?      // Torna o campo opcional
-  professorId    String?
+  dataNascimento DateTime?
+  genero         String?
+  professorId    String?      // FK para User
   grupoId        String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   gruposCriados  Grupo[]      @relation("GrupoCriado")
-  professor      UserPerfil?  @relation("ProfessorAluno", fields: [professorId], references: [id])
-  alunos         UserPerfil[] @relation("ProfessorAluno")
+  professor      User?        @relation("ProfessorUser", fields: [professorId], references: [id])
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   grupos         Grupo[]      @relation("MembroGrupo")
 }
