@@ -167,8 +167,9 @@ export default function TabsProfile() {
               <Label htmlFor="genero">Gênero</Label>
               <Select
                 onValueChange={(value) => handleSelectChange("genero", value)}
+                value={formData.genero}
               >
-                <SelectTrigger>
+                <SelectTrigger id="genero">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -215,8 +216,9 @@ export default function TabsProfile() {
               <Label htmlFor="genero">Gênero</Label>
               <Select
                 onValueChange={(value) => handleSelectChange("genero", value)}
+                value={formData.genero}
               >
-                <SelectTrigger>
+                <SelectTrigger id="genero">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
