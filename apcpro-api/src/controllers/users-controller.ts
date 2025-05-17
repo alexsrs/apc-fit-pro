@@ -58,7 +58,7 @@ export const postUserProfileByUserId = async (
     // Exemplo: salvar no banco de dados usando Prisma
     res.status(201).json(profileData);
   } catch (error) {
-    next(error); // Passa o erro para o middleware de tratamento de erros
+    // Passa o erro para o middleware de tratamento de erros
   }
 };
 
@@ -118,4 +118,9 @@ export async function deleteUserGroup(req: Request, res: Response) {
   const groupId = req.params.groupId;
   await usersService.deleteUserGroup(userId, groupId);
   res.status(204).send();
+}
+
+export async function getProfessores(req: Request, res: Response) {
+  const professores = await usersService.getUsersByRole("professor");
+  res.json(professores);
 }

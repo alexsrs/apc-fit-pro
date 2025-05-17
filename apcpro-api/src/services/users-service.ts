@@ -4,8 +4,6 @@ import {
 } from "../repositories/users-repository";
 import { UserProfileRepository } from "../repositories/user-profile-repository";
 import { Grupo, User, UserPerfil } from "../models/user-model";
-import { normalizeUserPerfil } from "../utils/normalize";
-import { sanitizeUserPerfil } from "../utils/sanitize";
 import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 
@@ -102,6 +100,7 @@ export class UsersService {
           dataNascimento: validatedData.dataNascimento
             ? new Date(validatedData.dataNascimento)
             : undefined,
+          professorId: validatedData.professorId ?? undefined, // garantir que professorId é passado
         }
       );
 
@@ -137,6 +136,35 @@ export class UsersService {
     }
   }
 
+  async getProfessores(): Promise<User[]> {
+    try {
+      const professores = await this.getUsersByRole("professor");
+      return professores;
+    } catch (error) {
+      handleServiceError(error, "Não foi possível buscar os professores.");
+    }
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    try {
+      const users = await this.userRepository.getByRole(role);
+      return users.map((user) => ({
+        id: user.id,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        name: user.name ?? "Nome Padrão",
+        email: user.email ?? "",
+        image: user.image ?? null,
+        emailVerified: user.emailVerified ?? null,
+      }));
+    } catch (error) {
+      handleServiceError(
+        error,
+        "Não foi possível buscar os usuários por papel."
+      );
+    }
+  }
+
   getUserStudents(userId: string) {
     throw new Error("Method not implemented.");
   }
@@ -149,8 +177,27 @@ export class UsersService {
   removeStudentFromUser(userId: string, studentId: string) {
     throw new Error("Method not implemented.");
   }
-  createUserGroup(userId: string, body: any) {
-    throw new Error("Method not implemented.");
+  async createUserGroup(userId: string, body: any) {
+    try {
+      // Validação dos dados do grupo
+      const validatedData = grupoSchema
+        .omit({
+          id: true,
+          criadoPorId: true,
+          criadoEm: true,
+          atualizadoEm: true,
+          membros: true,
+        })
+        .parse(body);
+      // Criação do grupo no repositório
+      const grupoCriado = await this.userRepository.createUserGroup(userId, {
+        ...validatedData,
+      });
+      // Busca o grupo completo para retornar com membros (se necessário)
+      return this.processGroup(grupoCriado);
+    } catch (error) {
+      handleServiceError(error, "Não foi possível criar o grupo.");
+    }
   }
   updateUserGroup(userId: string, groupId: string, body: any) {
     throw new Error("Method not implemented.");

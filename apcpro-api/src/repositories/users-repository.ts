@@ -1,4 +1,11 @@
-import { PrismaClient, User, UserPerfil, Grupo, Prisma, Session } from "@prisma/client";
+import {
+  PrismaClient,
+  User,
+  UserPerfil,
+  Grupo,
+  Prisma,
+  Session,
+} from "@prisma/client";
 import prisma from "../prisma";
 
 export class UserRepositoryClass {
@@ -21,6 +28,21 @@ export class UserRepositoryClass {
       include: {
         accounts: true, // Use o nome correto da relação
         sessions: true,
+      },
+    });
+  }
+
+  async getByRole(role: string): Promise<User[]> {
+    return prisma.user.findMany({
+      where: {
+        userPerfil: {
+          some: {
+            role: role,
+          },
+        },
+      },
+      include: {
+        userPerfil: true,
       },
     });
   }

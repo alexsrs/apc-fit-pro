@@ -13,7 +13,8 @@ import {
   updateUserGroup,
   deleteUserGroup,
   getUserProfileByUserId,
-  postUserProfileByUserId, // Adicionado aqui
+  postUserProfileByUserId,
+  getProfessores,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 
@@ -24,7 +25,11 @@ router.get("/users", getUser);
 router.get("/users/:id", getUserById);
 router.post("/:userId/profile", postUserProfileByUserId);
 router.get("/:userId/profile", getUserProfileByUserId);
+router.get("/professores", getProfessores);
 
+// Rotas de grupos
+router.get("/users/:id/grupos", getUserGroups);
+router.post("/users/:id/grupos", createUserGroup);
 
 // Rotas de alunos (relacionamentos)
 router.get("/users/:id/alunos", getUserStudents);
@@ -33,6 +38,7 @@ router.put("/users/:id/alunos/:alunoId", updateUserStudent);
 router.delete("/users/:id/alunos/:alunoId", removeStudentFromUser);
 
 // Rotas de grupos
+
 router.get("/users/:id/grupos", getUserGroups);
 router.post("/users/:id/grupos", createUserGroup);
 router.put("/users/:id/grupos/:groupId", updateUserGroup);

@@ -12,6 +12,7 @@ declare module "next-auth" {
     user: User & {
       id: string;
       email: string;
+      role?: string; // Adicione a propriedade role aqui
     };
   }
 }
@@ -39,6 +40,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        token.role = user.role; // Inclui a role no token
       }
       return token;
     },
@@ -48,9 +50,11 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
+        session.user.role = token.role as string; // Inclui a role na sessão
       } else {
         session.user.id = user.id;
         session.user.email = user.email;
+        session.user.role = user.role; // Inclui a role na sessão
       }
       return session;
     },
