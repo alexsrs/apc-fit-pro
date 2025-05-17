@@ -72,6 +72,12 @@ export default function TabsProfile() {
       return;
     }
 
+    // Validação extra para aluno
+    if (formData.role === "aluno" && !formData.professorId) {
+      alert("Por favor, selecione o professor responsável.");
+      return;
+    }
+
     const session = await getSession();
     if (!session || !session.user || !session.user.id) {
       alert("Usuário não autenticado");
@@ -106,9 +112,7 @@ export default function TabsProfile() {
       }
       await update();
       alert("Dados salvos com sucesso!");
-      // Garante que o loader recarregue o perfil antes do push
       router.refresh();
-      // Redireciona com base na role
       if (formData.role === "professor") {
         router.push("/dashboard/professores");
       } else if (formData.role === "aluno") {
