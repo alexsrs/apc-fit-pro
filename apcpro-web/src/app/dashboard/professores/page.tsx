@@ -4,11 +4,22 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import Loading from "@/components/ui/Loading";
+import Image from "next/image";
+
+type Aluno = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  telefone?: string;
+  genero?: string;
+  dataNascimento?: string | null;
+};
 
 export default function ProfessoresDashboard() {
   const { profile } = useUserProfile();
   const router = useRouter();
-  const [alunos, setAlunos] = useState<any[]>([]);
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loadingAlunos, setLoadingAlunos] = useState(true);
 
   useEffect(() => {
@@ -57,10 +68,13 @@ export default function ProfessoresDashboard() {
                 key={aluno.id}
                 className="rounded-lg border bg-white shadow p-4 flex flex-col items-center"
               >
-                <img
+                <Image
                   src={aluno.image || "https://github.com/shadcn.png"}
                   alt={aluno.name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full mb-2"
+                  unoptimized
                 />
                 <span className="font-semibold">{aluno.name}</span>
                 <span className="text-sm text-gray-500">{aluno.email}</span>
