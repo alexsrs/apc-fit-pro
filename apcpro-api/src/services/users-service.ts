@@ -6,6 +6,7 @@ import { UserProfileRepository } from "../repositories/user-profile-repository";
 import { Grupo, User, UserPerfil } from "../models/user-model";
 import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
+import { classificarObjetivoAnamnese } from "../utils/avaliacaoProcessor";
 
 function handleServiceError(error: unknown, message: string): never {
   console.error(message, error);
@@ -220,6 +221,37 @@ export class UsersService {
   }
   deleteUserGroup(userId: string, groupId: string) {
     throw new Error("Method not implemented.");
+  }
+
+  async alunoPossuiAvaliacaoValida(userPerfilId: string): Promise<boolean> {
+    try {
+      return await this.userRepository.hasValidAvaliacao(userPerfilId);
+    } catch (error) {
+      handleServiceError(error, "Erro ao verificar avaliação válida do aluno.");
+    }
+  }
+
+  async listarAvaliacoesAluno(userPerfilId: string) {
+    try {
+      return await this.userRepository.listarAvaliacoesAluno(userPerfilId);
+    } catch (error) {
+      handleServiceError(error, "Erro ao listar avaliações do aluno.");
+    }
+  }
+
+  async cadastrarAvaliacaoAluno(userPerfilId: string, dados: any) {
+    try {
+      let objetivoClassificado: string | null = null;
+      if (dados.tipo === "anamnese" && dados.resultado) {
+        objetivoClassificado = classificarObjetivoAnamnese(dados.resultado);
+      }
+      return await this.userRepository.cadastrarAvaliacaoAluno(userPerfilId, {
+        ...dados,
+        objetivoClassificado,
+      });
+    } catch (error) {
+      handleServiceError(error, "Erro ao cadastrar avaliação do aluno.");
+    }
   }
 
   private processGroup(group: Grupo): Grupo {

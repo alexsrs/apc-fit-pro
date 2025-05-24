@@ -15,6 +15,9 @@ import {
   getUserProfileByUserId,
   postUserProfileByUserId,
   getProfessores,
+  getAlunoAvaliacaoValida,
+  listarAvaliacoesAluno,
+  cadastrarAvaliacaoAluno,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 
@@ -50,5 +53,10 @@ router.delete("/users/:id/grupos/:groupId", deleteUserGroup);
 //router.post("/auth/validate", validateToken);
 router.post("/auth/sessions", persistSession as any);
 // Certifique-se de importar ou definir o authMiddleware corretamenteAjuste o caminho conforme necessário
+
+// Exemplo de rota
+router.get("/alunos/:userPerfilId/avaliacao-valida", getAlunoAvaliacaoValida);
+router.get("/alunos/:userPerfilId/avaliacoes", listarAvaliacoesAluno);
+router.post("/alunos/:userPerfilId/avaliacoes", cadastrarAvaliacaoAluno);
 
 export default router;
