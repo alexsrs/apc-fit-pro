@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 type Profile = {
+  [x: string]: ReactNode;
   id?: string;
   userId?: string;
   role?: string;
