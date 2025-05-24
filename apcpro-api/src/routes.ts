@@ -31,8 +31,9 @@ router.get("/professores", getProfessores);
 router.get("/users/:id/grupos", getUserGroups);
 router.post("/users/:id/grupos", createUserGroup);
 
-// Rotas de alunos (relacionamentos)
+// Rota para obetr alunos de um professor (relacionamentos)
 router.get("/users/:id/alunos", getUserStudents);
+
 router.post("/users/:id/alunos", addStudentToUser);
 router.put("/users/:id/alunos/:alunoId", updateUserStudent);
 router.delete("/users/:id/alunos/:alunoId", removeStudentFromUser);

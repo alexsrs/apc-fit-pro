@@ -165,8 +165,24 @@ export class UsersService {
     }
   }
 
-  getUserStudents(userId: string) {
-    throw new Error("Method not implemented.");
+  async getUserStudents(userId: string) {
+    try {
+      const students = await this.userRepository.getUserStudents(userId);
+      return students.map((perfil: any) => ({
+        id: perfil.id,
+        name: perfil.user?.name ?? "Aluno sem nome",
+        email: perfil.user?.email ?? "",
+        image: perfil.user?.image ?? null,
+        telefone: perfil.telefone ?? "",
+        dataNascimento: perfil.dataNascimento ?? null,
+        genero: perfil.genero ?? "",
+      }));
+    } catch (error) {
+      handleServiceError(
+        error,
+        "Não foi possível buscar os alunos do professor."
+      );
+    }
   }
   addStudentToUser(userId: string, body: any) {
     throw new Error("Method not implemented.");

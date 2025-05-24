@@ -109,11 +109,16 @@ export class UserRepositoryClass {
     });
   }
 
-  // Buscar alunos relacionados a um usuário
+  // Buscar alunos relacionados a um usuário (professor)
   async getUserStudents(userId: string) {
     return prisma.userPerfil.findMany({
-      where: { professorId: userId },
-      include: { user: true },
+      where: {
+        professorId: userId,
+        role: "aluno", // garante que só retorna perfis de alunos
+      },
+      include: {
+        user: true, // inclui dados do usuário vinculado ao perfil
+      },
     });
   }
 

@@ -1,153 +1,173 @@
-"use client";
+1. ANAMNESE INTELIGENTE — PÚBLICO GERAL
 
-import * as React from "react";
-import {
-  SlidersVertical,
-  NotebookPen,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Waypoints,
-} from "lucide-react";
+Objetivo: Classificar o usuário em uma das 3 categorias:
+	•	Controle de Doença
+	•	Saúde e Bem-estar
+	•	Estética / Hipertrofia
 
-import { useSession } from "next-auth/react"; // Importa o hook useSession
-import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
-import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
-} from "@/components/ui/sidebar";
+Bloco 1: Informações Gerais
+	•	Nome completo:
+	•	Data de nascimento:
+	•	Altura:
+	•	Peso atual:
+	•	Sexo:
+	•	Profissão:
+	•	Cidade / Estado:
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = useSession(); // Obtém os dados da sessão
+Bloco 2: Estado de Saúde e Histórico Médico
+	•	Possui alguma doença diagnosticada por médico? (Ex: diabetes, hipertensão, dislipidemia, obesidade, osteoporose etc.)
+	•	( ) Sim
+	•	( ) Não
+	•	Se sim, qual(is)?
+	•	Está usando alguma medicação contínua?
+	•	( ) Sim
+	•	( ) Não
+	•	Qual(is)?
+	•	Já realizou cirurgia nos últimos 2 anos?
+	•	( ) Sim
+	•	( ) Não
+	•	Qual(is)?
 
-  // Define os dados dinamicamente com base na sessão
-  const data = {
-    user: {
-      name: session?.user?.name || "Usuário Desconhecido",
-      email: session?.user?.email || "email@desconhecido.com",
-      avatar: session?.user?.image?.startsWith("http")
-        ? session.user.image
-        : "https://github.com/shadcn.png",
-    },
-    teams: [
-      {
-        name: "Professor: João",
-        logo: GalleryVerticalEnd,
-        plan: "Grupo: Academia XYZ",
-      },
-    ],
-    navMain: [
-      {
-        title: "Avaliar",
-        url: "#",
-        icon: NotebookPen,
-        isActive: true,
-        items: [
-          {
-            title: "Entrevista",
-            url: "/avaliacao",
-          },
-          {
-            title: "Anamnese inteligente",
-            url: "#",
-          },
-          {
-            title: "Medidas corporais",
-            url: "#",
-          },
-          {
-            title: "Testes físicos",
-            url: "#",
-          },
-        ],
-      },
-      {
-        title: "Planejar",
-        url: "#",
-        icon: Waypoints,
-        items: [
-          {
-            title: "Biblioteca de exercícios",
-            url: "#",
-          },
-          {
-            title: "Periodização",
-            url: "#",
-          },
-          {
-            title: "Plano de treino",
-            url: "#",
-          },
-          {
-            title: "Chekpoints",
-            url: "#",
-          },
-        ],
-      },
-      {
-        title: "Controlar",
-        url: "#",
-        icon: SlidersVertical,
-        items: [
-          {
-            title: "Registro de treino",
-            url: "#",
-          },
-          {
-            title: "Analise de carga",
-            url: "#",
-          },
-          {
-            title: "Evolução",
-            url: "#",
-          },
-          {
-            title: "Alertas inteligentes",
-            url: "#",
-          },
-        ],
-      },
-    ],
+Bloco 3: Nível de Atividade Atual
+	•	Você pratica alguma atividade física atualmente?
+	•	( ) Não
+	•	( ) Sim, qual?
+	•	Com que frequência?
+	•	( ) 1-2x por semana
+	•	( ) 3-4x por semana
+	•	( ) 5x ou mais
 
-    projects: [
-      {
-        name: "Design Engineering",
-        url: "#",
-        icon: Frame,
-      },
-      {
-        name: "Sales & Marketing",
-        url: "#",
-        icon: PieChart,
-      },
-      {
-        name: "Travel",
-        url: "#",
-        icon: Map,
-      },
-    ],
-  };
+Bloco 4: Objetivos com o Treinamento
 
-  return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
-  );
-}
+Selecione o objetivo que melhor representa sua motivação atual (apenas um):
+	•	( ) Melhorar ou controlar uma doença crônica (Ex: hipertensão, diabetes)
+	•	( ) Melhorar minha disposição, qualidade de vida e envelhecer com saúde
+	•	( ) Reduzir gordura corporal, melhorar a estética ou ganhar massa muscular
+
+Bloco 5: Sono, Estresse e Bem-estar
+	•	Quantas horas você dorme por noite, em média?
+	•	Avalie sua qualidade de sono (1 = péssimo, 5 = excelente):
+	•	Seu nível de estresse no dia a dia é:
+	•	( ) Baixo
+	•	( ) Moderado
+	•	( ) Alto
+
+⸻
+
+2. ANAMNESE INTELIGENTE — ATLETAS / ALTA PERFORMANCE
+
+Objetivo: Coletar dados completos para prescrição personalizada de performance
+
+Bloco 1: Dados Pessoais e Esportivos
+	•	Nome completo:
+	•	Data de nascimento:
+	•	Sexo:
+	•	Altura:
+	•	Peso atual:
+	•	Modalidade esportiva:
+	•	Posição (se aplicável):
+	•	Clube atual:
+	•	Cidade / Estado:
+
+Bloco 2: Histórico Esportivo
+	•	Há quanto tempo você pratica essa modalidade?
+	•	Participa de competições?
+	•	( ) Sim
+	•	( ) Não
+	•	Frequência semanal de treinos técnicos:
+	•	Frequência semanal de treinos físicos:
+
+Bloco 3: Histórico de Lesões e Cirurgias
+	•	Já teve alguma lesão grave?
+	•	( ) Sim
+	•	( ) Não
+	•	Qual(is)?
+	•	Já passou por cirurgia?
+	•	( ) Sim
+	•	( ) Não
+	•	Qual(is)? Ano?
+	•	Possui acompanhamento médico atual?
+	•	( ) Sim
+	•	( ) Não
+	•	Nome do médico/responsável:
+	•	Está em tratamento fisioterapêutico atualmente?
+	•	( ) Sim
+	•	( ) Não
+
+Bloco 4: Expectativa com o Treinamento
+	•	Quais são suas metas de performance para os próximos 3 meses?
+	•	Já realizou avaliações físicas recentemente? Quais?
+
+Bloco 5: Suporte e Logística
+	•	Possui local para realizar treinos físicos regularmente?
+	•	( ) Sim
+	•	( ) Não
+	•	Possui material disponível para treino? (elásticos, pesos, bola, quadra etc.)
+	•	Deseja treinos presenciais, online ou híbridos?
+
+  sistema de pontuação (ranking de decisão automática) para classificar cada usuário do APC Fit Pro em um dos 3 objetivos:
+1. Controle de Doenças
+2. Saúde e Bem-estar
+3. Estética / Hipertrofia
+
+⸻
+
+Critérios de Classificação com Pontuação (Score System)
+
+Cada pergunta-chave recebe um peso. A soma das respostas direciona o app a classificar o objetivo dominante.
+
+⸻
+
+PERGUNTAS-CHAVE E PESOS
+
+Bloco 2 – Estado de Saúde e Histórico Médico
+	•	Possui doença diagnosticada por médico?
+	•	( ) Sim → +3 pontos para Controle de Doença
+	•	( ) Não → +1 ponto para Saúde e Bem-estar
+	•	Usa medicação contínua?
+	•	( ) Sim → +2 pontos para Controle de Doença
+	•	( ) Não → +1 ponto para Saúde e Bem-estar
+	•	Já realizou cirurgia nos últimos 2 anos?
+	•	( ) Sim → +1 ponto para Controle de Doença
+	•	( ) Não → 0 pontos
+
+⸻
+
+Bloco 3 – Nível de Atividade
+	•	Pratica atividade física atualmente?
+	•	( ) Não → +2 pontos para Controle de Doença
+	•	( ) Sim → +1 ponto para Saúde e Bem-estar
+	•	Frequência semanal de treino:
+	•	1-2x → +1 ponto Saúde e Bem-estar
+	•	3-4x → +2 pontos Estética / Hipertrofia
+	•	5x ou mais → +3 pontos Estética / Hipertrofia
+
+⸻
+
+Bloco 4 – Objetivo Declarado (Peso máximo)
+	•	( ) Melhorar ou controlar uma doença crônica
+→ +10 pontos Controle de Doença
+	•	( ) Melhorar disposição, qualidade de vida e envelhecer com saúde
+→ +10 pontos Saúde e Bem-estar
+	•	( ) Reduzir gordura corporal, melhorar a estética ou ganhar massa muscular
+→ +10 pontos Estética / Hipertrofia
+
+⸻
+
+Bloco 5 – Bem-estar
+	•	Qualidade do sono (1 a 5):
+	•	1-2 → +1 ponto Controle de Doença
+	•	3-4 → +1 ponto Saúde e Bem-estar
+	•	5 → +1 ponto Estética / Hipertrofia
+	•	Nível de estresse:
+	•	Alto → +1 ponto Controle de Doença
+	•	Moderado → +1 ponto Saúde e Bem-estar
+	•	Baixo → +1 ponto Estética / Hipertrofia
+
+⸻
+
+RANKING FINAL (Lógica de Decisão)
+	•	Some os pontos acumulados para cada categoria.
+	•	Categoria com maior pontuação = objetivo final.
+
+Empates? Use o Objetivo Declarado (Bloco 4) como critério de desempate.
