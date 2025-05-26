@@ -74,6 +74,7 @@ model UserPerfil {
   professor      User?        @relation("ProfessorUser", fields: [professorId], references: [id])
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   grupos         Grupo[]      @relation("MembroGrupo")
+  avaliacoes     Avaliacao[]
 }
 
 model Grupo {
@@ -84,4 +85,19 @@ model Grupo {
   criadoEm     DateTime     @default(now())
   criadoPor    UserPerfil?  @relation("GrupoCriado", fields: [criadoPorId], references: [id])
   membros      UserPerfil[] @relation("MembroGrupo")
+}
+
+model Avaliacao {
+  id                   String      @id @default(cuid())
+  userPerfilId         String
+  tipo                 String
+  data                 DateTime    @default(now())
+  status               String
+  resultado            Json?
+  validadeAte          DateTime?
+  objetivoClassificado String?     // <--- novo campo
+
+  userPerfil           UserPerfil  @relation(fields: [userPerfilId], references: [id], onDelete: Cascade)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 }

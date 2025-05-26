@@ -15,6 +15,9 @@ import {
   getUserProfileByUserId,
   postUserProfileByUserId,
   getProfessores,
+  getAlunoAvaliacaoValida,
+  listarAvaliacoesAluno,
+  cadastrarAvaliacaoAluno,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 
@@ -31,8 +34,9 @@ router.get("/professores", getProfessores);
 router.get("/users/:id/grupos", getUserGroups);
 router.post("/users/:id/grupos", createUserGroup);
 
-// Rotas de alunos (relacionamentos)
+// Rota para obetr alunos de um professor (relacionamentos)
 router.get("/users/:id/alunos", getUserStudents);
+
 router.post("/users/:id/alunos", addStudentToUser);
 router.put("/users/:id/alunos/:alunoId", updateUserStudent);
 router.delete("/users/:id/alunos/:alunoId", removeStudentFromUser);
@@ -49,5 +53,10 @@ router.delete("/users/:id/grupos/:groupId", deleteUserGroup);
 //router.post("/auth/validate", validateToken);
 router.post("/auth/sessions", persistSession as any);
 // Certifique-se de importar ou definir o authMiddleware corretamenteAjuste o caminho conforme necessário
+
+// Exemplo de rota
+router.get("/alunos/:userPerfilId/avaliacao-valida", getAlunoAvaliacaoValida);
+router.get("/alunos/:userPerfilId/avaliacoes", listarAvaliacoesAluno);
+router.post("/alunos/:userPerfilId/avaliacoes", cadastrarAvaliacaoAluno);
 
 export default router;

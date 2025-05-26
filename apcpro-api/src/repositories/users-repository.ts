@@ -1,11 +1,4 @@
-import {
-  PrismaClient,
-  User,
-  UserPerfil,
-  Grupo,
-  Prisma,
-  Session,
-} from "@prisma/client";
+import { User, UserPerfil, Grupo, Prisma, Session } from "@prisma/client";
 import prisma from "../prisma";
 
 export class UserRepositoryClass {
@@ -109,11 +102,16 @@ export class UserRepositoryClass {
     });
   }
 
-  // Buscar alunos relacionados a um usuário
+  // Buscar alunos relacionados a um usuário (professor)
   async getUserStudents(userId: string) {
     return prisma.userPerfil.findMany({
-      where: { professorId: userId },
-      include: { user: true },
+      where: {
+        professorId: userId,
+        role: "aluno", // garante que só retorna perfis de alunos
+      },
+      include: {
+        user: true, // inclui dados do usuário vinculado ao perfil
+      },
     });
   }
 
@@ -249,6 +247,38 @@ export class UserRepositoryClass {
       console.error("Erro no repositório:", error);
       throw new Error("Erro ao persistir os dados no banco.");
     }
+  }
+
+  async hasValidAvaliacao(userPerfilId: string): Promise<boolean> {
+    const hoje = new Date();
+    const avaliacao = await prisma.avaliacao.findFirst({
+      where: {
+        userPerfilId,
+        status: "valida",
+        OR: [{ validadeAte: null }, { validadeAte: { gte: hoje } }],
+      },
+    });
+    return !!avaliacao;
+  }
+
+  async listarAvaliacoesAluno(userPerfilId: string) {
+    return prisma.avaliacao.findMany({
+      where: { userPerfilId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async cadastrarAvaliacaoAluno(userPerfilId: string, dados: any) {
+    return prisma.avaliacao.create({
+      data: {
+        userPerfilId,
+        tipo: dados.tipo,
+        status: dados.status,
+        resultado: dados.resultado,
+        validadeAte: dados.validadeAte ? new Date(dados.validadeAte) : null,
+        objetivoClassificado: dados.objetivoClassificado ?? null,
+      },
+    });
   }
 }
 

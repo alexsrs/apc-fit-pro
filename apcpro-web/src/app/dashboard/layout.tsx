@@ -1,5 +1,6 @@
 "use client";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
+import { AnamneseModalProvider } from "@/contexts/AnamneseModalContext";
 import { DashboardProfileLoader } from "@/components/dashboard-profile-loader";
 import DashboardLayout from "@/components/dashboard-layout";
 
@@ -12,8 +13,10 @@ export default function DashboardLayoutRoot({
 }) {
   return (
     <UserProfileProvider>
-      <DashboardProfileLoader />
-      <DashboardLayout>{children}</DashboardLayout>
+      <AnamneseModalProvider>
+        <DashboardProfileLoader />
+        <DashboardLayout>{children}</DashboardLayout>
+      </AnamneseModalProvider>
     </UserProfileProvider>
   );
 }

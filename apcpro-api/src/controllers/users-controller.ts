@@ -124,3 +124,34 @@ export async function getProfessores(req: Request, res: Response) {
   const professores = await usersService.getUsersByRole("professor");
   res.json(professores);
 }
+
+export async function getAlunoAvaliacaoValida(req: Request, res: Response) {
+  const userPerfilId = req.params.userPerfilId;
+  try {
+    const possuiValida = await usersService.alunoPossuiAvaliacaoValida(userPerfilId);
+    res.json({ possuiAvaliacaoValida: possuiValida });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao verificar avaliação válida." });
+  }
+}
+
+export async function listarAvaliacoesAluno(req: Request, res: Response) {
+  const userPerfilId = req.params.userPerfilId;
+  try {
+    const avaliacoes = await usersService.listarAvaliacoesAluno(userPerfilId);
+    res.json(avaliacoes);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao listar avaliações." });
+  }
+}
+
+export async function cadastrarAvaliacaoAluno(req: Request, res: Response) {
+  const userPerfilId = req.params.userPerfilId;
+  const dados = req.body;
+  try {
+    const avaliacao = await usersService.cadastrarAvaliacaoAluno(userPerfilId, dados);
+    res.status(201).json(avaliacao);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao cadastrar avaliação." });
+  }
+}
