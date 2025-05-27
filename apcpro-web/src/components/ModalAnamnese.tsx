@@ -95,8 +95,8 @@ export function ModalAnamnese({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tipo: "anamnese",
-          status: "valida",
+          tipo: "triagem",
+          status: "pendente",
           resultado,
           validadeAte: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) // 60 dias em ms
             .toISOString()

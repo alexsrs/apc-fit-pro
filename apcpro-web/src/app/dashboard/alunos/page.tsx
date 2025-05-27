@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import Loading from "@/components/ui/Loading";
 import { useAvaliacaoValida } from "@/hooks/useAvaliacaoValida";
-import { ModalAnamnese } from "@/components/ModalAnamnese";
+import { ModalTriagem } from "@/components/ModalTriagem";
 import {
   CalendarCheck,
   Dumbbell,
@@ -220,7 +220,7 @@ export default function AlunosDashboard() {
         ))}
       </div>
       {/* Modal de anamnese */}
-      <ModalAnamnese
+      <ModalTriagem
         open={open}
         onClose={closeModal}
         userPerfilId={profile.id ?? ""}

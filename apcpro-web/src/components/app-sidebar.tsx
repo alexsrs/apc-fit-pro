@@ -101,6 +101,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: true,
       items: [
         {
+          title: "Entrevista inicial",
+          url: "/#",
+        },
+        {
           title: "Anamnese inteligente",
           url: "/avaliacao",
         },
@@ -169,6 +173,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: NotebookPen,
       isActive: true,
       items: [
+        {
+          title: "Entrevista inicial",
+          url: "/#",
+        },
         {
           title: "Anamnese inteligente",
           url: "/avaliacao",

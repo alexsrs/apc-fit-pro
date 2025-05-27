@@ -57,10 +57,10 @@ export function NavMain({
               <CollapsibleContent>
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => {
-                    const isAnamnese = subItem.title === "Anamnese inteligente";
+                    const isEntrevista = subItem.title === "Entrevista inicial";
                     return (
                       <SidebarMenuSubItem key={subItem.title}>
-                        {isAnamnese ? (
+                        {isEntrevista ? (
                           <SidebarMenuSubButton
                             asChild={false}
                             onClick={(e) => {

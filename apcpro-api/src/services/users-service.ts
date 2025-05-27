@@ -242,7 +242,7 @@ export class UsersService {
   async cadastrarAvaliacaoAluno(userPerfilId: string, dados: any) {
     try {
       let objetivoClassificado: string | null = null;
-      if (dados.tipo === "anamnese" && dados.resultado) {
+      if (dados.tipo === "triagem" && dados.resultado) {
         objetivoClassificado = classificarObjetivoAnamnese(dados.resultado);
       }
       return await this.userRepository.cadastrarAvaliacaoAluno(userPerfilId, {
