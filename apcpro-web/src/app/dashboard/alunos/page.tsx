@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import Loading from "@/components/ui/Loading";
 import { useAvaliacaoValida } from "@/hooks/useAvaliacaoValida";
+import { ModalTriagem } from "@/components/ModalTriagem";
 import { ModalAnamnese } from "@/components/ModalAnamnese";
 import {
   CalendarCheck,
@@ -21,12 +22,24 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/MetricCard";
-import { useAnamneseModal } from "@/contexts/AnamneseModalContext";
+import { Avaliacao, ListaAvaliacoes } from "@/components/ListaAvaliacoes";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function AlunosDashboard() {
   const { profile } = useUserProfile();
   const router = useRouter();
-  const { open, openModal, closeModal } = useAnamneseModal();
+  const [showAnamnese, setShowAnamnese] = useState(false);
+  // Estado para guardar o último objetivo da triagem, se necessário futuramente
+  const [, setLastTriagemObj] = useState<string | null>(null);
+  // Estado separado para ModalTriagem
+  const [showTriagem, setShowTriagem] = useState(false);
+  const [avaliacaoSelecionada, setAvaliacaoSelecionada] =
+    useState<Avaliacao | null>(null);
 
   const avaliacaoValida = useAvaliacaoValida(profile?.id ?? "");
 
@@ -38,11 +51,44 @@ export default function AlunosDashboard() {
 
   useEffect(() => {
     // Abre o modal se não houver avaliação válida (inclui 404, vencida ou inválida)
-    if (avaliacaoValida === false) openModal();
-  }, [avaliacaoValida, openModal]);
+    if (avaliacaoValida === false) setShowTriagem(true);
+  }, [avaliacaoValida]);
 
-  function handleSuccess() {
-    window.location.reload();
+  useEffect(() => {
+    function handleOpenTriagemModal() {
+      setShowAnamnese(false);
+      setShowTriagem(true);
+    }
+    window.addEventListener("open-triagem-modal", handleOpenTriagemModal);
+    return () => {
+      window.removeEventListener("open-triagem-modal", handleOpenTriagemModal);
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleOpenAnamneseModal() {
+      setShowAnamnese(false);
+      setTimeout(() => setShowAnamnese(true), 50);
+    }
+    window.addEventListener("open-anamnese-modal", handleOpenAnamneseModal);
+    return () => {
+      window.removeEventListener(
+        "open-anamnese-modal",
+        handleOpenAnamneseModal
+      );
+    };
+  }, []);
+
+  // Função para lidar com o sucesso da triagem
+  // e decidir se deve abrir a anamnese ou recarregar a página
+  function handleTriagemSuccess(objetivo?: string) {
+    setShowTriagem(false);
+    if (objetivo && objetivo !== "Alto rendimento esportivo") {
+      setShowAnamnese(true);
+      setLastTriagemObj(objetivo);
+    } else {
+      window.location.reload();
+    }
   }
 
   if (!profile) return <Loading />;
@@ -61,7 +107,16 @@ export default function AlunosDashboard() {
     {
       icon: <CalendarDays className="w-5 h-5" aria-hidden="true" />,
       title: "Próxima avaliação",
-      value: "12/06/2025",
+      value: (() => {
+        const data = new Date("2025-06-12");
+        return data
+          .toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "short",
+          })
+          .replace(".", "")
+          .replace(" de ", " de ");
+      })(),
       descricao: "Data prevista para reavaliação",
       indicator: <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />,
       indicatorColor: "text-green-600",
@@ -112,7 +167,11 @@ export default function AlunosDashboard() {
     {
       titulo: "Próximo treino",
       descricao: "Treino A - Força",
-      acao: <Button size="sm">Iniciar treino</Button>,
+      acao: (
+        <Button size="sm" onClick={() => alert("Funcionalidade em breve!")}>
+          Iniciar treino
+        </Button>
+      ),
     },
     { titulo: "Reavaliação marcada", descricao: "14/06/2025 às 10h" },
     {
@@ -154,6 +213,7 @@ export default function AlunosDashboard() {
 
       {/* Alertas e próximas atividades */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Card Alertas Inteligentes */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -180,6 +240,7 @@ export default function AlunosDashboard() {
             </ul>
           </CardContent>
         </Card>
+        {/* Card Próximas Atividades */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -201,6 +262,21 @@ export default function AlunosDashboard() {
           </CardContent>
         </Card>
       </div>
+      {/* Card Minhas Avaliações em destaque abaixo (único) */}
+      <div className="mt-4 flex md:justify-start justify-center">
+        <div className="w-full md:w-1/3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 w-full">
+                <ClipboardList className="h-5 w-5" /> Minhas Avaliações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ListaAvaliacoes userPerfilId={profile.id ?? ""} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Acesso rápido */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
@@ -211,7 +287,10 @@ export default function AlunosDashboard() {
             className="flex flex-col items-center gap-1 py-6"
             aria-label={a.label}
             onClick={() => {
-              if (a.label === "Anamnese") openModal();
+              if (a.label === "Anamnese") {
+                setShowAnamnese(false); // Garante reset
+                setTimeout(() => setShowAnamnese(true), 50); // Força abrir
+              }
             }}
           >
             {a.icon}
@@ -219,13 +298,52 @@ export default function AlunosDashboard() {
           </Button>
         ))}
       </div>
-      {/* Modal de anamnese */}
-      <ModalAnamnese
-        open={open}
-        onClose={closeModal}
+      {/* Modal de triagem */}
+      <ModalTriagem
+        open={showTriagem}
+        onClose={() => setShowTriagem(false)}
         userPerfilId={profile.id ?? ""}
-        onSuccess={handleSuccess}
+        onSuccess={(objetivo) => handleTriagemSuccess(objetivo)}
       />
+      <ModalAnamnese
+        open={showAnamnese}
+        onClose={() => setShowAnamnese(false)}
+        userPerfilId={profile.id ?? ""}
+        onSuccess={() => window.location.reload()}
+      />
+      {/* Modal de detalhes */}
+      <Dialog
+        open={!!avaliacaoSelecionada}
+        onOpenChange={() => setAvaliacaoSelecionada(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes da Avaliação</DialogTitle>
+          </DialogHeader>
+          {avaliacaoSelecionada && (
+            <div>
+              <p>
+                <b>Tipo:</b> {avaliacaoSelecionada.tipo}
+              </p>
+              <p>
+                <b>Data:</b>{" "}
+                {new Date(avaliacaoSelecionada.data).toLocaleDateString(
+                  "pt-BR"
+                )}
+              </p>
+              <p>
+                <b>Status:</b> {avaliacaoSelecionada.status}
+              </p>
+              {avaliacaoSelecionada.objetivo && (
+                <p>
+                  <b>Objetivo:</b> {avaliacaoSelecionada.objetivo}
+                </p>
+              )}
+              {/* Adicione outros campos relevantes */}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

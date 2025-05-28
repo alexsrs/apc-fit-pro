@@ -17,7 +17,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { useAnamneseModal } from "@/contexts/AnamneseModalContext";
 
 export function NavMain({
   items,
@@ -33,8 +32,6 @@ export function NavMain({
     }[];
   }[];
 }) {
-  const { openModal } = useAnamneseModal();
-
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Menu</SidebarGroupLabel>
@@ -57,15 +54,40 @@ export function NavMain({
               <CollapsibleContent>
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => {
-                    const isAnamnese = subItem.title === "Anamnese inteligente";
+                    const isEntrevista = subItem.title === "Entrevista inicial";
+                    const isAnamnese = subItem.title === "Anamnese";
                     return (
                       <SidebarMenuSubItem key={subItem.title}>
-                        {isAnamnese ? (
+                        {isEntrevista ? (
                           <SidebarMenuSubButton
                             asChild={false}
                             onClick={(e) => {
                               e.preventDefault();
-                              openModal();
+                              // Abrir ModalTriagem
+                              if (typeof window !== "undefined") {
+                                const event = new CustomEvent(
+                                  "open-triagem-modal"
+                                );
+                                window.dispatchEvent(event);
+                              }
+                            }}
+                          >
+                            <span className="cursor-pointer w-full block px-2 py-1">
+                              {subItem.title}
+                            </span>
+                          </SidebarMenuSubButton>
+                        ) : isAnamnese ? (
+                          <SidebarMenuSubButton
+                            asChild={false}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              // Abrir ModalAnamnese via evento customizado
+                              if (typeof window !== "undefined") {
+                                const event = new CustomEvent(
+                                  "open-anamnese-modal"
+                                );
+                                window.dispatchEvent(event);
+                              }
                             }}
                           >
                             <span className="cursor-pointer w-full block px-2 py-1">

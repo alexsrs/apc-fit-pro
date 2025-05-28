@@ -101,7 +101,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: true,
       items: [
         {
-          title: "Anamnese inteligente",
+          title: "Entrevista inicial",
+          url: "/#",
+        },
+        {
+          title: "Anamnese",
           url: "/avaliacao",
         },
         {
@@ -170,7 +174,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: true,
       items: [
         {
-          title: "Anamnese inteligente",
+          title: "Entrevista inicial",
+          url: "/#",
+        },
+        {
+          title: "Anamnese",
           url: "/avaliacao",
         },
         {
