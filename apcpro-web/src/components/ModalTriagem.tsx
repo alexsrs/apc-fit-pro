@@ -99,7 +99,7 @@ export function ModalTriagem({
   const [loading, setLoading] = useState(false);
   // Adiciona estado para saber se é alto rendimento
   const [isAltoRendimento, setIsAltoRendimento] = useState(false);
-  const [isAnamnese, setIsAnamnese] = useState(false);
+  const [, setIsAnamnese] = useState(false);
 
   const doencaDiagnosticada = watch("bloco2_doencaDiagnosticada");
   const medicacaoContinua = watch("bloco2_medicacaoContinua");
@@ -110,7 +110,7 @@ export function ModalTriagem({
     setLoading(true);
 
     let tipoAvaliacao = "triagem";
-    let resultado: any = {};
+    let resultado: Record<string, unknown> = {};
 
     if (isAltoRendimento) {
       tipoAvaliacao = "alto_rendimento";

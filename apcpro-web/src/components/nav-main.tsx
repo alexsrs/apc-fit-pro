@@ -17,7 +17,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { useAnamneseModal } from "@/contexts/AnamneseModalContext";
 
 export function NavMain({
   items,
@@ -33,8 +32,6 @@ export function NavMain({
     }[];
   }[];
 }) {
-  const { openModal } = useAnamneseModal();
-
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Menu</SidebarGroupLabel>

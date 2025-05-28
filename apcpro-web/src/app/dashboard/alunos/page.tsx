@@ -23,7 +23,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/MetricCard";
 import { Avaliacao, ListaAvaliacoes } from "@/components/ListaAvaliacoes";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +34,8 @@ export default function AlunosDashboard() {
   const { profile } = useUserProfile();
   const router = useRouter();
   const [showAnamnese, setShowAnamnese] = useState(false);
-  const [lastTriagemObj, setLastTriagemObj] = useState<string | null>(null);
+  // Estado para guardar o último objetivo da triagem, se necessário futuramente
+  const [, setLastTriagemObj] = useState<string | null>(null);
   // Estado separado para ModalTriagem
   const [showTriagem, setShowTriagem] = useState(false);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] =
@@ -79,10 +79,8 @@ export default function AlunosDashboard() {
     };
   }, []);
 
-  function handleSuccess() {
-    window.location.reload();
-  }
-
+  // Função para lidar com o sucesso da triagem
+  // e decidir se deve abrir a anamnese ou recarregar a página
   function handleTriagemSuccess(objetivo?: string) {
     setShowTriagem(false);
     if (objetivo && objetivo !== "Alto rendimento esportivo") {

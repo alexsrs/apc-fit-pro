@@ -16,7 +16,7 @@ export type Avaliacao = {
   data: string;
   objetivo?: string;
   objetivoClassificado?: string;
-  resultado?: any;
+  resultado?: Record<string, unknown> | string | number | null;
 };
 
 interface ListaAvaliacoesProps {
@@ -39,7 +39,7 @@ export function ListaAvaliacoes({ userPerfilId }: ListaAvaliacoesProps) {
         );
         const data = await res.json();
         setAvaliacoes(data);
-      } catch (e) {
+      } catch {
         setAvaliacoes([]);
       }
       setLoading(false);
