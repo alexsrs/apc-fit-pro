@@ -254,7 +254,7 @@ export class UserRepositoryClass {
     const avaliacao = await prisma.avaliacao.findFirst({
       where: {
         userPerfilId,
-        status: "valida",
+        status: { in: ["valida", "pendente"] }, // Agora aceita avaliações "valida" OU "pendente"
         OR: [{ validadeAte: null }, { validadeAte: { gte: hoje } }],
       },
     });
