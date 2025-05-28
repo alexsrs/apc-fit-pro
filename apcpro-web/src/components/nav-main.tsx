@@ -58,6 +58,7 @@ export function NavMain({
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => {
                     const isEntrevista = subItem.title === "Entrevista inicial";
+                    const isAnamnese = subItem.title === "Anamnese";
                     return (
                       <SidebarMenuSubItem key={subItem.title}>
                         {isEntrevista ? (
@@ -65,7 +66,31 @@ export function NavMain({
                             asChild={false}
                             onClick={(e) => {
                               e.preventDefault();
-                              openModal();
+                              // Abrir ModalTriagem
+                              if (typeof window !== "undefined") {
+                                const event = new CustomEvent(
+                                  "open-triagem-modal"
+                                );
+                                window.dispatchEvent(event);
+                              }
+                            }}
+                          >
+                            <span className="cursor-pointer w-full block px-2 py-1">
+                              {subItem.title}
+                            </span>
+                          </SidebarMenuSubButton>
+                        ) : isAnamnese ? (
+                          <SidebarMenuSubButton
+                            asChild={false}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              // Abrir ModalAnamnese via evento customizado
+                              if (typeof window !== "undefined") {
+                                const event = new CustomEvent(
+                                  "open-anamnese-modal"
+                                );
+                                window.dispatchEvent(event);
+                              }
                             }}
                           >
                             <span className="cursor-pointer w-full block px-2 py-1">

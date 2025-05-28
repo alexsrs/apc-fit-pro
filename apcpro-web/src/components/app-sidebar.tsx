@@ -105,7 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: "/#",
         },
         {
-          title: "Anamnese inteligente",
+          title: "Anamnese",
           url: "/avaliacao",
         },
         {
@@ -178,7 +178,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: "/#",
         },
         {
-          title: "Anamnese inteligente",
+          title: "Anamnese",
           url: "/avaliacao",
         },
         {
