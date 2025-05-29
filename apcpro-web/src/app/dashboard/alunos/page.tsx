@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import Loading from "@/components/ui/Loading";
 import { useAvaliacaoValida } from "@/hooks/useAvaliacaoValida";
 import { ModalTriagem } from "@/components/ModalTriagem";
 import { ModalAnamnese } from "@/components/ModalAnamnese";
+import { ModalMedidasCorporais } from "@/components/ModalMedidasCorporais";
 import {
   CalendarCheck,
   Dumbbell,
@@ -22,7 +23,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/MetricCard";
-import { Avaliacao, ListaAvaliacoes } from "@/components/ListaAvaliacoes";
+import {
+  Avaliacao,
+  ListaAvaliacoes,
+  ListaAvaliacoesHandle,
+} from "@/components/ListaAvaliacoes";
 import {
   Dialog,
   DialogContent,
@@ -34,12 +39,14 @@ export default function AlunosDashboard() {
   const { profile } = useUserProfile();
   const router = useRouter();
   const [showAnamnese, setShowAnamnese] = useState(false);
+  const [showMedidas, setShowMedidas] = useState(false);
   // Estado para guardar o último objetivo da triagem, se necessário futuramente
   const [, setLastTriagemObj] = useState<string | null>(null);
   // Estado separado para ModalTriagem
   const [showTriagem, setShowTriagem] = useState(false);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] =
     useState<Avaliacao | null>(null);
+  const listaRef = useRef<ListaAvaliacoesHandle>(null);
 
   const avaliacaoValida = useAvaliacaoValida(profile?.id ?? "");
 
@@ -79,6 +86,17 @@ export default function AlunosDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    function handleOpenMedidasModal() {
+      setShowMedidas(false);
+      setTimeout(() => setShowMedidas(true), 50);
+    }
+    window.addEventListener("open-medidas-modal", handleOpenMedidasModal);
+    return () => {
+      window.removeEventListener("open-medidas-modal", handleOpenMedidasModal);
+    };
+  }, []);
+
   // Função para lidar com o sucesso da triagem
   // e decidir se deve abrir a anamnese ou recarregar a página
   function handleTriagemSuccess(objetivo?: string) {
@@ -89,6 +107,11 @@ export default function AlunosDashboard() {
     } else {
       window.location.reload();
     }
+  }
+
+  function handleMedidasSuccess() {
+    listaRef.current?.refetch();
+    setShowMedidas(false);
   }
 
   if (!profile) return <Loading />;
@@ -272,7 +295,7 @@ export default function AlunosDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ListaAvaliacoes userPerfilId={profile.id ?? ""} />
+              <ListaAvaliacoes ref={listaRef} userPerfilId={profile.id ?? ""} />
             </CardContent>
           </Card>
         </div>
@@ -310,6 +333,12 @@ export default function AlunosDashboard() {
         onClose={() => setShowAnamnese(false)}
         userPerfilId={profile.id ?? ""}
         onSuccess={() => window.location.reload()}
+      />
+      <ModalMedidasCorporais
+        open={showMedidas}
+        onClose={() => setShowMedidas(false)}
+        userPerfilId={profile.id ?? ""}
+        onSuccess={handleMedidasSuccess}
       />
       {/* Modal de detalhes */}
       <Dialog

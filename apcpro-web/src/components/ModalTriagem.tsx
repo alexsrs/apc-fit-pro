@@ -82,12 +82,12 @@ type FormData = {
   anamnese_recuperacaoPosTreino?: string;
 };
 
-interface ModalTriagemProps {
+type ModalTriagemProps = {
   open: boolean;
   onClose: () => void;
   userPerfilId: string;
-  onSuccess: (objetivo?: string) => void;
-}
+  onSuccess: (objetivo: string) => void;
+};
 
 export function ModalTriagem({
   open,

@@ -6,6 +6,7 @@ import {
   NotebookPen,
   GalleryVerticalEnd,
   Waypoints,
+  ClipboardList,
 } from "lucide-react";
 
 import { useUserProfile } from "@/contexts/UserProfileContext"; // Importa o hook useUserProfile
@@ -101,7 +102,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: true,
       items: [
         {
-          title: "Entrevista inicial",
+          title: "Triagem inteligente",
           url: "/#",
         },
         {
@@ -174,7 +175,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: true,
       items: [
         {
-          title: "Entrevista inicial",
+          title: "Triagem inteligente",
           url: "/#",
         },
         {
@@ -233,6 +234,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
           title: "Alertas inteligentes",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Avaliações",
+      url: "#",
+      icon: ClipboardList,
+      isActive: false,
+      items: [
+        {
+          title: "Triagem inteligente",
+          url: "/#",
+        },
+        {
+          title: "Anamnese",
+          url: "/avaliacao",
+        },
+        {
+          title: "Medidas corporais",
           url: "#",
         },
       ],
