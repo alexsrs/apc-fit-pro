@@ -35,14 +35,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+// Função utilitária para calcular idade
+function calcularIdade(dataNascimento?: string): number | undefined {
+  if (!dataNascimento) return undefined;
+  const nascimento = new Date(dataNascimento);
+  if (isNaN(nascimento.getTime())) return undefined;
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+  const m = hoje.getMonth() - nascimento.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+    idade--;
+  }
+  return idade >= 0 ? idade : undefined;
+}
+
 export default function AlunosDashboard() {
-  const { profile } = useUserProfile();
+  const { profile } = useUserProfile(); // Só use esse contexto!
   const router = useRouter();
   const [showAnamnese, setShowAnamnese] = useState(false);
   const [showMedidas, setShowMedidas] = useState(false);
-  // Estado para guardar o último objetivo da triagem, se necessário futuramente
   const [, setLastTriagemObj] = useState<string | null>(null);
-  // Estado separado para ModalTriagem
   const [showTriagem, setShowTriagem] = useState(false);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] =
     useState<Avaliacao | null>(null);
@@ -108,6 +120,15 @@ export default function AlunosDashboard() {
       window.location.reload();
     }
   }
+
+  const idade =
+    profile && profile.dataNascimento
+      ? calcularIdade(
+          typeof profile.dataNascimento === "string"
+            ? profile.dataNascimento
+            : profile.dataNascimento.toISOString()
+        )
+      : undefined;
 
   function handleMedidasSuccess() {
     listaRef.current?.refetch();
@@ -339,6 +360,10 @@ export default function AlunosDashboard() {
         onClose={() => setShowMedidas(false)}
         userPerfilId={profile.id ?? ""}
         onSuccess={handleMedidasSuccess}
+        dataNascimento={
+          profile.dataNascimento ? String(profile.dataNascimento) : ""
+        }
+        idade={idade ?? 0} // Passe a idade calculada aqui!
       />
       {/* Modal de detalhes */}
       <Dialog

@@ -7,6 +7,7 @@ import { Grupo, User, UserPerfil } from "../models/user-model";
 import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 import { classificarObjetivoAnamnese } from "../utils/avaliacaoProcessor";
+import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
 
 function handleServiceError(error: unknown, message: string): never {
   console.error(message, error);
@@ -242,17 +243,65 @@ export class UsersService {
   async cadastrarAvaliacaoAluno(userPerfilId: string, dados: any) {
     try {
       let objetivoClassificado: string | null = null;
+      let resultado = dados.resultado;
+
+      if (dados.tipo === "medidas" && dados.resultado) {
+        let {
+          membrosSuperiores = {},
+          tronco = {},
+          membrosInferiores = {},
+          pescoco,
+          ...principais
+        } = dados.resultado;
+
+        const medidasCompletas = {
+          ...principais,
+          ...membrosSuperiores,
+          ...tronco,
+          ...membrosInferiores,
+        };
+
+        const indicesCalculados = calcularIndicesMedidas(medidasCompletas);
+
+        // Filtra apenas índices e classificações
+        const indices = Object.fromEntries(
+          Object.entries(indicesCalculados).filter(
+            ([key]) =>
+              key.startsWith("classificacao") ||
+              key.includes("percentual") ||
+              key.includes("massaMuscular") ||
+              key === "imc" ||
+              key === "rcq" ||
+              key === "ca"
+          )
+        );
+
+        resultado = {
+          ...principais,
+          tronco,
+          membrosSuperiores,
+          membrosInferiores,
+          indices,
+        };
+      }
+
       if (dados.tipo === "triagem" && dados.resultado) {
         objetivoClassificado = classificarObjetivoAnamnese(dados.resultado);
       }
-      // Se for alto rendimento, define objetivoClassificado como 'alto_rendimento'
       if (dados.tipo === "alto_rendimento") {
         objetivoClassificado = "alto_rendimento";
       }
-      return await this.userRepository.cadastrarAvaliacaoAluno(userPerfilId, {
+
+      const avaliacaoParaSalvar = {
         ...dados,
+        resultado,
         objetivoClassificado,
-      });
+      };
+
+      return await this.userRepository.cadastrarAvaliacaoAluno(
+        userPerfilId,
+        avaliacaoParaSalvar
+      );
     } catch (error) {
       handleServiceError(error, "Erro ao cadastrar avaliação do aluno.");
     }
