@@ -1,12 +1,19 @@
-import { useEffect, useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 
 // Tipagem básica para avaliação
 export type Avaliacao = {
@@ -23,29 +30,41 @@ interface ListaAvaliacoesProps {
   userPerfilId: string;
 }
 
-export function ListaAvaliacoes({ userPerfilId }: ListaAvaliacoesProps) {
+export interface ListaAvaliacoesHandle {
+  refetch: () => void;
+}
+
+export const ListaAvaliacoes = forwardRef<
+  ListaAvaliacoesHandle,
+  ListaAvaliacoesProps
+>(function ListaAvaliacoes({ userPerfilId }, ref) {
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandir, setExpandir] = useState(false);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] =
     useState<Avaliacao | null>(null);
 
-  useEffect(() => {
-    async function fetchAvaliacoes() {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/alunos/${userPerfilId}/avaliacoes`
-        );
-        const data = await res.json();
-        setAvaliacoes(data);
-      } catch {
-        setAvaliacoes([]);
-      }
-      setLoading(false);
+  const fetchAvaliacoes = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/alunos/${userPerfilId}/avaliacoes`
+      );
+      const data = await res.json();
+      setAvaliacoes(data);
+    } catch {
+      setAvaliacoes([]);
     }
-    if (userPerfilId) fetchAvaliacoes();
+    setLoading(false);
   }, [userPerfilId]);
+
+  useImperativeHandle(ref, () => ({
+    refetch: fetchAvaliacoes,
+  }));
+
+  useEffect(() => {
+    if (userPerfilId) fetchAvaliacoes();
+  }, [userPerfilId, fetchAvaliacoes]);
 
   // Agrupa por tipo e pega a mais recente de cada tipo
   const avaliacoesAgrupadas = useMemo(() => {
@@ -185,4 +204,4 @@ export function ListaAvaliacoes({ userPerfilId }: ListaAvaliacoesProps) {
       </Dialog>
     </>
   );
-}
+});

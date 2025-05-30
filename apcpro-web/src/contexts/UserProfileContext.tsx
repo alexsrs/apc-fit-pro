@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 type Profile = {
-  [x: string]: ReactNode;
   id?: string;
   userId?: string;
   role?: string;
+  dataNascimento?: Date | null;
   // ...outros campos do perfil
 } | null;
 
@@ -15,7 +15,7 @@ type UserProfileContextType = {
   setError: (err: string | null) => void;
 };
 
-const UserProfileContext = createContext<UserProfileContextType>({
+export const UserProfileContext = createContext<UserProfileContextType>({
   profile: null,
   setProfile: () => {},
   error: null,

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { UsersService } from "../services/users-service";
 import { ok } from "../utils/http-helper";
+import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
 
 const usersService = new UsersService();
 // Usuários
@@ -148,6 +149,7 @@ export async function listarAvaliacoesAluno(req: Request, res: Response) {
 export async function cadastrarAvaliacaoAluno(req: Request, res: Response) {
   const userPerfilId = req.params.userPerfilId;
   const dados = req.body;
+
   try {
     const avaliacao = await usersService.cadastrarAvaliacaoAluno(userPerfilId, dados);
     res.status(201).json(avaliacao);

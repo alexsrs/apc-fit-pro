@@ -1,0 +1,478 @@
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSession } from "next-auth/react";
+
+// Lista de partes do corpo com laterais
+const bodyParts = [
+  {
+    id: "pescoco",
+    label: "Pescoço",
+    region: "upper",
+    side: "center",
+    tooltip: "Meça logo abaixo da laringe (pomo de Adão).",
+  },
+  { id: "biceps_d", label: "Bíceps Direito", region: "upper", side: "right" },
+  { id: "biceps_e", label: "Bíceps Esquerdo", region: "upper", side: "left" },
+  {
+    id: "antebraco_d",
+    label: "Antebraço Direito",
+    region: "upper",
+    side: "right",
+    tooltip: "Meça na parte mais grossa do antebraço.",
+  },
+  {
+    id: "antebraco_e",
+    label: "Antebraço Esquerdo",
+    region: "upper",
+    side: "left",
+    tooltip: "Meça na parte mais grossa do antebraço.",
+  },
+  { id: "torax", label: "Tórax", region: "torso", side: "center" },
+  {
+    id: "cintura",
+    label: "Cintura",
+    region: "torso",
+    side: "center",
+    tooltip:
+      "Homens: ao nível do umbigo. Mulheres: parte mais estreita do abdômen.",
+  },
+  { id: "abdomen", label: "Abdômen", region: "torso", side: "center" },
+  {
+    id: "quadril",
+    label: "Quadril",
+    region: "torso",
+    side: "center",
+    tooltip: "Meça na parte mais larga dos glúteos.",
+  },
+  { id: "coxa_d", label: "Coxa Direita", region: "lower", side: "right" },
+  { id: "coxa_e", label: "Coxa Esquerda", region: "lower", side: "left" },
+  {
+    id: "panturrilha_d",
+    label: "Panturrilha Direita",
+    region: "lower",
+    side: "right",
+    tooltip: "Meça na parte mais grossa da panturrilha.",
+  },
+  {
+    id: "panturrilha_e",
+    label: "Panturrilha Esquerda",
+    region: "lower",
+    side: "left",
+    tooltip: "Meça na parte mais grossa da panturrilha.",
+  },
+];
+
+// Tipagem das props
+type ModalMedidasCorporaisProps = {
+  open: boolean;
+  onClose: () => void;
+  userPerfilId: string;
+  onSuccess: () => void;
+  idade: number;
+  dataNascimento: string;
+};
+
+type MedidasForm = Record<string, string>;
+
+export function ModalMedidasCorporais({
+  open,
+  onClose,
+  userPerfilId,
+  onSuccess,
+  idade,
+  dataNascimento,
+}: ModalMedidasCorporaisProps) {
+  const [form, setForm] = useState<MedidasForm>({});
+  const [loading, setLoading] = useState(false);
+  // const { profile } = useContext(UserProfileContext);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm({ ...form, [e.target.id]: e.target.value });
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+
+    if (!idade || isNaN(idade)) {
+      alert("Idade não encontrada ou inválida!");
+      setLoading(false);
+      return;
+    }
+
+    const resultado = {
+      peso: form.peso ? Number(form.peso) : undefined,
+      altura: form.altura ? Number(form.altura) : undefined,
+      idade: typeof idade === "number" && !isNaN(idade) ? idade : undefined,
+      dataNascimento,
+      membrosSuperiores: {
+        biceps_d: form.biceps_d ? Number(form.biceps_d) : undefined,
+        biceps_e: form.biceps_e ? Number(form.biceps_e) : undefined,
+        antebraco_d: form.antebraco_d ? Number(form.antebraco_d) : undefined,
+        antebraco_e: form.antebraco_e ? Number(form.antebraco_e) : undefined,
+      },
+      tronco: {
+        pescoco: form.pescoco ? Number(form.pescoco) : undefined,
+        torax: form.torax ? Number(form.torax) : undefined,
+        cintura: form.cintura ? Number(form.cintura) : undefined,
+        abdomen: form.abdomen ? Number(form.abdomen) : undefined,
+        quadril: form.quadril ? Number(form.quadril) : undefined,
+      },
+      membrosInferiores: {
+        coxa_d: form.coxa_d ? Number(form.coxa_d) : undefined,
+        coxa_e: form.coxa_e ? Number(form.coxa_e) : undefined,
+        panturrilha_d: form.panturrilha_d
+          ? Number(form.panturrilha_d)
+          : undefined,
+        panturrilha_e: form.panturrilha_e
+          ? Number(form.panturrilha_e)
+          : undefined,
+      },
+    };
+
+    await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/alunos/${userPerfilId}/avaliacoes`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tipo: "medidas",
+          status: "pendente",
+          resultado,
+          validadeAte: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+        }),
+      }
+    );
+
+    setLoading(false);
+    onSuccess();
+    onClose();
+  }
+
+  // Separando os campos por lado
+  const leftParts = bodyParts.filter((part) => part.side === "left");
+  const rightParts = bodyParts.filter((part) => part.side === "right");
+
+  // Função utilitária para renderizar label com tooltip
+  function LabelWithTooltip({
+    htmlFor,
+    label,
+    tooltip,
+  }: {
+    htmlFor: string;
+    label: string;
+    tooltip?: string;
+  }) {
+    return (
+      <label className="block text-sm font-medium mb-0.5" htmlFor={htmlFor}>
+        {label}
+        {tooltip && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="ml-1 text-xs text-muted-foreground cursor-help">
+                  ⓘ
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{tooltip}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </label>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent
+        className="max-w-[600px] w-full p-0"
+        style={{ width: "100%", maxWidth: "600px" }}
+      >
+        <div className="relative flex flex-col">
+          <ScrollArea className="px-8 pb-2" style={{ maxHeight: "80vh" }}>
+            <DialogHeader className="pt-4 mb-1">
+              <DialogTitle>Medidas Corporais</DialogTitle>
+              <DialogDescription className="mt-2 mb-6">
+                Preencha as medidas corporais do aluno. Utilize fita métrica e
+                siga as orientações de cada campo para garantir precisão.
+              </DialogDescription>
+            </DialogHeader>
+            <form className="flex flex-col gap-1" onSubmit={handleSubmit}>
+              {/* PESO E ALTURA CENTRALIZADOS EM 2 COLUNAS */}
+              <div className="grid grid-cols-2 gap-x-8 mb-4">
+                <div className="flex flex-col items-center">
+                  <LabelWithTooltip
+                    htmlFor="peso"
+                    label="Peso (kg)"
+                    tooltip="Informe o peso corporal atual em quilogramas."
+                  />
+                  <Input
+                    id="peso"
+                    className="w-28"
+                    placeholder="Ex: 70"
+                    type="number"
+                    step="0.01"
+                    value={form.peso || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="flex flex-col items-center">
+                  <LabelWithTooltip
+                    htmlFor="altura"
+                    label="Altura (cm)"
+                    tooltip="Informe a altura em centímetros, sem sapatos."
+                  />
+                  <Input
+                    id="altura"
+                    className="w-28"
+                    placeholder="Ex: 175"
+                    type="number"
+                    step="0.1"
+                    value={form.altura || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              {/* Inputs centrais acima da imagem, divididos em 3 colunas */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2 mb-2">
+                <div className="flex flex-col items-center gap-2">
+                  <div>
+                    <LabelWithTooltip
+                      htmlFor="pescoco"
+                      label="Pescoço"
+                      tooltip="Meça logo abaixo da laringe (pomo de Adão)."
+                    />
+                    <Input
+                      id="pescoco"
+                      className="w-28"
+                      placeholder="cm"
+                      type="number"
+                      value={form.pescoco || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <LabelWithTooltip
+                      htmlFor="torax"
+                      label="Tórax"
+                      tooltip="Meça a circunferência do tórax na linha dos mamilos, com os braços relaxados."
+                    />
+                    <Input
+                      id="torax"
+                      className="w-28"
+                      placeholder="cm"
+                      type="number"
+                      value={form.torax || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div>
+                    <LabelWithTooltip
+                      htmlFor="cintura"
+                      label="Cintura"
+                      tooltip="Homens: ao nível do umbigo. Mulheres: parte mais estreita do abdômen."
+                    />
+                    <Input
+                      id="cintura"
+                      className="w-28"
+                      placeholder="cm"
+                      type="number"
+                      value={form.cintura || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div>
+                    <LabelWithTooltip
+                      htmlFor="quadril"
+                      label="Quadril"
+                      tooltip="Meça na parte mais larga dos glúteos."
+                    />
+                    <Input
+                      id="quadril"
+                      className="w-28"
+                      placeholder="cm"
+                      type="number"
+                      value={form.quadril || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <LabelWithTooltip
+                      htmlFor="abdomen"
+                      label="Abdômen"
+                      tooltip="Meça a circunferência abdominal na altura do umbigo."
+                    />
+                    <Input
+                      id="abdomen"
+                      className="w-28"
+                      placeholder="cm"
+                      type="number"
+                      value={form.abdomen || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Inputs laterais e imagem central */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2 items-start">
+                {/* Coluna esquerda */}
+                <div className="flex flex-col items-center gap-2">
+                  {leftParts.map((part) => (
+                    <div key={part.id}>
+                      <LabelWithTooltip
+                        htmlFor={part.id}
+                        label={part.label}
+                        tooltip={
+                          part.tooltip ||
+                          "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
+                        }
+                      />
+                      <Input
+                        id={part.id}
+                        className="w-28"
+                        placeholder="cm"
+                        type="number"
+                        value={form[part.id] || ""}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  ))}
+                </div>
+                {/* Imagem central */}
+                <div className="flex flex-col items-center gap-2">
+                  <Image
+                    src="/images/human-silhouette.png"
+                    alt="Figura medidas corporais"
+                    width={220}
+                    height={370}
+                    style={{ maxWidth: "100%", height: "auto" }}
+                  />
+                </div>
+                {/* Coluna direita */}
+                <div className="flex flex-col items-center gap-2">
+                  {rightParts.map((part) => (
+                    <div key={part.id}>
+                      <LabelWithTooltip
+                        htmlFor={part.id}
+                        label={part.label}
+                        tooltip={
+                          part.tooltip ||
+                          "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
+                        }
+                      />
+                      <Input
+                        id={part.id}
+                        className="w-28"
+                        placeholder="cm"
+                        type="number"
+                        value={form[part.id] || ""}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Botão de envio */}
+              <div className="flex justify-end mt-6 p-4">
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Salvando..." : "Salvar Medidas"}
+                </Button>
+              </div>
+            </form>
+          </ScrollArea>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Função utilitária para calcular idade
+function calcularIdade(dataNascimento?: string): number | undefined {
+  if (!dataNascimento) return undefined;
+  const nascimento = new Date(dataNascimento);
+  if (isNaN(nascimento.getTime())) return undefined; // Data inválida
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+  const m = hoje.getMonth() - nascimento.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+    idade--;
+  }
+  return idade >= 0 ? idade : undefined;
+}
+
+export default function PaginaAluno() {
+  const { data: session } = useSession();
+  const [modalAberto, setModalAberto] = useState(false);
+
+  // Defina um tipo que inclua dataNascimento
+  type UsuarioComDataNascimento = {
+    id: string;
+    email: string;
+    role?: string;
+    dataNascimento: string;
+  };
+
+  // Faça o cast do usuário para o novo tipo
+  const profile = session?.user as UsuarioComDataNascimento | undefined;
+  const dataNascimento = profile?.dataNascimento;
+  const idade = dataNascimento ? calcularIdade(dataNascimento) : undefined;
+
+  function handleAbrirModal() {
+    if (
+      !dataNascimento ||
+      typeof idade !== "number" ||
+      isNaN(idade) ||
+      idade <= 0
+    ) {
+      alert(
+        "Data de nascimento não encontrada ou inválida no seu perfil. Atualize seu cadastro para registrar medidas."
+      );
+      return;
+    }
+    setModalAberto(true);
+  }
+
+  return (
+    <>
+      <button onClick={handleAbrirModal}>Registrar minhas medidas</button>
+      {modalAberto &&
+        dataNascimento &&
+        typeof idade === "number" &&
+        idade > 0 && (
+          <ModalMedidasCorporais
+            open={modalAberto}
+            onClose={() => setModalAberto(false)}
+            userPerfilId={profile.id}
+            onSuccess={() => setModalAberto(false)}
+            idade={idade}
+            dataNascimento={dataNascimento}
+          />
+        )}
+    </>
+  );
+}

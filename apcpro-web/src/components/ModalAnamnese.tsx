@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,11 @@ export function ModalAnamnese({
         <ScrollArea className="max-h-[80vh] rounded-lg px-6 py-6">
           <DialogHeader>
             <DialogTitle>Anamnese</DialogTitle>
+            <DialogDescription>
+              Responda as perguntas para entendermos melhor seu histórico,
+              preferências e limitações. Isso nos ajuda a personalizar seu
+              acompanhamento.
+            </DialogDescription>
           </DialogHeader>
           <form
             onSubmit={handleSubmit(onSubmit)}
