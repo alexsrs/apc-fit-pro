@@ -215,6 +215,29 @@ npm run test
 
 ---
 
+# Avaliação Física Avançada (AFA)
+
+O APC FIT PRO implementa a Avaliação Física Avançada em três etapas integradas, garantindo individualização, precisão e segurança na prescrição de treinos:
+
+## 1. Entrevista Inteligente APC (Anamnese Estratégica)
+
+- **Triagem Inicial:** Questionário automatizado para identificar o objetivo principal do usuário (Controle de Doença, Saúde e Bem-estar, Estética/Hipertrofia ou Alta Performance Esportiva).
+- **Entrevista Aprofundada:** Perguntas segmentadas conforme o objetivo, abordando histórico de treino, preferências, lesões, limitações, estilo de vida, logística e comprometimento.
+
+## 2. Perfil Composicional Samurai (Avaliação Antropométrica e Composição Corporal)
+
+- **Coleta de Medidas:** Peso, altura, circunferências (pescoço, cintura, quadril, abdominal) e dobras cutâneas (tríceps, subescapular, supra-ilíaca, abdominal, coxa).
+- **Cálculos Automáticos:** IMC, percentual de gordura corporal (Deurenberg, Marinha Americana, Gómez-Ambrosi), RCQ, CA, MME (Lee).
+- **Classificação:** Resultados classificados por sexo, idade e objetivo, com referências clínicas (OMS, ACSM).
+
+## 3. Testes de Capacidades Físicas e Funcionais
+
+- **Registro e acompanhamento** de testes físicos e funcionais para prescrição personalizada (em desenvolvimento).
+
+> Todo o fluxo é automatizado, seguro e baseado em evidências, promovendo avaliações detalhadas e prescrições individualizadas.
+
+---
+
 # Contribuindo
 
 Contribuições são bem-vindas! Siga as etapas abaixo para contribuir com o projeto:

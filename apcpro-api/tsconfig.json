@@ -5,6 +5,6 @@
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
-    "types": ["node", "express"]
+    "types": ["node"]
   }
 }

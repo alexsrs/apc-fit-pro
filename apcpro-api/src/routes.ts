@@ -18,6 +18,7 @@ import {
   getAlunoAvaliacaoValida,
   listarAvaliacoesAluno,
   cadastrarAvaliacaoAluno,
+  getProfessorById,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 
@@ -29,6 +30,7 @@ router.get("/users/:id", getUserById);
 router.post("/:userId/profile", postUserProfileByUserId);
 router.get("/:userId/profile", getUserProfileByUserId);
 router.get("/professores", getProfessores);
+router.get("/professores/:id", getProfessorById); // Certifique-se que getProfessorById é uma função (req, res)
 
 // Rotas de grupos
 router.get("/users/:id/grupos", getUserGroups);

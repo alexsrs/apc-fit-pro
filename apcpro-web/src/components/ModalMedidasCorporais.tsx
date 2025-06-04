@@ -26,15 +26,29 @@ const bodyParts = [
     region: "upper",
     side: "center",
     tooltip: "Meça logo abaixo da laringe (pomo de Adão).",
+    required: true,
   },
-  { id: "biceps_d", label: "Bíceps Direito", region: "upper", side: "right" },
-  { id: "biceps_e", label: "Bíceps Esquerdo", region: "upper", side: "left" },
+  {
+    id: "biceps_d",
+    label: "Bíceps Direito",
+    region: "upper",
+    side: "right",
+    required: true,
+  },
+  {
+    id: "biceps_e",
+    label: "Bíceps Esquerdo",
+    region: "upper",
+    side: "left",
+    required: true,
+  },
   {
     id: "antebraco_d",
     label: "Antebraço Direito",
     region: "upper",
     side: "right",
     tooltip: "Meça na parte mais grossa do antebraço.",
+    required: true,
   },
   {
     id: "antebraco_e",
@@ -42,8 +56,15 @@ const bodyParts = [
     region: "upper",
     side: "left",
     tooltip: "Meça na parte mais grossa do antebraço.",
+    required: true,
   },
-  { id: "torax", label: "Tórax", region: "torso", side: "center" },
+  {
+    id: "torax",
+    label: "Tórax",
+    region: "torso",
+    side: "center",
+    required: true,
+  },
   {
     id: "cintura",
     label: "Cintura",
@@ -51,23 +72,44 @@ const bodyParts = [
     side: "center",
     tooltip:
       "Homens: ao nível do umbigo. Mulheres: parte mais estreita do abdômen.",
+    required: true,
   },
-  { id: "abdomen", label: "Abdômen", region: "torso", side: "center" },
+  {
+    id: "abdomen",
+    label: "Abdômen",
+    region: "torso",
+    side: "center",
+    required: true,
+  },
   {
     id: "quadril",
     label: "Quadril",
     region: "torso",
     side: "center",
     tooltip: "Meça na parte mais larga dos glúteos.",
+    required: true,
   },
-  { id: "coxa_d", label: "Coxa Direita", region: "lower", side: "right" },
-  { id: "coxa_e", label: "Coxa Esquerda", region: "lower", side: "left" },
+  {
+    id: "coxa_d",
+    label: "Coxa Direita",
+    region: "lower",
+    side: "right",
+    required: true,
+  },
+  {
+    id: "coxa_e",
+    label: "Coxa Esquerda",
+    region: "lower",
+    side: "left",
+    required: true,
+  },
   {
     id: "panturrilha_d",
     label: "Panturrilha Direita",
     region: "lower",
     side: "right",
     tooltip: "Meça na parte mais grossa da panturrilha.",
+    required: true,
   },
   {
     id: "panturrilha_e",
@@ -75,6 +117,7 @@ const bodyParts = [
     region: "lower",
     side: "left",
     tooltip: "Meça na parte mais grossa da panturrilha.",
+    required: true,
   },
 ];
 
@@ -112,6 +155,19 @@ export function ModalMedidasCorporais({
 
     if (!idade || isNaN(idade)) {
       alert("Idade não encontrada ou inválida!");
+      setLoading(false);
+      return;
+    }
+
+    // Lista de campos obrigatórios
+    const requiredFields = [
+      "peso",
+      "altura",
+      ...bodyParts.map((part) => part.id),
+    ];
+    const missingFields = requiredFields.filter((field) => !form[field]);
+    if (missingFields.length > 0) {
+      alert("Preencha todos os campos obrigatórios de medidas corporais.");
       setLoading(false);
       return;
     }
@@ -232,6 +288,7 @@ export function ModalMedidasCorporais({
                     step="0.01"
                     value={form.peso || ""}
                     onChange={handleChange}
+                    required
                   />
                 </div>
                 <div className="flex flex-col items-center">
@@ -248,6 +305,7 @@ export function ModalMedidasCorporais({
                     step="0.1"
                     value={form.altura || ""}
                     onChange={handleChange}
+                    required
                   />
                 </div>
               </div>
@@ -268,6 +326,7 @@ export function ModalMedidasCorporais({
                       type="number"
                       value={form.pescoco || ""}
                       onChange={handleChange}
+                      required
                     />
                   </div>
                   <div>
@@ -283,6 +342,7 @@ export function ModalMedidasCorporais({
                       type="number"
                       value={form.torax || ""}
                       onChange={handleChange}
+                      required
                     />
                   </div>
                 </div>
@@ -300,6 +360,7 @@ export function ModalMedidasCorporais({
                       type="number"
                       value={form.cintura || ""}
                       onChange={handleChange}
+                      required
                     />
                   </div>
                 </div>
@@ -317,6 +378,7 @@ export function ModalMedidasCorporais({
                       type="number"
                       value={form.quadril || ""}
                       onChange={handleChange}
+                      required
                     />
                   </div>
                   <div>
@@ -332,6 +394,7 @@ export function ModalMedidasCorporais({
                       type="number"
                       value={form.abdomen || ""}
                       onChange={handleChange}
+                      required
                     />
                   </div>
                 </div>
@@ -358,6 +421,7 @@ export function ModalMedidasCorporais({
                         type="number"
                         value={form[part.id] || ""}
                         onChange={handleChange}
+                        required
                       />
                     </div>
                   ))}
@@ -391,6 +455,7 @@ export function ModalMedidasCorporais({
                         type="number"
                         value={form[part.id] || ""}
                         onChange={handleChange}
+                        required
                       />
                     </div>
                   ))}
