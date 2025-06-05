@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import FormularioCadastroAluno from "@/components/FormularioCadastroAluno";
 
-export default function ConviteAlunoPage() {
+function ConviteAlunoPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const professorId = searchParams.get("professorId");
@@ -39,5 +39,13 @@ export default function ConviteAlunoPage() {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Carregando convite...</div>}>
+      <ConviteAlunoPage />
+    </Suspense>
   );
 }
