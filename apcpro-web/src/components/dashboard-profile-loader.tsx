@@ -2,7 +2,7 @@
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 export function DashboardProfileLoader() {
   const { data: session, status } = useSession();
@@ -45,7 +45,15 @@ export function DashboardProfileLoader() {
               "https://github.com/shadcn.png",
           });
         } else if (response.status === 404) {
-          router.replace("/dashboard/setup-profile");
+          // Permite fluxo de convite sem redirecionar para setup-profile
+          const isConviteComProfessor =
+            pathname === "/convite" &&
+            typeof window !== "undefined" &&
+            new URLSearchParams(window.location.search).has("professorId");
+
+          if (!isConviteComProfessor) {
+            router.replace("/dashboard/setup-profile");
+          }
         }
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -61,4 +69,26 @@ export function DashboardProfileLoader() {
   }, [session, status, router, pathname]);
 
   return null;
+}
+
+// Exemplo de verificação em um layout global
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { profile } = useUserProfile();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : null;
+  const isConviteComProfessor =
+    pathname === "/convite" && searchParams?.has("professorId");
+
+  useEffect(() => {
+    // Só redireciona se NÃO estiver na rota de convite com professorId
+    if (!profile && !isConviteComProfessor) {
+      router.replace("/setup-profile");
+    }
+  }, [profile, pathname, router, isConviteComProfessor]);
+
+  return <>{children}</>;
 }

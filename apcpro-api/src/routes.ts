@@ -30,7 +30,7 @@ router.get("/users/:id", getUserById);
 router.post("/:userId/profile", postUserProfileByUserId);
 router.get("/:userId/profile", getUserProfileByUserId);
 router.get("/professores", getProfessores);
-router.get("/professores/:id", getProfessorById); // Certifique-se que getProfessorById é uma função (req, res)
+router.get("/professor/:id", getProfessorById);
 
 // Rotas de grupos
 router.get("/users/:id/grupos", getUserGroups);

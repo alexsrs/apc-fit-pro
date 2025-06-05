@@ -22,6 +22,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/MetricCard";
+import { TeamSwitcher } from "@/components/team-switcher";
+import { ConviteAlunoModal } from "@/components/ConviteAlunoModal";
 
 type Aluno = {
   id: string;
@@ -40,6 +42,7 @@ export default function ProfessoresDashboard() {
   const [loadingAlunos, setLoadingAlunos] = useState(true);
   const [tab, setTab] = useState<string>("ativos");
   const [busca, setBusca] = useState("");
+  const [modalConviteOpen, setModalConviteOpen] = useState(false);
 
   useEffect(() => {
     if (
@@ -79,6 +82,8 @@ export default function ProfessoresDashboard() {
 
   return (
     <div className="p-4 space-y-6">
+      {/* Adicione aqui, logo após o carregamento do perfil */}
+
       {/* Cards de métricas originais */}
       <div className="grid gap-4 md:grid-cols-4 mt-2">
         <MetricCard
@@ -161,32 +166,37 @@ export default function ProfessoresDashboard() {
       </div>
       {/* Header com busca e notificações */}
       {/* Filtros e lista de alunos */}
-      <div className="flex justify-end mt-8">
-        <div className="flex flex-wrap gap-3 mt-2 md:mt-0">
-          <Input
-            placeholder="Buscar aluno..."
-            className="w-64"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            aria-label="Buscar aluno"
-          />
-          <Button variant="outline" size="icon" aria-label="Buscar">
-            <Search className="h-5 w-5" />
-          </Button>
-          <Button variant="outline" size="icon" aria-label="Notificações">
-            <Bell className="h-5 w-5" />
-          </Button>
-
-          <Button
-            variant="default"
-            className="w-full md:w-auto"
-            onClick={() => alert("Funcionalidade de adicionar aluno em breve!")}
-            aria-label="Adicionar novo aluno"
-          >
-            + Novo aluno
-          </Button>
+      <div className="flex flex-row items-center gap-3 justify-end mt-8 w-full">
+        <div className="max-w-xs w-full">
+          <TeamSwitcher teams={[]} />
         </div>
+        <Input
+          placeholder="Buscar aluno..."
+          className="w-64"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          aria-label="Buscar aluno"
+        />
+        <Button variant="outline" size="icon" aria-label="Buscar">
+          <Search className="h-5 w-5" />
+        </Button>
+        <Button variant="outline" size="icon" aria-label="Notificações">
+          <Bell className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="default"
+          className="md:w-auto"
+          onClick={() => setModalConviteOpen(true)}
+          aria-label="Adicionar novo aluno"
+        >
+          + Novo aluno
+        </Button>
       </div>
+      <ConviteAlunoModal
+        open={modalConviteOpen}
+        onClose={() => setModalConviteOpen(false)}
+        professorId={profile?.userId ?? ""}
+      />
       <Tabs value={tab} onValueChange={setTab} defaultValue="ativos">
         <TabsList>
           <TabsTrigger value="ativos">Alunos Ativos</TabsTrigger>

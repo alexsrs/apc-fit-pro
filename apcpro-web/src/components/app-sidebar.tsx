@@ -8,6 +8,7 @@ import {
   Waypoints,
   ClipboardList,
 } from "lucide-react";
+import Image from "next/image";
 
 import { useUserProfile } from "@/contexts/UserProfileContext"; // Importa o hook useUserProfile
 import { NavMain } from "@/components/nav-main";
@@ -238,26 +239,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     },
-    {
-      title: "Avaliações",
-      url: "#",
-      icon: ClipboardList,
-      isActive: false,
-      items: [
-        {
-          title: "Triagem inteligente",
-          url: "/#",
-        },
-        {
-          title: "Anamnese",
-          url: "/avaliacao",
-        },
-        {
-          title: "Medidas corporais",
-          url: "#",
-        },
-      ],
-    },
   ];
 
   const navMain =
@@ -285,8 +266,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+      <SidebarHeader className="flex items-center justify-center py-4">
+        {/* Logo completa (visível quando sidebar está aberto) */}
+        <div className="transition-all duration-200 ease-linear group-[sidebar-wrapper-data-collapsible=icon]:hidden">
+          <Image
+            src="/images/logo-apc-fit-pro.png" // Caminho correto na pasta public/
+            alt="APC Fit Pro"
+            width={120}
+            height={120}
+            priority
+          />
+        </div>
+        {/* Ícone (visível quando sidebar está minimizado) */}
+        <div className="transition-all duration-200 ease-linear hidden group-[sidebar-wrapper-data-collapsible=icon]:block">
+          <Image
+            src="/images/logo-apc-fit-pro.png" // Mesmo arquivo, tamanho menor
+            alt="APC Fit Pro"
+            width={60}
+            height={60}
+            priority
+          />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

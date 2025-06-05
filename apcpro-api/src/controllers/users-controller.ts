@@ -125,15 +125,11 @@ export async function getProfessores(req: Request, res: Response) {
   res.json(professores);
 }
 
-// Tipagem explícita para garantir compatibilidade com Express
-export const getProfessorById = async (req: Request, res: Response) => {
+export async function getProfessorById(req: Request, res: Response) {
   const { id } = req.params;
   const professor = await usersService.getProfessorById(id);
-  if (!professor) {
-    return res.status(404).json({ message: "Professor não encontrado" });
-  }
   res.json(professor);
-};
+}
 
 export async function getAlunoAvaliacaoValida(req: Request, res: Response) {
   const userPerfilId = req.params.userPerfilId;

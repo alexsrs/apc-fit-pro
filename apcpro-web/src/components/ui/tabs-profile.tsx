@@ -146,7 +146,7 @@ export default function TabsProfile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone</Label>
+              <Label htmlFor="telefone">Telefone celular</Label>
               <Input
                 id="telefone"
                 value={formData.telefone}
