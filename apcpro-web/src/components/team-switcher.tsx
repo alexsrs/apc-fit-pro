@@ -95,14 +95,14 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                 <activeTeam.logo className="size-4" />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              {/* AQUI: Adiciona a classe condicional para esconder texto quando recolhido */}
+              <div className="grid flex-1 text-left text-sm leading-tight group-[sidebar-wrapper-data-collapsible=icon]:sr-only">
                 <span className="truncate font-medium">
                   {profile?.role
                     ? profile.role.charAt(0).toUpperCase() +
                       profile.role.slice(1)
                     : ""}
                 </span>
-
                 <span className="truncate text-xs">{activeTeam.plan}</span>
               </div>
               <ChevronsUpDown className="ml-auto" />

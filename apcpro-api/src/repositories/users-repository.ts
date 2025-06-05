@@ -280,6 +280,25 @@ export class UserRepositoryClass {
       },
     });
   }
+
+  // Busca professor por ID
+  async getProfessorById(id: string) {
+    // Busca apenas se for professor
+    return prisma.user.findFirst({
+      where: {
+        id,
+        userPerfil: {
+          some: { role: "professor" },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+      },
+    });
+  }
 }
 
 // Ensure this file exports findUserByEmail as a named export

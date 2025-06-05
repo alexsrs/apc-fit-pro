@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { UsersService } from "../services/users-service";
 import { ok } from "../utils/http-helper";
-import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
 
 const usersService = new UsersService();
 // Usuários
@@ -126,10 +125,18 @@ export async function getProfessores(req: Request, res: Response) {
   res.json(professores);
 }
 
+export async function getProfessorById(req: Request, res: Response) {
+  const { id } = req.params;
+  const professor = await usersService.getProfessorById(id);
+  res.json(professor);
+}
+
 export async function getAlunoAvaliacaoValida(req: Request, res: Response) {
   const userPerfilId = req.params.userPerfilId;
   try {
-    const possuiValida = await usersService.alunoPossuiAvaliacaoValida(userPerfilId);
+    const possuiValida = await usersService.alunoPossuiAvaliacaoValida(
+      userPerfilId
+    );
     res.json({ possuiAvaliacaoValida: possuiValida });
   } catch (error) {
     res.status(500).json({ message: "Erro ao verificar avaliação válida." });
@@ -151,7 +158,10 @@ export async function cadastrarAvaliacaoAluno(req: Request, res: Response) {
   const dados = req.body;
 
   try {
-    const avaliacao = await usersService.cadastrarAvaliacaoAluno(userPerfilId, dados);
+    const avaliacao = await usersService.cadastrarAvaliacaoAluno(
+      userPerfilId,
+      dados
+    );
     res.status(201).json(avaliacao);
   } catch (error) {
     res.status(500).json({ message: "Erro ao cadastrar avaliação." });

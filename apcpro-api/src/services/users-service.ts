@@ -307,6 +307,12 @@ export class UsersService {
     }
   }
 
+  // Busca professor por ID
+  async getProfessorById(id: string) {
+    // Busca apenas se for professor
+    return await this.userRepository.getProfessorById(id);
+  }
+
   private processGroup(group: Grupo): Grupo {
     return {
       ...grupoSchema.parse({

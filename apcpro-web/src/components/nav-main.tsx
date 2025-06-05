@@ -47,7 +47,9 @@ export function NavMain({
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton tooltip={item.title}>
                     {item.icon && <item.icon />}
-                    <span>{item.title}</span>
+                    <span className="group-[sidebar-wrapper-data-collapsible=icon]:sr-only">
+                      {item.title}
+                    </span>
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
@@ -72,7 +74,7 @@ export function NavMain({
                                 }
                               }}
                             >
-                              <span className="cursor-pointer w-full block px-2 py-1">
+                              <span className="cursor-pointer w-full block px-2 py-1 group-[sidebar-wrapper-data-collapsible=icon]:sr-only">
                                 {subItem.title}
                               </span>
                             </SidebarMenuSubButton>
@@ -88,7 +90,7 @@ export function NavMain({
                                 }
                               }}
                             >
-                              <span className="cursor-pointer w-full block px-2 py-1">
+                              <span className="cursor-pointer w-full block px-2 py-1 group-[sidebar-wrapper-data-collapsible=icon]:sr-only">
                                 {subItem.title}
                               </span>
                             </SidebarMenuSubButton>
@@ -104,14 +106,16 @@ export function NavMain({
                                 }
                               }}
                             >
-                              <span className="cursor-pointer w-full block px-2 py-1">
+                              <span className="cursor-pointer w-full block px-2 py-1 group-[sidebar-wrapper-data-collapsible=icon]:sr-only">
                                 {subItem.title}
                               </span>
                             </SidebarMenuSubButton>
                           ) : (
                             <SidebarMenuSubButton asChild={true}>
                               <a href={subItem.url}>
-                                <span>{subItem.title}</span>
+                                <span className="group-[sidebar-wrapper-data-collapsible=icon]:sr-only">
+                                  {subItem.title}
+                                </span>
                               </a>
                             </SidebarMenuSubButton>
                           )}
@@ -127,7 +131,9 @@ export function NavMain({
               <SidebarMenuButton asChild={true}>
                 <a href={item.url}>
                   {item.icon && <item.icon />}
-                  <span>{item.title}</span>
+                  <span className="group-[sidebar-wrapper-data-collapsible=icon]:sr-only">
+                    {item.title}
+                  </span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
