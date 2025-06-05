@@ -2,7 +2,7 @@
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export function DashboardProfileLoader() {
   const { data: session, status } = useSession();

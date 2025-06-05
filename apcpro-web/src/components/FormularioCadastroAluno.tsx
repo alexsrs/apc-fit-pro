@@ -66,8 +66,12 @@ export default function FormularioCadastroAluno({
       setTimeout(() => {
         router.push("/dashboard");
       }, 1500);
-    } catch (err: any) {
-      setErro(err.message || "Erro inesperado.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErro(err.message);
+      } else {
+        setErro("Erro inesperado.");
+      }
     } finally {
       setEnviando(false);
     }

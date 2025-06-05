@@ -6,7 +6,6 @@ import {
   NotebookPen,
   GalleryVerticalEnd,
   Waypoints,
-  ClipboardList,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -14,7 +13,6 @@ import { useUserProfile } from "@/contexts/UserProfileContext"; // Importa o hoo
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
   SidebarContent,
