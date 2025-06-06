@@ -6,6 +6,8 @@
   "scripts": {
     "build": "tsup src/server.ts --format cjs,esm --dts --out-dir dist",
     "start": "node dist/server.js",
+    "start:dev": "tsx src/server.ts",
+    "start:watch": "tsx watch src/server.ts",
     "prisma:generate": "prisma generate",
     "postinstall": "prisma generate && npm run build"
   },
