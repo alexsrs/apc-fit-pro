@@ -19,6 +19,7 @@ import {
   listarAvaliacoesAluno,
   cadastrarAvaliacaoAluno,
   getProfessorById,
+  getProximaAvaliacaoAluno,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 
@@ -60,5 +61,9 @@ router.post("/auth/sessions", persistSession as any);
 router.get("/alunos/:userPerfilId/avaliacao-valida", getAlunoAvaliacaoValida);
 router.get("/alunos/:userPerfilId/avaliacoes", listarAvaliacoesAluno);
 router.post("/alunos/:userPerfilId/avaliacoes", cadastrarAvaliacaoAluno);
+router.get(
+  "/alunos/:userPerfilId/proxima-avaliacao",
+  getProximaAvaliacaoAluno as any
+);
 
 export default router;

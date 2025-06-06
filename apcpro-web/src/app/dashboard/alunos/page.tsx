@@ -34,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useProximaAvaliacao } from "@/hooks/useProximaAvaliacao";
 
 // Função utilitária para calcular idade
 function calcularIdade(dataNascimento?: string): number | undefined {
@@ -50,7 +51,9 @@ function calcularIdade(dataNascimento?: string): number | undefined {
 }
 
 export default function AlunosDashboard() {
-  const { profile } = useUserProfile(); // Só use esse contexto!
+  const { profile } = useUserProfile();
+  const { proxima, loading } = useProximaAvaliacao(profile?.id ?? ""); // Sempre chamado!
+
   const router = useRouter();
   const [showAnamnese, setShowAnamnese] = useState(false);
   const [showMedidas, setShowMedidas] = useState(false);
@@ -138,6 +141,7 @@ export default function AlunosDashboard() {
   if (!profile) return <Loading />;
 
   // Dados simulados para exibição (substitua por dados reais depois)
+  // Substitua o valor do card "Próxima avaliação" pelo valor real:
   const metricas = [
     {
       icon: <Dumbbell className="w-5 h-5" aria-hidden="true" />,
@@ -151,20 +155,25 @@ export default function AlunosDashboard() {
     {
       icon: <CalendarDays className="w-5 h-5" aria-hidden="true" />,
       title: "Próxima avaliação",
-      value: (() => {
-        const data = new Date("2025-06-12");
-        return data
-          .toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "short",
-          })
-          .replace(".", "")
-          .replace(" de ", " de ");
-      })(),
-      descricao: "Data prevista para reavaliação",
-      indicator: <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />,
-      indicatorColor: "text-green-600",
-      indicatorText: "+8%",
+      value: loading
+        ? "Carregando..."
+        : proxima
+        ? (() => {
+            const data = new Date(proxima.data);
+            const dia = data.toLocaleDateString("pt-BR", { day: "2-digit" });
+            let mes = data.toLocaleDateString("pt-BR", { month: "short" });
+            mes = mes.charAt(0).toUpperCase() + mes.slice(1).replace(".", "");
+            return `${dia} de ${mes}`;
+          })()
+        : "Sem previsão",
+      descricao: loading ? "" : proxima ? "Data prevista para reavaliação" : "",
+      indicator: undefined,
+      indicatorColor: undefined,
+      indicatorText: loading
+        ? ""
+        : proxima
+        ? proxima.tipo.charAt(0).toUpperCase() + proxima.tipo.slice(1)
+        : "",
       acao: (
         <Button
           size="sm"

@@ -167,3 +167,16 @@ export async function cadastrarAvaliacaoAluno(req: Request, res: Response) {
     res.status(500).json({ message: "Erro ao cadastrar avaliação." });
   }
 }
+
+export async function getProximaAvaliacaoAluno(req: Request, res: Response) {
+  const userPerfilId = req.params.userPerfilId;
+  try {
+    const proxima = await usersService.getProximaAvaliacaoAluno(userPerfilId);
+    if (!proxima) {
+      return res.status(404).json({ message: "Nenhuma avaliação encontrada." });
+    }
+    res.json(proxima);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar próxima avaliação." });
+  }
+}

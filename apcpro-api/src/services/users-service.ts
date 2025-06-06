@@ -8,6 +8,7 @@ import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 import { classificarObjetivoAnamnese } from "../utils/avaliacaoProcessor";
 import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
+import { addMonths } from "date-fns";
 
 function handleServiceError(error: unknown, message: string): never {
   console.error(message, error);
@@ -311,6 +312,37 @@ export class UsersService {
   async getProfessorById(id: string) {
     // Busca apenas se for professor
     return await this.userRepository.getProfessorById(id);
+  }
+
+  async getProximaAvaliacaoAluno(userPerfilId: string) {
+    try {
+      const avaliacoes = await this.userRepository.listarAvaliacoesAluno(
+        userPerfilId
+      );
+      if (!avaliacoes || avaliacoes.length === 0) return null;
+
+      const ultima = avaliacoes[0];
+      // Calcula validade em meses com base na diferença entre validadeAte e createdAt, ou usa 2 como padrão
+      let validadeMeses = 2;
+      if (ultima.validadeAte) {
+        const diffTime = Math.abs(
+          new Date(ultima.validadeAte).getTime() -
+            new Date(ultima.createdAt).getTime()
+        );
+        validadeMeses = Math.round(diffTime / (1000 * 60 * 60 * 24 * 30)); // Aproximação de meses
+      }
+      const dataProxima = ultima.validadeAte
+        ? new Date(ultima.validadeAte)
+        : addMonths(new Date(ultima.createdAt), validadeMeses);
+
+      return {
+        data: dataProxima,
+        tipo: ultima.tipo,
+        validadeMeses,
+      };
+    } catch (error) {
+      throw new Error("Erro ao calcular próxima avaliação.");
+    }
   }
 
   private processGroup(group: Grupo): Grupo {
