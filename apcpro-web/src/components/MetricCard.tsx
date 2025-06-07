@@ -1,17 +1,16 @@
 // src/components/MetricCard.tsx
-import { ReactNode } from "react";
+import React from "react";
 
 type MetricCardProps = {
-  icon: ReactNode;
+  icon: React.ReactNode;
   title: string;
-  value: string | number;
+  value: React.ReactNode;
   variacao?: string;
   cor?: string;
   descricao?: string;
   description?: string;
-  acao?: ReactNode;
-  // Props para compatibilidade com dashboard do professor
-  indicator?: ReactNode;
+  acao?: React.ReactNode;
+  indicator?: React.ReactNode;
   indicatorColor?: string;
   indicatorText?: string;
   subtitle?: string;
@@ -28,51 +27,48 @@ export function MetricCard({
   acao,
   indicator,
   indicatorColor,
-  indicatorText,
-  subtitle,
+  indicatorText
 }: MetricCardProps) {
-  // Unifica para 'title' e 'value' como padrão
   const displayDescricao = descricao || description;
 
   return (
-    <div className="rounded-xl shadow-md p-4 flex flex-col items-center bg-white max-w-full">
-      <div className="flex items-center gap-1 w-full justify-between">
-        <span className="flex items-center gap-1 min-w-0">
-          {icon}
-          <span className="text-sm font-medium text-muted-foreground truncate max-w-[120px] md:max-w-[140px]">
-            {title}
-          </span>
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="text-2xl font-bold whitespace-nowrap">{value}</span>
-          {variacao && (
-            <span className={`ml-2 text-sm ${cor ?? ""}`}>{variacao}</span>
-          )}
-          {indicator && <span className={indicatorColor}>{indicator}</span>}
+    <div className="rounded-xl shadow-md p-4 flex flex-col bg-white min-h-[180px] h-full">
+      {/* Topo: ícone e título */}
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <span className="text-base font-medium text-zinc-700 truncate">
+          {title}
         </span>
       </div>
-      {(variacao || indicatorText || subtitle) && (
-        <div className="flex justify-between items-center w-full mt-2">
-          {variacao && <span className={cor + " font-medium"}>{variacao}</span>}
-          {indicatorText && (
-            <span className={indicatorColor + " font-medium"}>
-              {indicatorText}
-            </span>
-          )}
-          {subtitle && (
-            <span className="text-sm text-muted-foreground truncate max-w-[100px] md:max-w-[140px]">
-              {subtitle}
-            </span>
+      {/* Valor principal, indicador e botão à direita */}
+      <div className="flex flex-row items-center justify-between flex-1 w-full">
+        <span className="text-2xl font-bold font-mono text-zinc-900">
+          {value}
+        </span>
+        <div className="flex flex-col items-end ml-2 gap-2">
+          {(variacao || indicatorText) && (
+            <div className="flex flex-col items-end">
+              {variacao && (
+                <span className={cor + " font-medium"}>{variacao}</span>
+              )}
+              {indicatorText && (
+                <span className={indicatorColor + " font-medium"}>
+                  {indicatorText}
+                </span>
+              )}
+              {indicator && <span className={indicatorColor}>{indicator}</span>}
+            </div>
           )}
         </div>
-      )}
+      </div>
+      {/* Botão sempre à direita, abaixo do valor */}
+      {acao && <div className="flex justify-end w-full mt-2">{acao}</div>}
+      {/* Rodapé: descrição sempre no final */}
       {displayDescricao && (
-        <p className="mt-1 text-xs text-muted-foreground w-full text-left truncate max-w-full">
+        <p className="mt-auto pt-2 text-xs text-zinc-500 w-full text-left truncate">
           {displayDescricao}
         </p>
       )}
-      {/* Ação (ex: botão) sempre abaixo de tudo */}
-      {acao && <div className="w-full flex justify-end mt-2">{acao}</div>}
     </div>
   );
 }

@@ -299,6 +299,21 @@ export class UserRepositoryClass {
       },
     });
   }
+
+  async buscarUltimasAvaliacoesMedidas(userPerfilId: string) {
+    return prisma.avaliacao.findMany({
+      where: { userPerfilId },
+      orderBy: { data: "desc" },
+      take: 2,
+      select: {
+        id: true,
+        data: true,
+        tipo: true,
+        status: true,
+        resultado: true, // Aqui ficam as medidas detalhadas se for JSON
+      },
+    });
+  }
 }
 
 // Ensure this file exports findUserByEmail as a named export

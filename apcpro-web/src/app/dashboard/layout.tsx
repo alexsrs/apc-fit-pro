@@ -3,6 +3,8 @@ import { UserProfileProvider } from "@/contexts/UserProfileContext";
 import { AnamneseModalProvider } from "@/contexts/AnamneseModalContext";
 import { DashboardProfileLoader } from "@/components/dashboard-profile-loader";
 import DashboardLayout from "@/components/dashboard-layout";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 import { ReactNode } from "react";
 
@@ -15,7 +17,10 @@ export default function DashboardLayoutRoot({
     <UserProfileProvider>
       <AnamneseModalProvider>
         <DashboardProfileLoader />
-        <DashboardLayout>{children}</DashboardLayout>
+        <SidebarProvider>
+          <AppSidebar />
+          <DashboardLayout>{children}</DashboardLayout>
+        </SidebarProvider>
       </AnamneseModalProvider>
     </UserProfileProvider>
   );

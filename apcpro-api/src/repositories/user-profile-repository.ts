@@ -2,6 +2,7 @@ import prisma from "../prisma"; // Certifique-se de que o Prisma está configura
 import { UserPerfil } from "../models/user-model";
 
 export class UserProfileRepository {
+  [x: string]: any;
   async createProfile(
     userId: string,
     data: Partial<UserPerfil>
@@ -29,6 +30,12 @@ export class UserProfileRepository {
       where: {
         id: profileId,
       },
+    });
+  }
+
+  async findProfileById(userPerfilId: string): Promise<UserPerfil | null> {
+    return await prisma.userPerfil.findUnique({
+      where: { id: userPerfilId },
     });
   }
 }

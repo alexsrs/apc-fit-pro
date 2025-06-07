@@ -167,3 +167,31 @@ export async function cadastrarAvaliacaoAluno(req: Request, res: Response) {
     res.status(500).json({ message: "Erro ao cadastrar avaliação." });
   }
 }
+
+export async function getProximaAvaliacaoAluno(req: Request, res: Response) {
+  const userPerfilId = req.params.userPerfilId;
+  try {
+    const proxima = await usersService.getProximaAvaliacaoAluno(userPerfilId);
+    if (!proxima) {
+      return res.status(404).json({ message: "Nenhuma avaliação encontrada." });
+    }
+    res.json(proxima);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar próxima avaliação." });
+  }
+}
+
+export async function getEvolucaoFisica(req: Request, res: Response) {
+  const userPerfilId = req.params.userPerfilId;
+  try {
+    const evolucao = await usersService.getEvolucaoFisica(userPerfilId);
+    if (!evolucao) {
+      return res
+        .status(404)
+        .json({ message: "Não há avaliações suficientes para comparação." });
+    }
+    res.json(evolucao);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar evolução física." });
+  }
+}
