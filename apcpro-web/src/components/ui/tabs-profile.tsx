@@ -36,6 +36,7 @@ export default function TabsProfile() {
     { id: string; name: string }[]
   >([]);
   const [loadingProfessores, setLoadingProfessores] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -67,32 +68,25 @@ export default function TabsProfile() {
   }, [formData.role]);
 
   const handleSubmit = async () => {
+    setErrorMsg(null);
     if (!formData.telefone || !formData.dataNascimento || !formData.genero) {
-      alert("Por favor, preencha todos os campos obrigatórios.");
+      setErrorMsg("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
-
-    // Validação extra para aluno
     if (formData.role === "aluno" && !formData.professorId) {
-      alert("Por favor, selecione o professor responsável.");
+      setErrorMsg("Por favor, selecione o professor responsável.");
       return;
     }
-
     const session = await getSession();
     if (!session || !session.user || !session.user.id) {
-      alert("Usuário não autenticado");
+      setErrorMsg("Usuário não autenticado");
       return;
     }
-
     const userId = session.user.id;
-
-    const payload = {
-      ...formData,
-    };
+    const payload = { ...formData };
     if (formData.role === "professor" && "professorId" in payload) {
       (payload as { professorId?: string }).professorId = undefined;
     }
-
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile`,
@@ -104,23 +98,28 @@ export default function TabsProfile() {
           body: JSON.stringify(payload),
         }
       );
-
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Erro da API:", errorData);
-        throw new Error("Erro ao salvar os dados");
+        let errorText = "Erro ao salvar os dados";
+        try {
+          const errorData = await response.json();
+          if (errorData?.error) {
+            errorText = errorData.error;
+          }
+        } catch {}
+        setErrorMsg(errorText);
+        return;
       }
       await update();
-      alert("Dados salvos com sucesso!");
       router.refresh();
       if (formData.role === "professor") {
         router.push("/dashboard/professores");
       } else if (formData.role === "aluno") {
         router.push("/dashboard/alunos");
       }
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao salvar os dados");
+    } catch (error: unknown) {
+      setErrorMsg(
+        error instanceof Error ? error.message : "Erro ao salvar os dados"
+      );
     }
   };
 
@@ -175,12 +174,18 @@ export default function TabsProfile() {
                 <SelectContent>
                   <SelectItem value="masculino">Masculino</SelectItem>
                   <SelectItem value="feminino">Feminino</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-2 items-stretch">
             <Button onClick={handleSubmit}>Salvar</Button>
+            {errorMsg && (
+              <div className="text-red-600 text-sm font-medium border border-red-200 bg-red-50 rounded p-2 mt-2">
+                {errorMsg}
+              </div>
+            )}
           </CardFooter>
         </Card>
       </TabsContent>
@@ -200,7 +205,7 @@ export default function TabsProfile() {
                 id="telefone"
                 value={formData.telefone}
                 onChange={handleInputChange}
-                placeholder="(21) 9xxxx-xxxx"
+                placeholder="(DDD) 9xxxx-xxxx"
               />
             </div>
             <div className="space-y-2">
@@ -224,6 +229,7 @@ export default function TabsProfile() {
                 <SelectContent>
                   <SelectItem value="masculino">Masculino</SelectItem>
                   <SelectItem value="feminino">Feminino</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -260,8 +266,13 @@ export default function TabsProfile() {
               </Select>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-2 items-stretch">
             <Button onClick={handleSubmit}>Salvar</Button>
+            {errorMsg && (
+              <div className="text-red-600 text-sm font-medium border border-red-200 bg-red-50 rounded p-2 mt-2">
+                {errorMsg}
+              </div>
+            )}
           </CardFooter>
         </Card>
       </TabsContent>

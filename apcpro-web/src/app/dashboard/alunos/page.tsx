@@ -19,6 +19,7 @@ import {
   BarChart2,
   MessageCircle,
   ArrowDown,
+  ArrowUpRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useProximaAvaliacao } from "@/hooks/useProximaAvaliacao";
+import { useEvolucaoFisica } from "@/hooks/useEvolucaoFisica";
+import {
+  AlertasPersistente,
+  AlertasPersistenteHandle,
+} from "@/app/components/AlertasPersistente";
 
 // Função utilitária para calcular idade
 function calcularIdade(dataNascimento?: string): number | undefined {
@@ -50,9 +56,43 @@ function calcularIdade(dataNascimento?: string): number | undefined {
   return idade >= 0 ? idade : undefined;
 }
 
+// Componente de evolução de massa magra/peso
+type CardEvolucaoProps = {
+  label: string;
+  valor: number;
+  unidade?: string;
+};
+
+export function CardEvolucao({
+  label,
+  valor,
+  unidade = "kg",
+}: CardEvolucaoProps) {
+  const positivo = valor > 0;
+
+  return (
+    <div className="flex items-center gap-2 p-4 bg-white rounded shadow">
+      <span className="font-medium text-gray-700">{label}</span>
+      <span
+        className={`flex items-center gap-1 font-bold ${
+          positivo ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {positivo && "+"}
+        {valor}
+        {unidade}
+        {positivo && <ArrowUpRight className="w-4 h-4" aria-label="Aumento" />}
+      </span>
+    </div>
+  );
+}
+
 export default function AlunosDashboard() {
   const { profile } = useUserProfile();
   const { proxima, loading } = useProximaAvaliacao(profile?.id ?? ""); // Sempre chamado!
+  const { evolucao, loading: loadingEvolucao } = useEvolucaoFisica(
+    profile?.id ?? ""
+  );
 
   const router = useRouter();
   const [showAnamnese, setShowAnamnese] = useState(false);
@@ -62,6 +102,7 @@ export default function AlunosDashboard() {
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] =
     useState<Avaliacao | null>(null);
   const listaRef = useRef<ListaAvaliacoesHandle>(null);
+  const alertasRef = useRef<AlertasPersistenteHandle>(null);
 
   const avaliacaoValida = useAvaliacaoValida(profile?.id ?? "");
 
@@ -187,11 +228,84 @@ export default function AlunosDashboard() {
     {
       icon: <TrendingUp className="w-5 h-5" aria-hidden="true" />,
       title: "Evolução física",
-      value: "-1,2kg / +0,5kg",
-      descricao: "Peso / massa magra desde a última avaliação",
-      indicator: <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />,
-      indicatorColor: "text-green-600",
-      indicatorText: "+8%",
+      value: loadingEvolucao ? (
+        "Carregando..."
+      ) : evolucao ? (
+        <div className="flex flex-col items-end gap-1 w-full">
+          {/* Peso */}
+          <span className="flex items-center gap-2">
+            <span className="text-xs text-zinc-500">Peso</span>
+            <span className="flex items-center font-mono text-2xl font-bold text-zinc-900">
+              <span
+                className={
+                  evolucao.peso > 0
+                    ? "text-green-600"
+                    : evolucao.peso < 0
+                    ? "text-red-600"
+                    : ""
+                }
+              >
+                {evolucao.peso > 0 && "+"}
+                {evolucao.peso < 0 && "-"}
+              </span>
+              {Math.abs(evolucao.peso).toFixed(1)}kg
+              {evolucao.peso > 0 && (
+                <ArrowUpRight
+                  className="w-5 h-5 ml-1 text-green-600"
+                  aria-label="Aumento de peso"
+                />
+              )}
+              {evolucao.peso < 0 && (
+                <ArrowDown
+                  className="w-5 h-5 ml-1 text-red-600"
+                  aria-label="Redução de peso"
+                />
+              )}
+            </span>
+          </span>
+          {/* Massa magra */}
+          <span className="flex items-center gap-2">
+            <span className="text-xs text-zinc-500">Massa magra</span>
+            <span className="flex items-center font-mono text-2xl font-bold text-zinc-900">
+              <span
+                className={
+                  evolucao.massaMagra > 0
+                    ? "text-green-600"
+                    : evolucao.massaMagra < 0
+                    ? "text-red-600"
+                    : ""
+                }
+              >
+                {evolucao.massaMagra > 0 && "+"}
+                {evolucao.massaMagra < 0 && "-"}
+              </span>
+              {Math.abs(evolucao.massaMagra).toFixed(1)}kg
+              {evolucao.massaMagra > 0 && (
+                <ArrowUpRight
+                  className="w-5 h-5 ml-1 text-green-600"
+                  aria-label="Aumento de massa magra"
+                />
+              )}
+              {evolucao.massaMagra < 0 && (
+                <ArrowDown
+                  className="w-5 h-5 ml-1 text-red-600"
+                  aria-label="Redução de massa magra"
+                />
+              )}
+            </span>
+          </span>
+        </div>
+      ) : (
+        "Sem dados"
+      ),
+      descricao: loadingEvolucao
+        ? ""
+        : evolucao
+        ? "Peso / massa magra desde a última avaliação"
+        : "",
+      indicator: undefined,
+      indicatorColor: undefined,
+      indicatorText: "",
     },
     {
       icon: <CalendarCheck className="w-5 h-5" aria-hidden="true" />,
@@ -201,18 +315,6 @@ export default function AlunosDashboard() {
       indicator: <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />,
       indicatorColor: "text-green-600",
       indicatorText: "+8%",
-    },
-  ];
-
-  const alertas = [
-    { texto: "Você está há 7 dias sem registrar treino.", tipo: "aviso" },
-    {
-      texto: "Avaliação vencida há 15 dias – agende nova avaliação.",
-      tipo: "erro",
-    },
-    {
-      texto: "Parabéns! Você bateu sua meta de frequência semanal.",
-      tipo: "sucesso",
     },
   ];
 
@@ -247,21 +349,23 @@ export default function AlunosDashboard() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
-      {/* Cards de métricas */}
-      <div className="grid gap-4 md:grid-cols-4">
-        {metricas.map((m, i) => (
-          <MetricCard
-            key={i}
-            icon={m.icon}
-            title={m.title}
-            value={m.value}
-            indicator={m.indicator}
-            indicatorColor={m.indicatorColor}
-            indicatorText={m.indicatorText}
-            descricao={m.descricao}
-            acao={m.acao}
-          />
-        ))}
+      {/* Cards de métricas - grid responsivo sem scroll */}
+      <div>
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {metricas.map((m, i) => (
+            <MetricCard
+              key={i}
+              icon={m.icon}
+              title={m.title}
+              value={m.value}
+              indicator={m.indicator}
+              indicatorColor={m.indicatorColor}
+              indicatorText={m.indicatorText}
+              descricao={m.descricao}
+              acao={m.acao}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Alertas e próximas atividades */}
@@ -275,22 +379,27 @@ export default function AlunosDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="list-disc pl-6 space-y-2 text-sm">
-              {alertas.map((a, i) => (
-                <li
-                  key={i}
-                  className={
-                    a.tipo === "erro"
-                      ? "text-red-600"
-                      : a.tipo === "sucesso"
-                      ? "text-green-600"
-                      : "text-yellow-600"
-                  }
-                >
-                  {a.texto}
-                </li>
-              ))}
-            </ul>
+            {/* Alertas persistentes por usuário */}
+            <AlertasPersistente ref={alertasRef} userId={profile.id ?? ""} />
+            <Button
+              className="mt-4"
+              variant="outline"
+              onClick={async () => {
+                await fetch("/api/alerta-amqp", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    mensagem: "Hello World",
+                    userId: profile.id, // envia o userId correto
+                  }),
+                });
+                // Atualiza alertas imediatamente após envio
+                alertasRef.current?.atualizar();
+                alert("Alerta enviado para a fila!");
+              }}
+            >
+              Enviar alerta Hello World
+            </Button>
           </CardContent>
         </Card>
         {/* Card Próximas Atividades */}

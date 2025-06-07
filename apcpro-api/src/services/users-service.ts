@@ -7,7 +7,10 @@ import { Grupo, User, UserPerfil } from "../models/user-model";
 import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 import { classificarObjetivoAnamnese } from "../utils/avaliacaoProcessor";
-import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
+import {
+  calcularIndicesMedidas,
+  sexoToNumber,
+} from "../utils/avaliacaoMedidas";
 import { addMonths } from "date-fns";
 
 function handleServiceError(error: unknown, message: string): never {
@@ -321,27 +324,161 @@ export class UsersService {
       );
       if (!avaliacoes || avaliacoes.length === 0) return null;
 
-      const ultima = avaliacoes[0];
-      // Calcula validade em meses com base na diferença entre validadeAte e createdAt, ou usa 2 como padrão
-      let validadeMeses = 2;
-      if (ultima.validadeAte) {
-        const diffTime = Math.abs(
-          new Date(ultima.validadeAte).getTime() -
-            new Date(ultima.createdAt).getTime()
-        );
-        validadeMeses = Math.round(diffTime / (1000 * 60 * 60 * 24 * 30)); // Aproximação de meses
-      }
-      const dataProxima = ultima.validadeAte
-        ? new Date(ultima.validadeAte)
-        : addMonths(new Date(ultima.createdAt), validadeMeses);
+      const [maisRecente, anterior] = avaliacoes;
+      if (!maisRecente || !anterior)
+        throw new Error("Avaliações insuficientes");
+
+      // Se as medidas estão em resultado (JSON), extraia assim:
+      const medidasRecente = {
+        ...maisRecente,
+        ...(typeof maisRecente.resultado === "object"
+          ? maisRecente.resultado
+          : {}),
+      };
+      const medidasAnterior = {
+        ...anterior,
+        ...(typeof anterior.resultado === "object" ? anterior.resultado : {}),
+      };
+
+      // Agora use medidasRecente e medidasAnterior para calcular os índices
+
+      const indicesCalculados = calcularIndicesMedidas({
+        ...medidasRecente,
+        ...medidasAnterior,
+        peso: 0,
+        altura: 0,
+        idade: 0,
+        sexo: 0,
+        cintura: 0,
+      });
+
+      // Filtra apenas índices e classificações
+      const indices = Object.fromEntries(
+        Object.entries(indicesCalculados).filter(
+          ([key]) =>
+            key.startsWith("classificacao") ||
+            key.includes("percentual") ||
+            key.includes("massaMuscular") ||
+            key === "imc" ||
+            key === "rcq" ||
+            key === "ca"
+        )
+      );
+
+      const dataProxima = maisRecente.validadeAte
+        ? new Date(maisRecente.validadeAte)
+        : null;
 
       return {
         data: dataProxima,
-        tipo: ultima.tipo,
-        validadeMeses,
+        tipo: maisRecente.tipo,
+        validadeMeses: 2, // Padrão, já que agora calculamos a validade com base nas datas
+        indices,
       };
     } catch (error) {
       throw new Error("Erro ao calcular próxima avaliação.");
+    }
+  }
+
+  async getEvolucaoFisica(userPerfilId: string) {
+    try {
+      const avaliacoes =
+        await this.userRepository.buscarUltimasAvaliacoesMedidas(userPerfilId);
+      console.log("Avaliações retornadas:", avaliacoes);
+
+      if (!avaliacoes || avaliacoes.length < 2) {
+        console.error("Menos de 2 avaliações encontradas");
+        return null;
+      }
+
+      const [maisRecente, anterior] = avaliacoes;
+
+      const perfil = await this.userProfileRepository.findProfileById(
+        userPerfilId
+      );
+      console.log("Perfil retornado:", perfil);
+
+      if (!perfil) {
+        console.error(
+          "Perfil não encontrado para o userPerfilId:",
+          userPerfilId
+        );
+        throw new Error(
+          "Perfil não encontrado para o userPerfilId: " + userPerfilId
+        );
+      }
+
+      // Ajuste aqui: verifique se a propriedade correta é 'genero' ou similar
+      const genero = perfil.genero;
+      const sexo: Sexo = isSexo(genero) ? genero : "feminino"; // valor padrão seguro
+      const sexoNum = sexoToNumber(sexo);
+
+      if (!maisRecente || !anterior) {
+        console.error("Avaliações insuficientes para cálculo.");
+        throw new Error("Avaliações insuficientes para cálculo.");
+      }
+
+      function getNumberProp(obj: Record<string, any>, prop: string): number {
+        const value = obj[prop];
+        return typeof value === "number" ? value : Number(value) || 0;
+      }
+
+      function isJsonObject(obj: unknown): obj is Record<string, any> {
+        return typeof obj === "object" && obj !== null && !Array.isArray(obj);
+      }
+
+      const medidasRecente = isJsonObject(maisRecente.resultado)
+        ? maisRecente.resultado
+        : {};
+      const medidasAnterior = isJsonObject(anterior.resultado)
+        ? anterior.resultado
+        : {};
+
+      console.log("Medidas recente:", medidasRecente);
+      console.log("Medidas anterior:", medidasAnterior);
+
+      const indicesRecente = calcularIndicesMedidas({
+        peso: getNumberProp(medidasRecente, "peso"),
+        altura: getNumberProp(medidasRecente, "altura"),
+        idade: getNumberProp(medidasRecente, "idade"),
+        sexo,
+        cintura: getNumberProp(medidasRecente, "cintura"),
+        quadril: getNumberProp(medidasRecente, "quadril"),
+        pescoco: getNumberProp(medidasRecente, "pescoco"),
+        abdomen: getNumberProp(medidasRecente, "abdomen"),
+      });
+      const indicesAnterior = calcularIndicesMedidas({
+        peso: getNumberProp(medidasAnterior, "peso"),
+        altura: getNumberProp(medidasAnterior, "altura"),
+        idade: getNumberProp(medidasAnterior, "idade"),
+        sexo,
+        cintura: getNumberProp(medidasAnterior, "cintura"),
+        quadril: getNumberProp(medidasAnterior, "quadril"),
+        pescoco: getNumberProp(medidasAnterior, "pescoco"),
+        abdomen: getNumberProp(medidasAnterior, "abdomen"),
+      });
+
+      return {
+        peso:
+          getNumberProp(medidasRecente, "peso") -
+          getNumberProp(medidasAnterior, "peso"),
+        massaMagra:
+          (indicesRecente.massaMuscular_Lee ?? 0) -
+          (indicesAnterior.massaMuscular_Lee ?? 0),
+        percentualGC_Deurenberg:
+          (indicesRecente.percentualGC_Deurenberg ?? 0) -
+          (indicesAnterior.percentualGC_Deurenberg ?? 0),
+        percentualGC_Gomez:
+          (indicesRecente.percentualGC_Gomez ?? 0) -
+          (indicesAnterior.percentualGC_Gomez ?? 0),
+        percentualGC_Marinha:
+          (indicesRecente.percentualGC_Marinha ?? 0) -
+          (indicesAnterior.percentualGC_Marinha ?? 0),
+        imc: (indicesRecente.imc ?? 0) - (indicesAnterior.imc ?? 0),
+      };
+    } catch (error) {
+      console.error("Erro detalhado ao calcular evolução física:", error);
+      throw new Error("Erro ao buscar evolução física.");
     }
   }
 
@@ -361,3 +498,8 @@ export class UsersService {
 }
 
 export { UserRepositoryClass };
+type Sexo = "masculino" | "feminino" | 1 | 0;
+
+function isSexo(value: any): value is Sexo {
+  return value === "masculino" || value === "feminino" || value === 1 || value === 0;
+}

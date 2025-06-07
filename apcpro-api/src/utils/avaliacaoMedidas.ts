@@ -20,7 +20,7 @@ export interface MedidasInput {
 }
 
 // Função utilitária para converter sexo para número
-function sexoToNumber(sexo: Sexo): 0 | 1 {
+export function sexoToNumber(sexo: Sexo): 0 | 1 {
   if (sexo === 1 || sexo === "masculino") return 1;
   return 0; // feminino ou 0
 }

@@ -20,6 +20,7 @@ import {
   cadastrarAvaliacaoAluno,
   getProfessorById,
   getProximaAvaliacaoAluno,
+  getEvolucaoFisica,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 
@@ -65,5 +66,6 @@ router.get(
   "/alunos/:userPerfilId/proxima-avaliacao",
   getProximaAvaliacaoAluno as any
 );
+router.get("/alunos/:userPerfilId/evolucao-fisica", getEvolucaoFisica as any);
 
 export default router;
