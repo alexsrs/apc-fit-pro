@@ -41,6 +41,7 @@ import {
   AlertasPersistente,
   AlertasPersistenteHandle,
 } from "@/app/components/AlertasPersistente";
+import { ResultadoAvaliacao } from "@/components/ResultadoAvaliacao";
 
 // Função utilitária para calcular idade
 function calcularIdade(dataNascimento?: string): number | undefined {
@@ -462,7 +463,7 @@ export default function AlunosDashboard() {
             <DialogTitle>Detalhes da Avaliação</DialogTitle>
           </DialogHeader>
           {avaliacaoSelecionada && (
-            <div>
+            <div className="space-y-2">
               <p>
                 <b>Tipo:</b> {avaliacaoSelecionada.tipo}
               </p>
@@ -480,7 +481,24 @@ export default function AlunosDashboard() {
                   <b>Objetivo:</b> {avaliacaoSelecionada.objetivo}
                 </p>
               )}
-              {/* Adicione outros campos relevantes */}
+              {/* Exibe resultado detalhado se existir */}
+              {avaliacaoSelecionada.resultado &&
+                typeof avaliacaoSelecionada.resultado === "object" &&
+                !Array.isArray(avaliacaoSelecionada.resultado) && (
+                  <>
+                    <h4 className="font-semibold mt-4 mb-2 text-sm text-zinc-700">
+                      Conteúdo da avaliação:
+                    </h4>
+                    <ResultadoAvaliacao
+                      resultado={
+                        typeof avaliacaoSelecionada.resultado === "string"
+                          ? JSON.parse(avaliacaoSelecionada.resultado)
+                          : avaliacaoSelecionada.resultado
+                      }
+                      inModal={true}
+                    />
+                  </>
+                )}
             </div>
           )}
         </DialogContent>
