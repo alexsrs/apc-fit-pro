@@ -301,6 +301,7 @@ const legendaSiglas: Record<string, string> = {
 
 interface ResultadoAvaliacaoProps {
   resultado: KeyValueData;
+  inModal?: boolean;
 }
 
 export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
