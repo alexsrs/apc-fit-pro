@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import { ResultadoAvaliacao } from "./ResultadoAvaliacao";
+import apiClient from "@/lib/api-client";
 
 // Tipagem básica para avaliação
 export type Avaliacao = {
@@ -48,11 +49,8 @@ export const ListaAvaliacoes = forwardRef<
   const fetchAvaliacoes = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/alunos/${userPerfilId}/avaliacoes`
-      );
-      const data = await res.json();
-      setAvaliacoes(data);
+      const res = await apiClient.get(`alunos/${userPerfilId}/avaliacoes`);
+      setAvaliacoes(res.data);
     } catch {
       setAvaliacoes([]);
     }

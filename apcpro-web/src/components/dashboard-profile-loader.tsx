@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useRouter, usePathname } from "next/navigation";
+import apiClient from "@/lib/api-client";
 
 export function DashboardProfileLoader() {
   const { data: session, status } = useSession();
@@ -11,6 +12,7 @@ export function DashboardProfileLoader() {
   const pathname = usePathname();
 
   useEffect(() => {
+    console.log("Session:", session, "Status:", status);
     // Evita ciclo infinito: não executa nada na página de setup do perfil
     if (pathname === "/dashboard/setup-profile") return;
 
@@ -19,32 +21,28 @@ export function DashboardProfileLoader() {
         const userId = session?.user?.id;
         if (!userId) return;
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile/`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.ok) {
-          const userProfile = await response.json();
-          localStorage.setItem("userProfileId", userProfile.id);
-          setProfile({
-            ...userProfile,
-            name: userProfile.name || session?.user?.name || "Usuário",
-            email:
-              userProfile.email ||
-              session?.user?.email ||
-              "sem-email@exemplo.com",
-            image:
-              userProfile.image ||
-              session?.user?.image ||
-              "https://github.com/shadcn.png",
-          });
-        } else if (response.status === 404) {
+        // Usa o apiClient padronizado (axios) que já envia o token JWT
+        const { data: userProfile } = await apiClient.get(`${userId}/profile/`);
+        localStorage.setItem("userProfileId", userProfile.id);
+        setProfile({
+          ...userProfile,
+          name: userProfile.name || session?.user?.name || "Usuário",
+          email:
+            userProfile.email ||
+            session?.user?.email ||
+            "sem-email@exemplo.com",
+          image:
+            userProfile.image ||
+            session?.user?.image ||
+            "https://github.com/shadcn.png",
+        });
+      } catch (err) {
+        if (
+          err &&
+          typeof err === "object" &&
+          "response" in err &&
+          (err as { response?: { status?: number } }).response?.status === 404
+        ) {
           // Permite fluxo de convite sem redirecionar para setup-profile
           const isConviteComProfessor =
             pathname === "/convite" &&
@@ -54,9 +52,7 @@ export function DashboardProfileLoader() {
           if (!isConviteComProfessor) {
             router.replace("/dashboard/setup-profile");
           }
-        }
-      } catch (err: unknown) {
-        if (err instanceof Error) {
+        } else if (err instanceof Error) {
           setError(err.message);
         } else {
           setError("Erro desconhecido ao buscar perfil");

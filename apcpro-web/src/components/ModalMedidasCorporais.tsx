@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSession } from "next-auth/react";
+import apiClient from "@/lib/api-client";
 
 // Lista de partes do corpo com laterais
 const bodyParts = [
@@ -202,21 +203,14 @@ export function ModalMedidasCorporais({
       },
     };
 
-    await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/alunos/${userPerfilId}/avaliacoes`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tipo: "medidas",
-          status: "pendente",
-          resultado,
-          validadeAte: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
-        }),
-      }
-    );
+    await apiClient.post(`alunos/${userPerfilId}/avaliacoes`, {
+      tipo: "medidas",
+      status: "pendente",
+      resultado,
+      validadeAte: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+    });
 
     setLoading(false);
     onSuccess();

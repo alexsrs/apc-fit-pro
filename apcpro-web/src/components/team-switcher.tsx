@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import apiClient from "@/lib/api-client";
 
 type Team = {
   name: string;
@@ -26,11 +27,6 @@ type Team = {
     Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
   >;
   plan: string;
-};
-
-type GrupoApi = {
-  nome: string;
-  // adicione outros campos se necessário
 };
 
 export function TeamSwitcher({ teams }: { teams: Team[] }) {
@@ -44,45 +40,15 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
   const [activeTeam, setActiveTeam] = React.useState(defaultTeam);
   const [showModal, setShowModal] = React.useState(false);
   const [newTeamName, setNewTeamName] = React.useState("");
-  const [userProfileId, setUserProfileId] = React.useState<string | null>(null);
   const [teamsState, setTeamsState] = React.useState<typeof teams>(teams);
 
   React.useEffect(() => {
-    setUserProfileId(localStorage.getItem("userProfileId"));
-    const onStorage = () =>
-      setUserProfileId(localStorage.getItem("userProfileId"));
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  React.useEffect(() => {
-    if (!userProfileId) return;
-    const fetchGroups = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userProfileId}/grupos`
-        );
-        if (response.ok) {
-          const gruposApi = await response.json();
-          setTeamsState(
-            (gruposApi as GrupoApi[]).map((g) => ({
-              name: g.nome,
-              logo: Users,
-              plan: g.nome,
-            }))
-          );
-        }
-      } catch {
-        // Silencie erro
-      }
-    };
-    fetchGroups();
-  }, [showModal, userProfileId]);
+    setTeamsState(teams);
+  }, [teams]);
 
   if (!activeTeam) {
     return null;
   }
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -179,25 +145,17 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
                     alert("Digite um nome para o grupo");
                     return;
                   }
-                  if (!userProfileId) {
-                    alert("ID do perfil do usuário não encontrado.");
-                    return;
-                  }
                   try {
-                    const response = await fetch(
-                      `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userProfileId}/grupos`,
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ nome: newTeamName }),
-                      }
+                    const response = await apiClient.post(
+                      `/api/users/${profile?.id}/grupos`,
+                      { nome: newTeamName }
                     );
-                    if (response.ok) {
+                    if (response.status === 200 || response.status === 201) {
                       setShowModal(false);
                       setNewTeamName("");
                       // Opcional: recarregar a página ou atualizar a lista de grupos
                     } else {
-                      const error = await response.json().catch(() => ({}));
+                      const error = response.data || {};
                       alert(error.message || "Erro ao criar grupo");
                     }
                   } catch {

@@ -24,21 +24,21 @@
 			"com.tldraw.shape.note": 9,
 			"com.tldraw.shape.line": 5,
 			"com.tldraw.shape.frame": 1,
-			"com.tldraw.shape.arrow": 5,
+			"com.tldraw.shape.arrow": 6,
 			"com.tldraw.shape.highlight": 1,
 			"com.tldraw.shape.embed": 4,
 			"com.tldraw.shape.image": 5,
 			"com.tldraw.shape.video": 3,
-			"com.tldraw.binding.arrow": 0
+			"com.tldraw.binding.arrow": 1
 		}
 	},
 	"records": [
 		{
 			"id": "pointer:pointer",
 			"typeName": "pointer",
-			"x": 746.2808628016223,
-			"y": 14.907349954873652,
-			"lastActivityTimestamp": 1744846081890,
+			"x": 1199.7917188713084,
+			"y": 366.75334606100506,
+			"lastActivityTimestamp": 1749501970508,
 			"meta": {}
 		},
 		{
@@ -239,9 +239,9 @@
 			"typeName": "shape"
 		},
 		{
-			"x": 113.22675227057977,
-			"y": 57.27352211191335,
-			"z": 0.9005155817438346,
+			"x": -239.83082552495924,
+			"y": 62.59023328112137,
+			"z": 0.7010702255317655,
 			"meta": {},
 			"id": "camera:page:page",
 			"typeName": "camera"
@@ -517,7 +517,9 @@
 				"text": "",
 				"labelPosition": 0.5,
 				"font": "sans",
-				"scale": 1
+				"scale": 1,
+				"kind": "arc",
+				"elbowMidPoint": 0.5
 			},
 			"parentId": "page:page",
 			"index": "aI5V9",
@@ -923,8 +925,8 @@
 			"screenBounds": {
 				"x": 0,
 				"y": 0,
-				"w": 1544,
-				"h": 682
+				"w": 707,
+				"h": 554
 			},
 			"insets": [
 				false,
@@ -980,7 +982,9 @@
 				"text": "",
 				"labelPosition": 0.5,
 				"font": "sans",
-				"scale": 1
+				"scale": 1,
+				"kind": "arc",
+				"elbowMidPoint": 0.5
 			},
 			"parentId": "page:page",
 			"index": "aJ3pz",

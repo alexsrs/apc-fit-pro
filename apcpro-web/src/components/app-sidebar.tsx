@@ -21,6 +21,8 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
+import apiClient from "@/lib/api-client";
+import { TeamSwitcher } from "@/components/team-switcher";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   type Profile = {
@@ -50,24 +52,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       try {
         const userId = profile?.userId || profile?.id;
         if (!userId) return;
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/grupos`,
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-        if (response.ok) {
-          const gruposApi = await response.json();
-          if (Array.isArray(gruposApi) && gruposApi.length > 0) {
-            setGrupos(
-              gruposApi.map((g: { name?: string }) => ({
-                name: g.name || "Grupo sem nome",
-                logo: GalleryVerticalEnd,
-                plan: "Academia XYZ",
-              }))
-            );
-          }
+        const response = await apiClient.get(`users/${userId}/grupos`);
+        const gruposApi = response.data;
+        if (Array.isArray(gruposApi) && gruposApi.length > 0) {
+          setGrupos(
+            gruposApi.map((g: { name?: string }) => ({
+              name: g.name || "Grupo sem nome",
+              logo: GalleryVerticalEnd,
+              plan: "Academia XYZ",
+            }))
+          );
         }
       } catch {
         // Silencia erro, mantém grupo padrão
@@ -289,6 +283,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
+        <TeamSwitcher teams={grupos} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

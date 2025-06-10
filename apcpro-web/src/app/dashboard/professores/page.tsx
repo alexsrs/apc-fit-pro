@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/MetricCard";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { ConviteAlunoModal } from "@/components/ConviteAlunoModal";
+import apiClient from "@/lib/api-client";
 
 type Aluno = {
   id: string;
@@ -56,13 +57,9 @@ export default function ProfessoresDashboard() {
     }
     if (profile && profile.id) {
       setLoadingAlunos(true);
-      fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/users/${profile.userId}/alunos`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          setAlunos(data);
-        })
+      apiClient
+        .get(`/api/users/${profile.userId}/alunos`)
+        .then((res) => setAlunos(res.data))
         .catch(() => setAlunos([]))
         .finally(() => setLoadingAlunos(false));
     }

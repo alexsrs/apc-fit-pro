@@ -29,6 +29,12 @@ O APC FIT PRO é uma plataforma completa para prescrição, avaliação e contro
 
 O sistema é dividido em duas grandes partes: **Frontend** e **Backend**.
 
+## ☁️ Microserviço de Mensageria (CloudAMQP/RabbitMQ)
+
+- **Função:** Responsável pela comunicação assíncrona entre serviços do sistema, utilizando filas para processar eventos, tarefas e integrações de forma desacoplada.
+- **Integração:** O backend (`apcpro-api`) publica e consome mensagens via CloudAMQP, permitindo escalabilidade e maior resiliência no processamento de dados.
+- **Tecnologia:** [CloudAMQP](https://www.cloudamqp.com/) (RabbitMQ gerenciado na nuvem).
+
 ## 🌐 Frontend (`apcpro-web`)
 
 - **Framework:** [Next.js](https://nextjs.org/) (React)
@@ -85,6 +91,7 @@ O sistema é dividido em duas grandes partes: **Frontend** e **Backend**.
 
 - **apcpro-api**: Diretório do backend, desenvolvido com Node.js, Express e Prisma.
 - **apcpro-web**: Diretório do frontend, desenvolvido com Next.js e Shadcn.
+- **CloudAMQP:** Instância gerenciada de RabbitMQ utilizada para mensageria entre serviços (configuração via variáveis de ambiente).
 - **`.github/`**: Arquivos de configuração e workflows do GitHub Actions.
 - **`README.md`**: Documentação principal do projeto.
 
@@ -134,6 +141,7 @@ O sistema é dividido em duas grandes partes: **Frontend** e **Backend**.
 - [Shadcn](https://ui.shadcn.com/) - Componentes UI acessíveis e reutilizáveis.
 - [Tailwind CSS](https://tailwindcss.com/) - Framework CSS utilitário para estilização rápida e responsiva.
 - [TypeScript](https://www.typescriptlang.org/) - Tipagem estática para melhor manutenção e escalabilidade.
+- [CloudAMQP (RabbitMQ)](https://www.cloudamqp.com/) - Mensageria e filas para comunicação assíncrona entre microserviços.
 
 ---
 

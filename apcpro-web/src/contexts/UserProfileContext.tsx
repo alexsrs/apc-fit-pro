@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
+// Tipagem mais restrita para os campos do perfil, evitando o uso de 'any'.
 type Profile = {
+  nome: string;
+  name: string;
   id?: string;
   userId?: string;
   role?: string;

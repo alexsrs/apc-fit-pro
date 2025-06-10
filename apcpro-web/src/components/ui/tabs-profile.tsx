@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import apiClient from "@/lib/api-client";
 
 export default function TabsProfile() {
   const { update } = useSession();
@@ -57,11 +58,9 @@ export default function TabsProfile() {
   useEffect(() => {
     if (formData.role === "aluno") {
       setLoadingProfessores(true);
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/professores`)
-        .then((res) => res.json())
-        .then((data) => {
-          setProfessores(data);
-        })
+      apiClient
+        .get("/professores")
+        .then((res) => setProfessores(res.data))
         .catch(() => setProfessores([]))
         .finally(() => setLoadingProfessores(false));
     }
@@ -78,37 +77,17 @@ export default function TabsProfile() {
       return;
     }
     const session = await getSession();
-    if (!session || !session.user || !session.user.id) {
+    if (!session?.user?.id) {
       setErrorMsg("Usuário não autenticado");
       return;
     }
-    const userId = session.user.id;
+
     const payload = { ...formData };
     if (formData.role === "professor" && "professorId" in payload) {
       (payload as { professorId?: string }).professorId = undefined;
     }
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-      if (!response.ok) {
-        let errorText = "Erro ao salvar os dados";
-        try {
-          const errorData = await response.json();
-          if (errorData?.error) {
-            errorText = errorData.error;
-          }
-        } catch {}
-        setErrorMsg(errorText);
-        return;
-      }
+      await apiClient.post(`${session.user.id}/profile`, payload);
       await update();
       router.refresh();
       if (formData.role === "professor") {

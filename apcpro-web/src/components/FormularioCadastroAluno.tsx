@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation"; // Importa o hook
+import apiClient from "@/lib/api-client"; // Importa o cliente API
 
 type FormularioCadastroAlunoProps = {
   professorId: string;
@@ -47,16 +48,9 @@ export default function FormularioCadastroAluno({
     };
 
     try {
-      const resposta = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/${userId}/profile`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const resposta = await apiClient.post(`${userId}/profile`, payload);
 
-      if (!resposta.ok) {
+      if (resposta.status < 200 || resposta.status >= 300) {
         throw new Error("Erro ao cadastrar aluno. Tente novamente.");
       }
 
