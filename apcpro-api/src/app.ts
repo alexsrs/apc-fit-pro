@@ -6,22 +6,14 @@ function createApp() {
   const app = express();
 
   const allowedOrigins = [
-    "http://localhost:3000",
-    "https://apc-fit-pro.vercel.app",
+    "https://apc-fit-pro.vercel.app", // produção
+    "http://localhost:3000", // dev local
   ];
 
-  // Configuração do CORS
   app.use(
     cors({
-      origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error("Não permitido pelo CORS"));
-        }
-      },
-      methods: ["GET", "POST", "PUT", "DELETE"], // Métodos permitidos
-      credentials: true, // Permitir envio de cookies
+      origin: allowedOrigins,
+      credentials: true, // se usar cookies/autenticação
     })
   );
 
