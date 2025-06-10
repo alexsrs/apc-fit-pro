@@ -23,49 +23,63 @@ import {
   getEvolucaoFisica,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
+import { authenticateUser } from "./middlewares/auth-middleware";
 
 const router = Router();
 
 // Outras rotas públicas
-router.get("/users", getUser);
-router.get("/users/:id", getUserById);
-router.post("/:userId/profile", postUserProfileByUserId);
-router.get("/:userId/profile", getUserProfileByUserId);
+router.get("/users", authenticateUser, getUser);
+router.get("/users/:id", authenticateUser, getUserById);
+router.post("/:userId/profile", authenticateUser, postUserProfileByUserId);
+router.get("/:userId/profile", authenticateUser, getUserProfileByUserId);
 router.get("/professores", getProfessores);
-router.get("/professor/:id", getProfessorById);
+router.get("/professor/:id", authenticateUser, getProfessorById);
 
 // Rotas de grupos
-router.get("/users/:id/grupos", getUserGroups);
-router.post("/users/:id/grupos", createUserGroup);
+router.get("/users/:id/grupos", authenticateUser, getUserGroups);
+router.post("/users/:id/grupos", authenticateUser, createUserGroup);
+router.put("/users/:id/grupos/:groupId", authenticateUser, updateUserGroup);
+router.delete("/users/:id/grupos/:groupId", authenticateUser, deleteUserGroup);
 
-// Rota para obetr alunos de um professor (relacionamentos)
-router.get("/users/:id/alunos", getUserStudents);
+// Rota para obter alunos de um professor (relacionamentos)
+router.get("/users/:id/alunos", authenticateUser, getUserStudents);
+router.post("/users/:id/alunos", authenticateUser, addStudentToUser);
+router.put("/users/:id/alunos/:alunoId", authenticateUser, updateUserStudent);
+router.delete(
+  "/users/:id/alunos/:alunoId",
+  authenticateUser,
+  removeStudentFromUser
+);
 
-router.post("/users/:id/alunos", addStudentToUser);
-router.put("/users/:id/alunos/:alunoId", updateUserStudent);
-router.delete("/users/:id/alunos/:alunoId", removeStudentFromUser);
-
-// Rotas de grupos
-
-router.get("/users/:id/grupos", getUserGroups);
-router.post("/users/:id/grupos", createUserGroup);
-router.put("/users/:id/grupos/:groupId", updateUserGroup);
-router.delete("/users/:id/grupos/:groupId", deleteUserGroup);
-
-// Rota para autenticação
-//router.post("/auth/google", authenticateUser);
-//router.post("/auth/validate", validateToken);
-router.post("/auth/sessions", persistSession as any);
-// Certifique-se de importar ou definir o authMiddleware corretamenteAjuste o caminho conforme necessário
-
-// Exemplo de rota
-router.get("/alunos/:userPerfilId/avaliacao-valida", getAlunoAvaliacaoValida);
-router.get("/alunos/:userPerfilId/avaliacoes", listarAvaliacoesAluno);
-router.post("/alunos/:userPerfilId/avaliacoes", cadastrarAvaliacaoAluno);
+// Rotas de avaliações
+router.get(
+  "/alunos/:userPerfilId/avaliacao-valida",
+  authenticateUser,
+  getAlunoAvaliacaoValida
+);
+router.get(
+  "/alunos/:userPerfilId/avaliacoes",
+  authenticateUser,
+  listarAvaliacoesAluno
+);
+router.post(
+  "/alunos/:userPerfilId/avaliacoes",
+  authenticateUser,
+  cadastrarAvaliacaoAluno
+);
 router.get(
   "/alunos/:userPerfilId/proxima-avaliacao",
-  getProximaAvaliacaoAluno as any
+  authenticateUser,
+  getProximaAvaliacaoAluno
 );
-router.get("/alunos/:userPerfilId/evolucao-fisica", getEvolucaoFisica as any);
+router.get(
+  "/alunos/:userPerfilId/evolucao-fisica",
+  authenticateUser,
+  getEvolucaoFisica
+);
+
+// Rota para autenticação
+router.post("/auth/sessions", persistSession as any);
+// Certifique-se de importar ou definir o authMiddleware corretamenteAjuste o caminho conforme necessário
 
 export default router;

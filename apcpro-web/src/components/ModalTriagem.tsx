@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm, Controller } from "react-hook-form";
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import apiClient from "@/lib/api-client";
 
 type FormData = {
   atleta_frequenciaTreino: number;
@@ -168,21 +169,14 @@ export function ModalTriagem({
       };
     }
 
-    await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/alunos/${userPerfilId}/avaliacoes`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tipo: tipoAvaliacao,
-          status: "pendente",
-          resultado,
-          validadeAte: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
-        }),
-      }
-    );
+    await apiClient.post(`alunos/${userPerfilId}/avaliacoes`, {
+      tipo: tipoAvaliacao,
+      status: "pendente",
+      resultado,
+      validadeAte: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+    });
 
     setLoading(false);
     onSuccess(data.bloco4_objetivo);

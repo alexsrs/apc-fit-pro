@@ -1,7 +1,6 @@
+import apiClient from "@/lib/api-client";
+
 export async function fetchUserData(userId: string) {
-    const response = await fetch(`/api/users/${userId}`);
-    if (!response.ok) {
-      throw new Error("Erro ao buscar dados do usuário");
-    }
-    return response.json();
-  }
+  const response = await apiClient.get(`users/${userId}`);
+  return response.data;
+}

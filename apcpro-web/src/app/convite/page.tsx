@@ -14,7 +14,7 @@ import FormularioCadastroAluno from "@/components/FormularioCadastroAluno";
 function ConviteAlunoPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const professorId = searchParams.get("professorId");
+  const professorId = searchParams?.get("professorId");
 
   useEffect(() => {
     // Se não houver professorId, redireciona para home
