@@ -133,15 +133,15 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
   };
 }
 
-// Classificação IMC (OMS)
-// Observação: O IMC é mais indicado para adultos saudáveis. Pode não refletir adequadamente a composição corporal de atletas, idosos ou pessoas muito musculosas.
+// Classificação IMC (OMS/CDC)
+// https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight
 function classificarIMC(imc: number): string {
-  if (imc < 18.5) return "Baixo peso"; // Mais comum em adolescentes, idosos ou pessoas com desnutrição
-  if (imc < 25) return "Peso normal"; // Indicado para adultos saudáveis e praticantes recreativos
-  if (imc < 30) return "Sobrepeso"; // Frequente em adultos sedentários ou com leve excesso de gordura
-  if (imc < 35) return "Obesidade grau I"; // Risco aumentado, comum em adultos com maus hábitos alimentares
-  if (imc < 40) return "Obesidade grau II"; // Risco alto, atenção especial para adultos e idosos
-  return "Obesidade grau III"; // Risco muito alto, geralmente demanda acompanhamento multiprofissional
+  if (imc < 18.5) return "Abaixo do peso";
+  if (imc < 25) return "Peso normal";
+  if (imc < 30) return "Pré-obesidade";
+  if (imc < 35) return "Obesidade I";
+  if (imc < 40) return "Obesidade II";
+  return "Obesidade III";
 }
 
 // Classificação RCQ (OMS/ACSM)

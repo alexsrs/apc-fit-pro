@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 
 import {
   getUser,
@@ -24,6 +24,7 @@ import {
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 import { authenticateUser } from "./middlewares/auth-middleware";
+import { calcularMedidasController } from "./controllers/avaliacao-controller";
 
 const router = Router();
 

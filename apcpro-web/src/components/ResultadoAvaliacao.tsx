@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { ImcInfo } from "@/components/ImcInfo";
 
 // Utilitário para formatar nomes de campos
 function formatLabel(label: string) {
@@ -192,7 +193,6 @@ function isCampoMedidaCm(label: string) {
 function IndicesColunasAgrupados({ data }: { data: IndicesData }) {
   const ordem: [string, string, string?][] = [
     ["Ca", "Classificacao C A"],
-    ["Imc", "Classificacao I M C"],
     ["Rcq", "Classificacao R C Q"],
     ["Percentual G C (Gomez)", "Classificacao G C (Gomez)", "%"],
     ["Percentual G C (Marinha)", "Classificacao G C (Marinha)", "%"],
@@ -310,13 +310,13 @@ export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
   // Separar campos primitivos e objetos
   const dadosGerais: KeyValueData = {};
   const grupos: Record<string, KeyValueData> = {};
-  let indices: KeyValueData | null = null;
+  let indicesData: KeyValueData = {};
 
   Object.entries(resultado).forEach(([k, v]) => {
     if (v === null || v === undefined) return;
     if (typeof v === "object" && !Array.isArray(v)) {
       if (k.toLowerCase() === "indices") {
-        indices = v as KeyValueData;
+        indicesData = v as KeyValueData;
       } else {
         grupos[k] = v as KeyValueData;
       }
@@ -345,46 +345,99 @@ export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
     </Card>
   );
 
+  // Utiliza a prop resultado diretamente
+
+  const tipoAvaliacao = String(resultado?.tipo ?? "")
+    .trim()
+    .toLowerCase();
+  const indices = (resultado.indices ?? {}) as Record<string, unknown>;
+  const imc = indices.imc ?? resultado.imc ?? undefined;
+  const classificacaoImc =
+    indices?.classificacaoIMC ?? resultado.classificacaoImc ?? undefined;
+
+  const exibirImcInfo =
+    (typeof imc === "number" ||
+      (!isNaN(Number(imc)) &&
+        imc !== "" &&
+        imc !== null &&
+        imc !== undefined)) &&
+    typeof classificacaoImc === "string" &&
+    classificacaoImc !== "" &&
+    classificacaoImc !== undefined;
+
   return (
-    <div className="space-y-1">
-      <Classificacoes resultado={resultado} />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-        {Object.keys(dadosGerais).length > 0 && (
-          <Section title="Dados Gerais">
-            <KeyValueList data={dadosGerais} />
-          </Section>
+    <div className="max-h-[80vh] overflow-y-auto p-4">
+      <div className="space-y-1">
+        <Classificacoes resultado={resultado} />
+
+        {/* Só exibe ImcInfo se for avaliação de medidas */}
+        {exibirImcInfo && (
+          <div className="mb-2">
+            <ImcInfo
+              imc={Number(imc)}
+              classificacao={String(classificacaoImc)}
+            />
+          </div>
         )}
-        {grupos.Tronco && Object.keys(grupos.Tronco).length > 0 && (
-          <Section title="Tronco">
-            <KeyValueList data={grupos.Tronco} />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+          {Object.keys(dadosGerais).length > 0 && (
+            <Section title="Dados Gerais">
+              <KeyValueList data={dadosGerais} />
+            </Section>
+          )}
+          {grupos.Tronco && Object.keys(grupos.Tronco).length > 0 && (
+            <Section title="Tronco">
+              <KeyValueList data={grupos.Tronco} />
+            </Section>
+          )}
+          {Object.entries(grupos).map(
+            ([nome, grupo]) =>
+              nome !== "Tronco" &&
+              Object.keys(grupo).length > 0 && (
+                <Section title={formatLabel(nome)} key={nome}>
+                  <KeyValueList data={grupo} />
+                </Section>
+              )
+          )}
+        </div>
+        {indices && Object.keys(indices).length > 0 && (
+          <Section title="Índices">
+            <IndicesColunasAgrupados
+              data={
+                Object.fromEntries(
+                  Object.entries(indices).filter(
+                    ([k]) =>
+                      ![
+                        "imc",
+                        "Imc",
+                        "IMC",
+                        "classificacaoimc",
+                        "Classificacaoimc",
+                        "classificacaoImc",
+                        "classificacaoIMC",
+                        "Classificacao I M C",
+                        "classificacao imc",
+                        "Classificação IMC",
+                      ].includes(k.trim())
+                  )
+                ) as IndicesData
+              }
+            />
+            {/* Legenda das siglas */}
+            <div className="pt-4 text-[11px] text-zinc-400">
+              <ul className="grid grid-cols-2 gap-x-8 gap-y-1 list-none pl-0 justify-center items-center">
+                {Object.entries(legendaSiglas).map(([sigla, desc]) => (
+                  <li key={sigla} className="flex items-center justify-center">
+                    <span className="text-zinc-400">{sigla} -</span>
+                    <span className="text-zinc-400">{desc}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </Section>
-        )}
-        {Object.entries(grupos).map(
-          ([nome, grupo]) =>
-            nome !== "Tronco" &&
-            Object.keys(grupo).length > 0 && (
-              <Section title={formatLabel(nome)} key={nome}>
-                <KeyValueList data={grupo} />
-              </Section>
-            )
         )}
       </div>
-      {indices && Object.keys(indices).length > 0 && (
-        <Section title="Índices">
-          <IndicesColunasAgrupados data={indices} />
-          {/* Legenda das siglas */}
-          <div className="pt-4 text-[11px] text-zinc-400">
-            <ul className="grid grid-cols-2 gap-x-8 gap-y-1 list-none pl-0 justify-center items-center">
-              {Object.entries(legendaSiglas).map(([sigla, desc]) => (
-                <li key={sigla} className="flex items-center justify-center">
-                  <span className="text-zinc-400">{sigla} -</span>
-                  <span className="text-zinc-400">{desc}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Section>
-      )}
     </div>
   );
 }
