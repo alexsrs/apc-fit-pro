@@ -1,3 +1,4 @@
+import { Genero } from "../models/genero-model";
 import { converterMedidasJson } from "./conversorMedidas";
 
 // Função utilitária para processar o body do frontend:
@@ -6,31 +7,29 @@ export function processarMedidas(body: any) {
   return calcularIndicesMedidas(medidas);
 }
 
-type Sexo = 0 | 1 | "masculino" | "feminino";
-
 export interface MedidasInput {
   peso: number;
   altura: number; // em cm
   idade: number;
-  sexo: Sexo;
+  genero: Genero;
   cintura: number; // em cm
   pescoco?: number; // em cm
   quadril?: number; // em cm (obrigatório para mulheres)
   abdomen?: number; // em cm
 }
 
-// Função utilitária para converter sexo para número
-export function sexoToNumber(sexo: Sexo): 0 | 1 {
-  if (sexo === 1 || sexo === "masculino") return 1;
-  return 0; // feminino ou 0
+// Função utilitária para converter genero para número
+export function generoToNumber(genero: Genero): 0 | 1 {
+  return genero === Genero.Masculino ? 1 : 0;
 }
 
 function log10(x: number): number {
   return Math.log(x) / Math.LN10;
 }
 
+// Função principal para calcular os índices a partir das medidas fornecidas
 export function calcularIndicesMedidas(dados: MedidasInput) {
-  const sexoNum = sexoToNumber(dados.sexo);
+  const sexoNum = generoToNumber(dados.genero);
   const alturaM = dados.altura / 100;
   const imc = dados.peso / (alturaM * alturaM);
 
@@ -109,27 +108,27 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
     percentualGC_Deurenberg,
     classificacaoGC_Deurenberg: classificarPercentualGC(
       percentualGC_Deurenberg,
-      dados.sexo,
+      dados.genero,
       dados.idade
     ),
     percentualGC_Gomez,
     classificacaoGC_Gomez: classificarPercentualGC(
       percentualGC_Gomez,
-      dados.sexo,
+      dados.genero,
       dados.idade
     ),
     percentualGC_Marinha,
     classificacaoGC_Marinha: classificarPercentualGC(
       percentualGC_Marinha,
-      dados.sexo,
+      dados.genero,
       dados.idade
     ),
     massaMuscular_Lee,
     massaMuscular_Doupe,
     rcq,
-    classificacaoRCQ: rcq ? classificarRCQ(rcq, dados.sexo) : null,
+    classificacaoRCQ: rcq ? classificarRCQ(rcq, dados.genero) : null,
     ca,
-    classificacaoCA: classificarCA(ca, dados.sexo),
+    classificacaoCA: ca !== null ? classificarCA(ca, dados.genero) : null,
   };
 }
 
@@ -146,8 +145,8 @@ function classificarIMC(imc: number): string {
 
 // Classificação RCQ (OMS/ACSM)
 // Observação: O RCQ é útil para identificar risco cardiovascular, especialmente em adultos e idosos. Pode não ser tão preciso para atletas.
-function classificarRCQ(rcq: number, sexo: Sexo): string {
-  const sexoNum = sexoToNumber(sexo);
+function classificarRCQ(rcq: number, sexo: Genero): string {
+  const sexoNum = generoToNumber(sexo);
   if (sexoNum === 1) {
     // Homem
     if (rcq < 0.9) return "Baixo risco"; // Indicado para adultos jovens e praticantes de atividade física
@@ -163,19 +162,15 @@ function classificarRCQ(rcq: number, sexo: Sexo): string {
 
 // Classificação CA (Circunferência Abdominal) - risco metabólico (OMS)
 // Observação: A CA é um bom indicador de risco metabólico, especialmente para adultos e idosos. Pode não ser adequada para atletas.
-function classificarCA(ca: number | null, sexo: Sexo): string | null {
-  if (ca == null) return null;
-  const sexoNum = sexoToNumber(sexo);
-  if (sexoNum === 1) {
-    // Homem
-    if (ca < 94) return "Baixo risco"; // Indicado para adultos jovens e praticantes de atividade física
-    if (ca < 102) return "Risco aumentado"; // Frequente em adultos sedentários ou com sobrepeso
-    return "Risco muito aumentado"; // Comum em adultos com obesidade abdominal
+export function classificarCA(ca: number, genero: Genero): string {
+  if (genero === Genero.Masculino) {
+    if (ca < 94) return "Baixo risco";
+    if (ca < 102) return "Risco moderado";
+    return "Risco muito aumentado";
   } else {
-    // Mulher
-    if (ca < 80) return "Baixo risco"; // Indicado para mulheres jovens e ativas
-    if (ca < 88) return "Risco aumentado"; // Frequente em mulheres sedentárias ou com sobrepeso
-    return "Risco muito aumentado"; // Comum em mulheres com obesidade abdominal ou pós-menopausa
+    if (ca < 80) return "Baixo risco";
+    if (ca < 88) return "Risco moderado";
+    return "Risco muito aumentado";
   }
 }
 
@@ -183,11 +178,11 @@ function classificarCA(ca: number | null, sexo: Sexo): string | null {
 // Observação: O %GC é mais preciso para avaliar composição corporal em atletas, praticantes de atividade física e acompanhamento de emagrecimento.
 function classificarPercentualGC(
   percentualGC: number | null,
-  sexo: Sexo,
+  sexo: Genero,
   idade: number
 ): string | null {
   if (percentualGC == null) return null;
-  const sexoNum = sexoToNumber(sexo);
+  const sexoNum = generoToNumber(sexo);
   // Tabela simplificada ACSM (pode ajustar conforme referência desejada)
   const tabelaHomem = [
     { maxIdade: 29, limites: [8, 19, 24] },

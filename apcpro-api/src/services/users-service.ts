@@ -7,11 +7,9 @@ import { Grupo, User, UserPerfil } from "../models/user-model";
 import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 import { classificarObjetivoAnamnese } from "../utils/avaliacaoProcessor";
-import {
-  calcularIndicesMedidas,
-  sexoToNumber,
-} from "../utils/avaliacaoMedidas";
-import { addMonths } from "date-fns";
+import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
+// Adicione a importação ou declaração do tipo Sexo
+type Sexo = "masculino" | "feminino" | 1 | 0;
 
 function handleServiceError(error: unknown, message: string): never {
   console.error(message, error);
@@ -343,13 +341,11 @@ export class UsersService {
       // Agora use medidasRecente e medidasAnterior para calcular os índices
 
       const indicesCalculados = calcularIndicesMedidas({
-        ...medidasRecente,
-        ...medidasAnterior,
         peso: 0,
         altura: 0,
         idade: 0,
-        sexo: 0,
         cintura: 0,
+        genero: Genero.Masculino,
       });
 
       // Filtra apenas índices e classificações
@@ -441,7 +437,7 @@ export class UsersService {
         peso: getNumberProp(medidasRecente, "peso"),
         altura: getNumberProp(medidasRecente, "altura"),
         idade: getNumberProp(medidasRecente, "idade"),
-        sexo,
+        genero: sexoNum,
         cintura: getNumberProp(medidasRecente, "cintura"),
         quadril: getNumberProp(medidasRecente, "quadril"),
         pescoco: getNumberProp(medidasRecente, "pescoco"),
@@ -451,7 +447,7 @@ export class UsersService {
         peso: getNumberProp(medidasAnterior, "peso"),
         altura: getNumberProp(medidasAnterior, "altura"),
         idade: getNumberProp(medidasAnterior, "idade"),
-        sexo,
+        genero: sexoNum,
         cintura: getNumberProp(medidasAnterior, "cintura"),
         quadril: getNumberProp(medidasAnterior, "quadril"),
         pescoco: getNumberProp(medidasAnterior, "pescoco"),
@@ -495,11 +491,40 @@ export class UsersService {
       })),
     };
   }
+
+  /**
+   * Busca o gênero do perfil do usuário pelo ID do perfil.
+   */
+  static async getGeneroFromUserPerfil(
+    userPerfilId: string
+  ): Promise<Genero | null> {
+    // Busca o perfil usando o repositório, seguindo a arquitetura em camadas
+    const userProfileRepository = new UserProfileRepository();
+    const perfil = await userProfileRepository.findProfileById(userPerfilId);
+
+    if (perfil && isGenero(perfil.genero)) {
+      return perfil.genero;
+    }
+    return null;
+  }
 }
 
-export { UserRepositoryClass };
-type Sexo = "masculino" | "feminino" | 1 | 0;
-
+// Função utilitária para validar o tipo Sexo
 function isSexo(value: any): value is Sexo {
-  return value === "masculino" || value === "feminino" || value === 1 || value === 0;
+  return (
+    value === "masculino" || value === "feminino" || value === 1 || value === 0
+  );
+}
+import { Genero, isGenero } from "../models/genero-model";
+
+/**
+ * Converte o valor de sexo para o tipo Genero.
+ * @param sexo "masculino" | "feminino" | 1 | 0
+ * @returns Genero.Masculino ou Genero.Feminino
+ */
+function sexoToNumber(sexo: string | number): Genero {
+  if (sexo === "masculino" || sexo === 1) return Genero.Masculino;
+  if (sexo === "feminino" || sexo === 0) return Genero.Feminino;
+  // Valor padrão seguro
+  return Genero.Feminino;
 }

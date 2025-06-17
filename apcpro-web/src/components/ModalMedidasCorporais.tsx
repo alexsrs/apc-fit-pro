@@ -18,6 +18,13 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSession } from "next-auth/react";
 import apiClient from "@/lib/api-client";
+import {
+  avaliarCA,
+  CircunferenciaAbdominalResultado,
+} from "@/services/ca-service";
+import { CaInfo } from "./CaInfo";
+
+// Service que chama a API de medidas
 
 // Lista de partes do corpo com laterais
 const bodyParts = [
@@ -144,7 +151,7 @@ export function ModalMedidasCorporais({
 }: ModalMedidasCorporaisProps) {
   const [form, setForm] = useState<MedidasForm>({});
   const [loading, setLoading] = useState(false);
-  // const { profile } = useContext(UserProfileContext);
+  const [resultadoCA] = useState<CircunferenciaAbdominalResultado | null>(null);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm({ ...form, [e.target.id]: e.target.value });
@@ -203,6 +210,9 @@ export function ModalMedidasCorporais({
       },
     };
 
+    // Chama a API que já retorna todos os índices, inclusive CA
+    // Não é necessário chamar avaliarMedidas aqui, pois a API já calcula e persiste o valor de CA junto com as demais medidas.
+
     await apiClient.post(`alunos/${userPerfilId}/avaliacoes`, {
       tipo: "medidas",
       status: "pendente",
@@ -216,10 +226,6 @@ export function ModalMedidasCorporais({
     onSuccess();
     onClose();
   }
-
-  // Separando os campos por lado
-  const leftParts = bodyParts.filter((part) => part.side === "left");
-  const rightParts = bodyParts.filter((part) => part.side === "right");
 
   // Função utilitária para renderizar label com tooltip
   function LabelWithTooltip({
@@ -398,27 +404,29 @@ export function ModalMedidasCorporais({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2 items-start">
                 {/* Coluna esquerda */}
                 <div className="flex flex-col items-center gap-2">
-                  {leftParts.map((part) => (
-                    <div key={part.id}>
-                      <LabelWithTooltip
-                        htmlFor={part.id}
-                        label={part.label}
-                        tooltip={
-                          part.tooltip ||
-                          "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
-                        }
-                      />
-                      <Input
-                        id={part.id}
-                        className="w-28"
-                        placeholder="cm"
-                        type="number"
-                        value={form[part.id] || ""}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  ))}
+                  {bodyParts
+                    .filter((part) => part.side === "left")
+                    .map((part) => (
+                      <div key={part.id}>
+                        <LabelWithTooltip
+                          htmlFor={part.id}
+                          label={part.label}
+                          tooltip={
+                            part.tooltip ||
+                            "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
+                          }
+                        />
+                        <Input
+                          id={part.id}
+                          className="w-28"
+                          placeholder="cm"
+                          type="number"
+                          value={form[part.id] || ""}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    ))}
                 </div>
                 {/* Imagem central */}
                 <div className="flex flex-col items-center gap-2">
@@ -432,27 +440,29 @@ export function ModalMedidasCorporais({
                 </div>
                 {/* Coluna direita */}
                 <div className="flex flex-col items-center gap-2">
-                  {rightParts.map((part) => (
-                    <div key={part.id}>
-                      <LabelWithTooltip
-                        htmlFor={part.id}
-                        label={part.label}
-                        tooltip={
-                          part.tooltip ||
-                          "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
-                        }
-                      />
-                      <Input
-                        id={part.id}
-                        className="w-28"
-                        placeholder="cm"
-                        type="number"
-                        value={form[part.id] || ""}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  ))}
+                  {bodyParts
+                    .filter((part) => part.side === "right")
+                    .map((part) => (
+                      <div key={part.id}>
+                        <LabelWithTooltip
+                          htmlFor={part.id}
+                          label={part.label}
+                          tooltip={
+                            part.tooltip ||
+                            "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
+                          }
+                        />
+                        <Input
+                          id={part.id}
+                          className="w-28"
+                          placeholder="cm"
+                          type="number"
+                          value={form[part.id] || ""}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    ))}
                 </div>
               </div>
 
@@ -463,6 +473,8 @@ export function ModalMedidasCorporais({
                 </Button>
               </div>
             </form>
+            {/* Exibe o resultado do CA se existir */}
+            {resultadoCA && <CaInfo resultado={resultadoCA} />}
           </ScrollArea>
         </div>
       </DialogContent>
@@ -532,6 +544,68 @@ export default function PaginaAluno() {
             dataNascimento={dataNascimento}
           />
         )}
+    </>
+  );
+}
+
+export function FormularioCA() {
+  const [valor, setValor] = useState("");
+  const [genero, setGenero] = useState<"masculino" | "feminino">("masculino");
+  const [loading, setLoading] = useState(false);
+  const [resultado, setResultado] =
+    useState<CircunferenciaAbdominalResultado | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      // Envia para o backend, que faz o cálculo/classificação
+      const res = await avaliarCA({ valor: Number(valor), genero });
+      setResultado(res);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block mb-1 font-medium">
+            Circunferência abdominal (cm)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={0.1}
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Gênero</label>
+          <select
+            className="w-full border rounded px-3 py-2"
+            value={genero}
+            onChange={(e) =>
+              setGenero(e.target.value as "masculino" | "feminino")
+            }
+          >
+            <option value="masculino">Masculino</option>
+            <option value="feminino">Feminino</option>
+          </select>
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white rounded py-2"
+          disabled={loading}
+        >
+          {loading ? "Avaliando..." : "Avaliar CA"}
+        </button>
+      </form>
+      {resultado && <CaInfo resultado={resultado} />}
     </>
   );
 }

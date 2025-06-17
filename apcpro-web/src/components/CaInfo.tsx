@@ -1,92 +1,50 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { CircunferenciaAbdominalResultado } from "@/services/ca-service";
 import {
   Accordion,
-  AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  AccordionContent,
 } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
-// Faixas e rótulos conforme ImcCalculator
-const classificacoes = [
-  {
-    min: 0,
-    max: 18.49,
-    label: "Abaixo do peso",
-    color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
-  },
-  {
-    min: 18.5,
-    max: 24.99,
-    label: "Peso normal",
-    color: "bg-green-100 text-green-700 border border-green-200",
-  },
-  {
-    min: 25,
-    max: 29.99,
-    label: "Pré-obesidade",
-    color: "bg-orange-100 text-orange-700 border border-orange-200",
-  },
-  {
-    min: 30,
-    max: 34.99,
-    label: "Obesidade I",
-    color: "bg-red-100 text-red-700 border border-red-200",
-  },
-  {
-    min: 35,
-    max: 39.99,
-    label: "Obesidade II",
-    color: "bg-red-200 text-red-800 border border-red-300",
-  },
-  {
-    min: 40,
-    max: Infinity,
-    label: "Obesidade III",
-    color: "bg-red-300 text-red-900 border border-red-400",
-  },
-];
-
-// Função para buscar cor do badge pela classificação
-function getBadgeColor(classificacao: string): string {
-  const found = classificacoes.find(
-    (c) => c.label.toLowerCase() === classificacao.toLowerCase()
-  );
-  return found
-    ? found.color
-    : "bg-zinc-100 text-zinc-700 border border-zinc-200";
-}
-
-type ImcInfoProps = {
-  imc: number;
-  classificacao: string;
+/**
+ * Exibe o resultado da avaliação de Circunferência Abdominal (CA)
+ */
+type CaInfoProps = {
+  resultado: CircunferenciaAbdominalResultado;
 };
 
-export function ImcInfo({ imc, classificacao }: ImcInfoProps) {
+export function CaInfo({ resultado }: CaInfoProps) {
   return (
     <Card className="mb-4 shadow-sm border border-zinc-200">
       <CardContent className="p-4">
         <div className="mb-2">
           <h3 className="font-bold text-lg text-zinc-800 mb-1">
-            IMC calculado:{" "}
-            <span className="text-2xl font-mono">{imc?.toFixed(2)}</span>
+            Circunferência abdominal:{" "}
+            <span className="text-2xl font-mono">{resultado.valor} cm</span>
           </h3>
           <div className="flex items-center gap-2 mb-2">
             <span className="font-semibold text-zinc-700">Classificação:</span>
-            {classificacao && classificacao !== "--" ? (
-              <Badge
-                className={cn(
-                  "text-xs font-semibold font-sans px-2 py-0.5 rounded border align-middle",
-                  getBadgeColor(classificacao)
-                )}
-              >
-                {classificacao}
-              </Badge>
-            ) : (
-              <span className="text-zinc-400 ml-2">Não disponível</span>
-            )}
+            <span
+              className={
+                resultado.classificacao.toLowerCase().includes("baixo")
+                  ? "text-xs font-semibold px-2 py-0.5 rounded bg-green-100 text-green-700 border border-green-200"
+                  : resultado.classificacao
+                      .toLowerCase()
+                      .includes("aumentado") &&
+                    !resultado.classificacao.toLowerCase().includes("muito")
+                  ? "text-xs font-semibold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-200"
+                  : resultado.classificacao
+                      .toLowerCase()
+                      .includes("muito aumentado")
+                  ? "text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-700 border border-red-200"
+                  : "text-xs font-semibold px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200"
+              }
+            >
+              {resultado.classificacao}
+            </span>
           </div>
         </div>
         <Accordion type="single" collapsible className="w-full mt-2">
@@ -114,56 +72,48 @@ export function ImcInfo({ imc, classificacao }: ImcInfoProps) {
                 <table className="min-w-full text-xs border mt-2 mb-4">
                   <thead>
                     <tr>
-                      <th className="border px-2 py-1">IMC</th>
-                      <th className="border px-2 py-1">Classificação</th>
+                      <th className="border px-2 py-1">Gênero</th>
+                      <th className="border px-2 py-1">Baixo risco</th>
+                      <th className="border px-2 py-1">Risco aumentado</th>
+                      <th className="border px-2 py-1">
+                        Risco muito aumentado
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="border px-2 py-1">{"< 18,5"}</td>
-                      <td className="border px-2 py-1">
-                        <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-200">
-                          Abaixo do peso
-                        </Badge>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1">18,5 – 24,99</td>
+                      <td className="border px-2 py-1">Masculino</td>
                       <td className="border px-2 py-1">
                         <Badge className="bg-green-100 text-green-700 border border-green-200">
-                          Peso normal
+                          {"< 94 cm"}
                         </Badge>
                       </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1">25 – 29,99</td>
                       <td className="border px-2 py-1">
-                        <Badge className="bg-orange-100 text-orange-700 border border-orange-200">
-                          Pré-obesidade
+                        <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-200">
+                          {"94–101 cm"}
                         </Badge>
                       </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1">30 – 34,99</td>
                       <td className="border px-2 py-1">
                         <Badge className="bg-red-100 text-red-700 border border-red-200">
-                          Obesidade I
+                          {"≥ 102 cm"}
                         </Badge>
                       </td>
                     </tr>
                     <tr>
-                      <td className="border px-2 py-1">35 – 39,99</td>
+                      <td className="border px-2 py-1">Feminino</td>
                       <td className="border px-2 py-1">
-                        <Badge className="bg-red-200 text-red-800 border border-red-300">
-                          Obesidade II
+                        <Badge className="bg-green-100 text-green-700 border border-green-200">
+                          {"< 80 cm"}
                         </Badge>
                       </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1">{"≥ 40"}</td>
                       <td className="border px-2 py-1">
-                        <Badge className="bg-red-300 text-red-900 border border-red-400">
-                          Obesidade III
+                        <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-200">
+                          {"80–87 cm"}
+                        </Badge>
+                      </td>
+                      <td className="border px-2 py-1">
+                        <Badge className="bg-red-100 text-red-700 border border-red-200">
+                          {"≥ 88 cm"}
                         </Badge>
                       </td>
                     </tr>
@@ -205,38 +155,38 @@ export function ImcInfo({ imc, classificacao }: ImcInfoProps) {
               <ul className="list-disc pl-5 text-sm mb-4">
                 <li>
                   <a
-                    href="https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight"
+                    href="https://www.who.int/europe/news-room/fact-sheets/item/a-healthy-lifestyle---who-recommendations"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    OMS - Obesidade e Sobrepeso
+                    OMS - Circunferência abdominal e risco cardiometabólico
                   </a>
                 </li>
                 <li>
                   <a
-                    href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4869763/"
+                    href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6520897/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    NCBI - Limitações do IMC
+                    NCBI - Waist Circumference and Health Risk
                   </a>
                 </li>
                 <li>
                   <a
-                    href="https://www.verywellhealth.com/body-mass-index-bmi-5184776"
+                    href="https://www.scielo.br/j/rbme/a/8k6k6w6w6w6w6w6w6w6w6w6w/?lang=pt"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    Verywell Health - BMI
+                    SciELO - Utilidade clínica da circunferência abdominal
                   </a>
                 </li>
               </ul>
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="limitacoes">
+          <AccordionItem value="aplicacao">
             <AccordionTrigger>
               <span className="flex items-center gap-2">
                 <svg
@@ -262,19 +212,27 @@ export function ImcInfo({ imc, classificacao }: ImcInfoProps) {
                     d="M4 4h16v16H4z"
                   />
                 </svg>
-                Limitações do IMC
+                Aplicação
               </span>
             </AccordionTrigger>
             <AccordionContent>
               <ul className="list-disc pl-5 text-sm mb-4">
-                <li>Não diferencia massa magra de gordura.</li>
-                <li>Não avalia a distribuição da gordura corporal.</li>
                 <li>
-                  Pode superestimar ou subestimar riscos em atletas, idosos e
-                  diferentes etnias.
+                  A circunferência abdominal (CA) é um marcador simples e
+                  prático para estimar a gordura abdominal, associada ao risco
+                  cardiovascular e metabólico.
                 </li>
                 <li>
-                  É um indicador populacional, não diagnóstico individual.
+                  Valores elevados de CA indicam maior risco de doenças como
+                  diabetes tipo 2, hipertensão e doenças cardíacas.
+                </li>
+                <li>
+                  A CA complementa o IMC, pois avalia a distribuição da gordura
+                  corporal, especialmente a visceral.
+                </li>
+                <li>
+                  Recomenda-se medir a CA no ponto médio entre a última costela
+                  e a crista ilíaca, com a fita paralela ao solo.
                 </li>
               </ul>
             </AccordionContent>

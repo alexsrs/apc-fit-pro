@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 
 import {
   getUser,
@@ -24,7 +24,8 @@ import {
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 import { authenticateUser } from "./middlewares/auth-middleware";
-import { calcularMedidasController } from "./controllers/avaliacao-controller";
+
+import { avaliarCAController } from "./controllers/avaliarCA-controller";
 
 const router = Router();
 
@@ -82,5 +83,15 @@ router.get(
 // Rota para autenticação
 router.post("/auth/sessions", persistSession as any);
 // Certifique-se de importar ou definir o authMiddleware corretamenteAjuste o caminho conforme necessário
+
+// Função utilitária para tratar controllers assíncronos e capturar erros
+
+router.post("/avaliar-ca", authenticateUser, async (req, res, next) => {
+  try {
+    await avaliarCAController(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

@@ -2,7 +2,12 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ImcInfo } from "@/components/ImcInfo";
+import { ImcInfo } from "./ImcInfo";
+import {
+  avaliarCA,
+  CircunferenciaAbdominalResultado,
+} from "@/services/ca-service";
+import { CaInfo } from "./CaInfo";
 
 // Utilitário para formatar nomes de campos
 function formatLabel(label: string) {
@@ -310,13 +315,12 @@ export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
   // Separar campos primitivos e objetos
   const dadosGerais: KeyValueData = {};
   const grupos: Record<string, KeyValueData> = {};
-  let indicesData: KeyValueData = {};
 
   Object.entries(resultado).forEach(([k, v]) => {
     if (v === null || v === undefined) return;
     if (typeof v === "object" && !Array.isArray(v)) {
       if (k.toLowerCase() === "indices") {
-        indicesData = v as KeyValueData;
+        // Nada a fazer, já usamos resultado.indices abaixo
       } else {
         grupos[k] = v as KeyValueData;
       }
@@ -347,13 +351,24 @@ export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
 
   // Utiliza a prop resultado diretamente
 
-  const tipoAvaliacao = String(resultado?.tipo ?? "")
-    .trim()
-    .toLowerCase();
   const indices = (resultado.indices ?? {}) as Record<string, unknown>;
   const imc = indices.imc ?? resultado.imc ?? undefined;
   const classificacaoImc =
     indices?.classificacaoIMC ?? resultado.classificacaoImc ?? undefined;
+
+  const ca = indices.ca ?? resultado.ca ?? undefined;
+  const classificacaoCa =
+    indices?.classificacaoCA ??
+    resultado.classificacaoCa ??
+    resultado.classificacaoCA ??
+    undefined;
+  const riscoCa =
+    indices?.riscoCA ?? resultado.riscoCa ?? resultado.riscoCA ?? undefined;
+  const referenciaCa =
+    indices?.referenciaCA ??
+    resultado.referenciaCa ??
+    resultado.referenciaCA ??
+    undefined;
 
   const exibirImcInfo =
     (typeof imc === "number" ||
@@ -365,17 +380,37 @@ export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
     classificacaoImc !== "" &&
     classificacaoImc !== undefined;
 
+  const exibirCaInfo =
+    (typeof ca === "number" ||
+      (!isNaN(Number(ca)) && ca !== "" && ca !== null && ca !== undefined)) &&
+    typeof classificacaoCa === "string" &&
+    classificacaoCa !== "" &&
+    classificacaoCa !== undefined;
+
   return (
     <div className="max-h-[80vh] overflow-y-auto p-4">
       <div className="space-y-1">
         <Classificacoes resultado={resultado} />
 
-        {/* Só exibe ImcInfo se for avaliação de medidas */}
+        {/* Exibe ImcInfo se for avaliação de medidas */}
         {exibirImcInfo && (
           <div className="mb-2">
             <ImcInfo
               imc={Number(imc)}
               classificacao={String(classificacaoImc)}
+            />
+          </div>
+        )}
+        {/* Exibe CaInfo no mesmo padrão visual do ImcInfo */}
+        {exibirCaInfo && (
+          <div className="mb-2">
+            <CaInfo
+              resultado={{
+                valor: Number(ca),
+                classificacao: String(classificacaoCa),
+                risco: String(riscoCa ?? ""),
+                referencia: String(referenciaCa ?? ""),
+              }}
             />
           </div>
         )}
@@ -438,6 +473,65 @@ export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
           </Section>
         )}
       </div>
+    </div>
+  );
+}
+
+type ResultadoAvaliacoesProps = {
+  resultadoIMC?: {
+    valor: number;
+    classificacao: string;
+    risco: string;
+    referencia: string;
+  };
+  resultadoCA?: {
+    valor: number;
+    classificacao: string;
+    risco: string;
+    referencia: string;
+  };
+  // ...outros resultados de avaliações
+};
+
+export function ResultadoAvaliacoes({
+  resultadoIMC,
+  resultadoCA,
+}: ResultadoAvaliacoesProps) {
+  return (
+    <div>
+      {resultadoIMC && (
+        <ImcInfo
+          imc={resultadoIMC.valor}
+          classificacao={resultadoIMC.classificacao}
+        />
+      )}
+      {resultadoCA && <CaInfo resultado={resultadoCA} />}
+    </div>
+  );
+}
+
+// Remover hooks não utilizados do ModalMedidasCorporais
+export function ModalMedidasCorporais({
+  tipoAvaliacao,
+}: {
+  tipoAvaliacao: string;
+}) {
+  const [resultadoCA, setResultadoCA] =
+    React.useState<CircunferenciaAbdominalResultado | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await avaliarCA({ valor: Number(0), genero: "masculino" }); // Exemplo, ajuste conforme uso real
+    console.log("Resultado CA da API:", res); // <-- Aqui você vê o resultado no console
+    setResultadoCA(res);
+  }
+
+  return (
+    <div>
+      {tipoAvaliacao === "medidas" && (
+        <form onSubmit={handleSubmit}>{/* ...inputs... */}</form>
+      )}
+      {resultadoCA && <CaInfo resultado={resultadoCA} />}
     </div>
   );
 }
