@@ -1,5 +1,4 @@
 import React from "react";
-import { CircunferenciaAbdominalResultado } from "@/services/ca-service";
 import {
   Accordion,
   AccordionItem,

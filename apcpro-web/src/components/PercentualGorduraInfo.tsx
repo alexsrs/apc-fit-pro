@@ -55,7 +55,6 @@ const classificacoes = [
 export function PercentualGorduraInfo({
   valor,
   classificacao,
-  referencia,
 }: PercentualGorduraInfoProps) {
   return (
     // Card para encapsular o conteúdo do componente com estilização.
@@ -64,7 +63,7 @@ export function PercentualGorduraInfo({
         {/* Exibição do valor calculado do percentual de gordura e sua classificação. */}
         <div className="mb-2">
           <h3 className="font-bold text-lg text-zinc-800 mb-1">
-            Percentual de Gordura Corporal (Marinha):{" "}
+            Percentual de Gordura Corporal (US Navy):{" "}
             <span className="text-2xl font-mono">{valor.toFixed(2)}%</span>
           </h3>
           <div className="flex items-center gap-2 mb-2">

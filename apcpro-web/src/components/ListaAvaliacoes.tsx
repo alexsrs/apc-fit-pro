@@ -15,14 +15,18 @@ import {
   useState,
 } from "react";
 import { ResultadoAvaliacao } from "./ResultadoAvaliacao";
-import { PercentualGorduraInfo } from "./PercentualGorduraInfo";
 import apiClient from "@/lib/api-client";
 
-// Atualizar a tipagem para incluir as propriedades esperadas
+// Tipagem alinhada com o componente ResultadoAvaliacao
+export type IndicesAvaliacao = Record<string, number | string | undefined>;
+
 export type ResultadoAvaliacao = {
-  percentualGC_Marinha?: number;
-  classificacaoGC_Marinha?: string;
-  [key: string]: unknown; // Permite outras propriedades dinâmicas
+  indices?: IndicesAvaliacao;
+  genero?: string;
+  riscoCA?: string;
+  referenciaCA?: string;
+  referenciaRCQ?: string;
+  referenciaGC_Marinha?: string;
 };
 
 // Tipagem básica para avaliação
@@ -178,7 +182,9 @@ export const ListaAvaliacoes = forwardRef<
                   {typeof avaliacaoSelecionada.resultado === "object" &&
                   avaliacaoSelecionada.resultado !== null ? (
                     <ResultadoAvaliacao
-                      resultado={avaliacaoSelecionada.resultado as any}
+                      resultado={
+                        avaliacaoSelecionada.resultado as ResultadoAvaliacao
+                      }
                     />
                   ) : (
                     <span className="text-sm text-gray-500">
