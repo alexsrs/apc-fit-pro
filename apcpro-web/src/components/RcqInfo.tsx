@@ -15,7 +15,7 @@ import { getBadgeColor } from "@/utils/badge-utils";
  * Este componente utiliza Accordion para exibir informações detalhadas, como tabela de classificação,
  * referências científicas e aplicação prática.
  */
-export function RcqInfo({ valor, classificacao, referencia }: RcqInfoProps) {
+export function RcqInfo({ valor, classificacao }: RcqInfoProps) {
   return (
     <Card className="mb-4 shadow-sm border border-zinc-200">
       <CardContent className="p-4">

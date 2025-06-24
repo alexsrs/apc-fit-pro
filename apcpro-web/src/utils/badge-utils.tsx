@@ -12,7 +12,10 @@ function isRangeClassificacao(
   c: BadgeClassificacao
 ): c is { min: number; max: number; label: string; color: string } {
   return (
-    typeof (c as any).min === "number" && typeof (c as any).max === "number"
+    "min" in c &&
+    "max" in c &&
+    typeof c.min === "number" &&
+    typeof c.max === "number"
   );
 }
 
