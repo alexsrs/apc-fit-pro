@@ -41,7 +41,10 @@ import {
   AlertasPersistente,
   AlertasPersistenteHandle,
 } from "@/app/components/AlertasPersistente";
-import { ResultadoAvaliacao } from "@/components/ResultadoAvaliacao";
+import {
+  ResultadoAvaliacao,
+  type ResultadoAvaliacaoProps,
+} from "@/components/ResultadoAvaliacao";
 
 // Função utilitária para calcular idade
 function calcularIdade(dataNascimento?: string): number | undefined {
@@ -492,8 +495,10 @@ export default function AlunosDashboard() {
                     <ResultadoAvaliacao
                       resultado={
                         typeof avaliacaoSelecionada.resultado === "string"
-                          ? JSON.parse(avaliacaoSelecionada.resultado)
-                          : avaliacaoSelecionada.resultado
+                          ? (JSON.parse(
+                              avaliacaoSelecionada.resultado
+                            ) as ResultadoAvaliacaoProps["resultado"])
+                          : (avaliacaoSelecionada.resultado as ResultadoAvaliacaoProps["resultado"])
                       }
                       inModal={true}
                     />

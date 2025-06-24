@@ -31,7 +31,7 @@ interface IndicesAvaliacao {
 }
 
 // Tipagem para o resultado de avaliação
-interface ResultadoAvaliacaoProps {
+export interface ResultadoAvaliacaoProps {
   resultado: {
     indices?: IndicesAvaliacao;
     genero?: string;
@@ -40,10 +40,14 @@ interface ResultadoAvaliacaoProps {
     referenciaRCQ?: string;
     referenciaGC_Marinha?: string;
   };
+  inModal?: boolean; // Adicionando a propriedade inModal
 }
 
 // Componente principal que exibe os resultados de avaliação
-export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
+export function ResultadoAvaliacao({
+  resultado,
+  inModal,
+}: ResultadoAvaliacaoProps) {
   if (!resultado || typeof resultado !== "object") return null;
 
   const indices: IndicesAvaliacao = resultado.indices ?? {};
@@ -65,7 +69,7 @@ export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
   const classificacaoGC_Marinha = indices.classificacaoGC_Marinha;
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${inModal ? "modal-class" : ""}`}>
       {/* Exibe IMC usando ImcInfo */}
       {imc && classificacaoImc && (
         <ImcInfo imc={imc} classificacao={classificacaoImc} />
