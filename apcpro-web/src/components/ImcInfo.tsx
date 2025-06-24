@@ -1,6 +1,6 @@
+// Importação de dependências e utilitários necessários para o componente.
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import {
   Accordion,
   AccordionContent,
@@ -8,66 +8,67 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
+import { getBadgeColor } from "@/utils/badge-utils";
 
-// Faixas e rótulos conforme ImcCalculator
+// Definição das classificações de IMC com seus intervalos, rótulos e estilos visuais.
 const classificacoes = [
   {
     min: 0,
     max: 18.49,
     label: "Abaixo do peso",
     color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+    keywords: ["abaixo"],
   },
   {
     min: 18.5,
     max: 24.99,
     label: "Peso normal",
     color: "bg-green-100 text-green-700 border border-green-200",
+    keywords: ["normal"],
   },
   {
     min: 25,
     max: 29.99,
     label: "Pré-obesidade",
     color: "bg-orange-100 text-orange-700 border border-orange-200",
+    keywords: ["pré-obesidade", "sobrepeso"],
   },
   {
     min: 30,
     max: 34.99,
     label: "Obesidade I",
     color: "bg-red-100 text-red-700 border border-red-200",
+    keywords: ["obesidade i"],
   },
   {
     min: 35,
     max: 39.99,
     label: "Obesidade II",
     color: "bg-red-200 text-red-800 border border-red-300",
+    keywords: ["obesidade ii"],
   },
   {
     min: 40,
     max: Infinity,
     label: "Obesidade III",
     color: "bg-red-300 text-red-900 border border-red-400",
+    keywords: ["obesidade iii"],
   },
 ];
 
-// Função para buscar cor do badge pela classificação
-function getBadgeColor(classificacao: string): string {
-  const found = classificacoes.find(
-    (c) => c.label.toLowerCase() === classificacao.toLowerCase()
-  );
-  return found
-    ? found.color
-    : "bg-zinc-100 text-zinc-700 border border-zinc-200";
-}
-
+// Tipagem das propriedades esperadas pelo componente.
 type ImcInfoProps = {
-  imc: number;
-  classificacao: string;
+  imc: number; // Valor do IMC calculado.
+  classificacao: string; // Classificação correspondente ao IMC.
 };
 
+// Componente principal que exibe informações sobre o IMC calculado e sua classificação.
 export function ImcInfo({ imc, classificacao }: ImcInfoProps) {
   return (
+    // Card para encapsular o conteúdo do componente com estilização.
     <Card className="mb-4 shadow-sm border border-zinc-200">
       <CardContent className="p-4">
+        {/* Exibição do valor calculado do IMC e sua classificação. */}
         <div className="mb-2">
           <h3 className="font-bold text-lg text-zinc-800 mb-1">
             IMC calculado:{" "}
@@ -76,20 +77,25 @@ export function ImcInfo({ imc, classificacao }: ImcInfoProps) {
           <div className="flex items-center gap-2 mb-2">
             <span className="font-semibold text-zinc-700">Classificação:</span>
             {classificacao && classificacao !== "--" ? (
+              // Badge para exibir a classificação com estilo dinâmico baseado na função getBadgeColor.
               <Badge
-                className={cn(
-                  "text-xs font-semibold font-sans px-2 py-0.5 rounded border align-middle",
-                  getBadgeColor(classificacao)
-                )}
+                className={
+                  "text-xs font-semibold font-sans px-2 py-0.5 rounded border align-middle " +
+                  getBadgeColor(classificacao, classificacoes)
+                }
               >
                 {classificacao}
               </Badge>
             ) : (
+              // Mensagem padrão caso a classificação não esteja disponível.
               <span className="text-zinc-400 ml-2">Não disponível</span>
             )}
           </div>
         </div>
+
+        {/* Accordion para exibir informações adicionais como tabela de classificação, referências e limitações. */}
         <Accordion type="single" collapsible className="w-full mt-2">
+          {/* Item do Accordion para exibir a tabela de classificação. */}
           <AccordionItem value="tabela">
             <AccordionTrigger>
               <span className="flex items-center gap-2">
@@ -119,59 +125,24 @@ export function ImcInfo({ imc, classificacao }: ImcInfoProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td className="border px-2 py-1">{"< 18,5"}</td>
-                      <td className="border px-2 py-1">
-                        <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-200">
-                          Abaixo do peso
-                        </Badge>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1">18,5 – 24,99</td>
-                      <td className="border px-2 py-1">
-                        <Badge className="bg-green-100 text-green-700 border border-green-200">
-                          Peso normal
-                        </Badge>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1">25 – 29,99</td>
-                      <td className="border px-2 py-1">
-                        <Badge className="bg-orange-100 text-orange-700 border border-orange-200">
-                          Pré-obesidade
-                        </Badge>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1">30 – 34,99</td>
-                      <td className="border px-2 py-1">
-                        <Badge className="bg-red-100 text-red-700 border border-red-200">
-                          Obesidade I
-                        </Badge>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1">35 – 39,99</td>
-                      <td className="border px-2 py-1">
-                        <Badge className="bg-red-200 text-red-800 border border-red-300">
-                          Obesidade II
-                        </Badge>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border px-2 py-1">{"≥ 40"}</td>
-                      <td className="border px-2 py-1">
-                        <Badge className="bg-red-300 text-red-900 border border-red-400">
-                          Obesidade III
-                        </Badge>
-                      </td>
-                    </tr>
+                    {/* Renderização das linhas da tabela com badges para cada classificação. */}
+                    {classificacoes.map(({ min, max, label, color }) => (
+                      <tr key={label}>
+                        <td className="border px-2 py-1">
+                          {min === 0 ? `< ${max}` : `${min} – ${max}`}
+                        </td>
+                        <td className="border px-2 py-1">
+                          <Badge className={color}>{label}</Badge>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             </AccordionContent>
           </AccordionItem>
+
+          {/* Item do Accordion para exibir referências científicas. */}
           <AccordionItem value="referencias">
             <AccordionTrigger>
               <span className="flex items-center gap-2">
@@ -236,6 +207,8 @@ export function ImcInfo({ imc, classificacao }: ImcInfoProps) {
               </ul>
             </AccordionContent>
           </AccordionItem>
+
+          {/* Item do Accordion para exibir limitações do IMC. */}
           <AccordionItem value="limitacoes">
             <AccordionTrigger>
               <span className="flex items-center gap-2">

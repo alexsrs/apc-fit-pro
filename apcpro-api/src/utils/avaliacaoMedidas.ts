@@ -1,5 +1,7 @@
 import { Genero } from "../models/genero-model";
+import { RcqService } from "../services/rcq-service";
 import { converterMedidasJson } from "./conversorMedidas";
+import { RCQResultado } from "../models/rcq-model";
 
 // Função utilitária para processar o body do frontend:
 export function processarMedidas(body: any) {
@@ -27,6 +29,62 @@ function log10(x: number): number {
   return Math.log(x) / Math.LN10;
 }
 
+// Método da Marinha dos EUA (Navy Method)
+const calcularPercentualGorduraMarinha = (dados: {
+  cintura: number;
+  pescoco: number;
+  quadril?: number;
+  altura: number;
+  sexo: "masculino" | "feminino";
+}): number => {
+  const alturaLog = Math.log10(dados.altura);
+  if (dados.sexo === "masculino") {
+    return (
+      495 /
+        (1.0324 -
+          0.19077 * Math.log10(dados.cintura - dados.pescoco) +
+          0.15456 * alturaLog) -
+      450
+    );
+  } else {
+    return (
+      495 /
+        (1.29579 -
+          0.35004 * Math.log10(dados.cintura + dados.quadril! - dados.pescoco) +
+          0.221 * alturaLog) -
+      450
+    );
+  }
+};
+
+// Classificação do percentual de gordura corporal
+const classificarPercentualGordura = (
+  percentual: number,
+  sexo: "masculino" | "feminino"
+): string => {
+  const classificacoes =
+    sexo === "masculino"
+      ? [
+          { min: 2, max: 5, label: "Essencial" },
+          { min: 6, max: 13, label: "Atletas" },
+          { min: 14, max: 17, label: "Fitness" },
+          { min: 18, max: 24, label: "Média" },
+          { min: 25, max: Infinity, label: "Obeso" },
+        ]
+      : [
+          { min: 10, max: 13, label: "Essencial" },
+          { min: 14, max: 20, label: "Atletas" },
+          { min: 21, max: 24, label: "Fitness" },
+          { min: 25, max: 31, label: "Média" },
+          { min: 32, max: Infinity, label: "Obeso" },
+        ];
+
+  const found = classificacoes.find(
+    (c) => percentual >= c.min && percentual <= c.max
+  );
+  return found ? found.label : "Não classificado";
+};
+
 // Função principal para calcular os índices a partir das medidas fornecidas
 export function calcularIndicesMedidas(dados: MedidasInput) {
   const sexoNum = generoToNumber(dados.genero);
@@ -37,65 +95,28 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
   const percentualGC_Deurenberg =
     1.2 * imc + 0.23 * dados.idade - 10.8 * sexoNum - 5.4;
 
-  // %GC Gómez-Ambrosi
-  const cc = dados.cintura;
-  const percentualGC_Gomez =
-    -44.988 +
-    0.503 * dados.idade +
-    10.689 * sexoNum +
-    3.172 * imc +
-    0.026 * cc -
-    0.02 * imc * cc -
-    0.015 * imc * dados.idade +
-    0.00021 * imc * imc * cc -
-    0.000084 * imc * cc * dados.idade;
+  // %GC Marinha
+  const percentualGC_Marinha = calcularPercentualGorduraMarinha({
+    cintura: dados.cintura,
+    pescoco: dados.pescoco!,
+    quadril: dados.quadril,
+    altura: dados.altura,
+    sexo: dados.genero === Genero.Masculino ? "masculino" : "feminino",
+  });
 
-  // Massa Muscular (Lee) - sem raça
-  const massaMuscular_Lee =
-    0.244 * dados.peso +
-    7.8 * alturaM +
-    6.6 * sexoNum -
-    0.098 * dados.idade -
-    3.3;
-
-  // Massa Muscular Esquelética (Doupe)
-  const massaMuscular_Doupe = 0.407 * dados.peso + 0.267 * dados.altura - 19.2;
-
-  // %GC Protocolo Marinha dos EUA
-  let percentualGC_Marinha: number | null = null;
-  if (
-    typeof dados.pescoco === "number" &&
-    typeof dados.cintura === "number" &&
-    typeof dados.altura === "number"
-  ) {
-    if (sexoNum === 1) {
-      // Homem: precisa de cintura, pescoco, altura
-      percentualGC_Marinha =
-        495 /
-          (1.0324 -
-            0.19077 * log10(dados.cintura - dados.pescoco) +
-            0.15456 * log10(dados.altura)) -
-        450;
-    } else if (
-      typeof dados.quadril === "number" &&
-      typeof dados.cintura === "number" &&
-      typeof dados.pescoco === "number" &&
-      typeof dados.altura === "number"
-    ) {
-      // Mulher: precisa de cintura, quadril, pescoco, altura
-      percentualGC_Marinha =
-        495 /
-          (1.29579 -
-            0.35004 * log10(dados.cintura + dados.quadril - dados.pescoco) +
-            0.221 * log10(dados.altura)) -
-        450;
-    }
-  }
+  const classificacaoGC_Marinha = classificarPercentualGordura(
+    percentualGC_Marinha,
+    dados.genero === Genero.Masculino ? "masculino" : "feminino"
+  );
 
   // Relação Cintura-Quadril (RCQ)
-  let rcq: number | null = null;
+  let rcqResultado: RCQResultado | null = null;
   if (typeof dados.cintura === "number" && typeof dados.quadril === "number") {
-    rcq = dados.cintura / dados.quadril;
+    rcqResultado = RcqService.avaliarRCQ({
+      cintura: dados.cintura,
+      quadril: dados.quadril,
+      genero: dados.genero,
+    });
   }
 
   // Circunferência Abdominal (CA)
@@ -105,30 +126,13 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
     ...dados,
     imc,
     classificacaoIMC: classificarIMC(imc),
-    percentualGC_Deurenberg,
-    classificacaoGC_Deurenberg: classificarPercentualGC(
-      percentualGC_Deurenberg,
-      dados.genero,
-      dados.idade
-    ),
-    percentualGC_Gomez,
-    classificacaoGC_Gomez: classificarPercentualGC(
-      percentualGC_Gomez,
-      dados.genero,
-      dados.idade
-    ),
-    percentualGC_Marinha,
-    classificacaoGC_Marinha: classificarPercentualGC(
-      percentualGC_Marinha,
-      dados.genero,
-      dados.idade
-    ),
-    massaMuscular_Lee,
-    massaMuscular_Doupe,
-    rcq,
-    classificacaoRCQ: rcq ? classificarRCQ(rcq, dados.genero) : null,
+    rcq: rcqResultado ? rcqResultado.valor : null,
+    classificacaoRCQ: rcqResultado ? rcqResultado.classificacao : null,
+    referenciaRCQ: rcqResultado ? rcqResultado.referencia : null,
     ca,
     classificacaoCA: ca !== null ? classificarCA(ca, dados.genero) : null,
+    percentualGC_Marinha,
+    classificacaoGC_Marinha,
   };
 }
 

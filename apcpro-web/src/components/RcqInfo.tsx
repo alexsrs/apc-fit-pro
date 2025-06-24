@@ -1,5 +1,4 @@
 import React from "react";
-import { CircunferenciaAbdominalResultado } from "@/services/ca-service";
 import {
   Accordion,
   AccordionItem,
@@ -8,34 +7,38 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { getBadgeColor } from "@/utils/badge-utils";
 import { Table, BookOpen, FlaskConical } from "lucide-react";
+import { getBadgeColor } from "@/utils/badge-utils";
 
 /**
- * Exibe o resultado da avaliação de Circunferência Abdominal (CA).
+ * Exibe o resultado da avaliação da Relação Cintura-Quadril (RCQ).
  * Este componente utiliza Accordion para exibir informações detalhadas, como tabela de classificação,
  * referências científicas e aplicação prática.
  */
-export function CaInfo({ resultado }: CaInfoProps) {
+export function RcqInfo({ valor, classificacao, referencia }: RcqInfoProps) {
   return (
     <Card className="mb-4 shadow-sm border border-zinc-200">
       <CardContent className="p-4">
-        {/* Exibição do valor calculado de CA */}
+        {/* Exibição do valor calculado de RCQ */}
         <div className="mb-2">
           <h3 className="font-bold text-lg text-zinc-800 mb-1">
-            Circunferência abdominal:{" "}
-            <span className="text-2xl font-mono">{resultado.valor} cm</span>
+            Relação cintura-quadril (RCQ):{" "}
+            <span className="text-2xl font-mono">{valor.toFixed(2)}</span>
           </h3>
           <div className="flex items-center gap-2 mb-2">
             <span className="font-semibold text-zinc-700">Classificação:</span>
-            <Badge
-              className={
-                "text-xs font-semibold font-sans px-2 py-0.5 rounded border align-middle " +
-                getBadgeColor(resultado.classificacao, classificacoes)
-              }
-            >
-              {resultado.classificacao}
-            </Badge>
+            {classificacao && classificacao !== "--" ? (
+              <Badge
+                className={
+                  "text-xs font-semibold font-sans px-2 py-0.5 rounded border align-middle " +
+                  getBadgeColor(classificacao, classificacoes)
+                }
+              >
+                {classificacao}
+              </Badge>
+            ) : (
+              <span className="text-zinc-400 ml-2">Não disponível</span>
+            )}
           </div>
         </div>
 
@@ -56,46 +59,44 @@ export function CaInfo({ resultado }: CaInfoProps) {
                     <tr>
                       <th className="border px-2 py-1">Gênero</th>
                       <th className="border px-2 py-1">Baixo risco</th>
-                      <th className="border px-2 py-1">Risco aumentado</th>
-                      <th className="border px-2 py-1">
-                        Risco muito aumentado
-                      </th>
+                      <th className="border px-2 py-1">Risco moderado</th>
+                      <th className="border px-2 py-1">Alto risco</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td className="border px-2 py-1">Masculino</td>
                       <td className="border px-2 py-1">
-                        <Badge className="bg-green-100 text-green-700 border border-green-200">
-                          {"< 94 cm"}
+                        <Badge className="bg-green-100 text-green-700 border-green-200">
+                          {"< 0,90"}
                         </Badge>
                       </td>
                       <td className="border px-2 py-1">
-                        <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-200">
-                          {"94–101 cm"}
+                        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                          0,90–0,99
                         </Badge>
                       </td>
                       <td className="border px-2 py-1">
-                        <Badge className="bg-red-100 text-red-700 border border-red-200">
-                          {"≥ 102 cm"}
+                        <Badge className="bg-red-100 text-red-700 border-red-200">
+                          {"≥ 1,00"}
                         </Badge>
                       </td>
                     </tr>
                     <tr>
                       <td className="border px-2 py-1">Feminino</td>
                       <td className="border px-2 py-1">
-                        <Badge className="bg-green-100 text-green-700 border border-green-200">
-                          {"< 80 cm"}
+                        <Badge className="bg-green-100 text-green-700 border-green-200">
+                          {"< 0,80"}
                         </Badge>
                       </td>
                       <td className="border px-2 py-1">
-                        <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-200">
-                          {"80–87 cm"}
+                        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                          0,80–0,84
                         </Badge>
                       </td>
                       <td className="border px-2 py-1">
-                        <Badge className="bg-red-100 text-red-700 border border-red-200">
-                          {"≥ 88 cm"}
+                        <Badge className="bg-red-100 text-red-700 border-red-200">
+                          {"≥ 0,85"}
                         </Badge>
                       </td>
                     </tr>
@@ -117,32 +118,32 @@ export function CaInfo({ resultado }: CaInfoProps) {
               <ul className="list-disc pl-5 text-sm mb-4">
                 <li>
                   <a
-                    href="https://www.who.int/europe/news-room/fact-sheets/item/a-healthy-lifestyle---who-recommendations"
+                    href="https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    OMS - Circunferência abdominal e risco cardiometabólico
+                    OMS - Obesidade e Sobrepeso
                   </a>
                 </li>
                 <li>
                   <a
-                    href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6520897/"
+                    href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4869763/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    NCBI - Waist Circumference and Health Risk
+                    NCBI - Limitações do RCQ
                   </a>
                 </li>
                 <li>
                   <a
-                    href="https://www.scielo.br/j/rbme/a/8k6k6w6w6w6w6w6w6w/?lang=pt"
+                    href="https://www.verywellhealth.com/waist-to-hip-ratio-5184776"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    SciELO - Utilidade clínica da circunferência abdominal
+                    Verywell Health - RCQ
                   </a>
                 </li>
               </ul>
@@ -159,23 +160,9 @@ export function CaInfo({ resultado }: CaInfoProps) {
             </AccordionTrigger>
             <AccordionContent>
               <ul className="list-disc pl-5 text-sm mb-4">
-                <li>
-                  A circunferência abdominal (CA) é um marcador simples e
-                  prático para estimar a gordura abdominal, associada ao risco
-                  cardiovascular e metabólico.
-                </li>
-                <li>
-                  Valores elevados de CA indicam maior risco de doenças como
-                  diabetes tipo 2, hipertensão e doenças cardíacas.
-                </li>
-                <li>
-                  A CA complementa o IMC, pois avalia a distribuição da gordura
-                  corporal, especialmente a visceral.
-                </li>
-                <li>
-                  Recomenda-se medir a CA no ponto médio entre a última costela
-                  e a crista ilíaca, com a fita paralela ao solo.
-                </li>
+                <li>Forte preditor de risco cardiovascular e mortalidade.</li>
+                <li>Recomendado para adultos e idosos.</li>
+                <li>Menos preciso para atletas.</li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -186,20 +173,16 @@ export function CaInfo({ resultado }: CaInfoProps) {
 }
 
 /**
- * Propriedades esperadas pelo componente CaInfo.
+ * Propriedades esperadas pelo componente RcqInfo.
  */
-type CaInfoProps = {
-  resultado: {
-    valor: number;
-    classificacao: string;
-    risco: string;
-    referencia: string;
-    aplicacao?: string[]; // Adicionado para suportar a seção de aplicação.
-  };
+type RcqInfoProps = {
+  valor: number;
+  classificacao: string;
+  referencia: string;
 };
 
 /**
- * Classificações possíveis para CA, com suas cores e palavras-chave associadas.
+ * Classificações possíveis para RCQ, com suas cores e palavras-chave associadas.
  */
 const classificacoes = [
   {
@@ -208,13 +191,13 @@ const classificacoes = [
     keywords: ["baixo"],
   },
   {
-    label: "Risco aumentado",
+    label: "Risco moderado",
     color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
-    keywords: ["aumentado"],
+    keywords: ["moderado"],
   },
   {
-    label: "Risco muito aumentado",
+    label: "Alto risco",
     color: "bg-red-100 text-red-700 border border-red-200",
-    keywords: ["muito aumentado"],
+    keywords: ["alto"],
   },
 ];

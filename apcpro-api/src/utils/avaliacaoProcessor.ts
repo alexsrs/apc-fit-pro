@@ -23,6 +23,60 @@ interface ResultadoAnamnese {
     qualidadeSono: number; // 1 a 5
     nivelEstresse: "Baixo" | "Moderado" | "Alto";
   };
+  cintura?: number;
+  pescoco?: number;
+  quadril?: number;
+  altura?: number;
+  sexo?: "Masculino" | "Feminino";
+  percentualGordura?: number;
+  classificacaoGordura?: string;
+}
+
+function calcularPercentualGorduraMarinha({
+  cintura,
+  pescoco,
+  quadril,
+  altura,
+  sexo,
+}: {
+  cintura: number;
+  pescoco: number;
+  quadril: number;
+  altura: number;
+  sexo: "Masculino" | "Feminino";
+}): number {
+  // Fórmula do método da Marinha dos EUA para cálculo do percentual de gordura
+  if (sexo === "Masculino") {
+    return (
+      86.01 * Math.log10(cintura - pescoco) -
+      70.041 * Math.log10(altura) +
+      36.76
+    );
+  } else {
+    return (
+      163.205 * Math.log10(cintura + quadril - pescoco) -
+      97.684 * Math.log10(altura) -
+      78.387
+    );
+  }
+}
+
+function classificarPercentualGordura(
+  percentual: number,
+  sexo: "Masculino" | "Feminino"
+): string {
+  // Classificação do percentual de gordura
+  if (sexo === "Masculino") {
+    if (percentual < 6) return "Abaixo do normal";
+    if (percentual < 24) return "Normal";
+    if (percentual < 31) return "Sobrepeso";
+    return "Obesidade";
+  } else {
+    if (percentual < 16) return "Abaixo do normal";
+    if (percentual < 30) return "Normal";
+    if (percentual < 36) return "Sobrepeso";
+    return "Obesidade";
+  }
 }
 
 export function classificarObjetivoAnamnese(
@@ -50,7 +104,7 @@ export function classificarObjetivoAnamnese(
   if (resultado.bloco2.cirurgiaRecente) {
     score["Controle de Doença"] += 1;
   }
- 
+
   // Bloco 3 – Nível de Atividade
   if (!resultado.bloco3.praticaAtividade) {
     score["Controle de Doença"] += 2;
@@ -102,6 +156,22 @@ export function classificarObjetivoAnamnese(
       score["Estética / Hipertrofia"] += 1;
       break;
   }
+
+  // Exemplo de uso do método da Marinha dos EUA
+  const percentualGordura = calcularPercentualGorduraMarinha({
+    cintura: resultado.cintura ?? 0,
+    pescoco: resultado.pescoco ?? 0,
+    quadril: resultado.quadril ?? 0,
+    altura: resultado.altura ?? 0,
+    sexo: resultado.sexo ?? "Masculino",
+  });
+  const classificacaoGordura = classificarPercentualGordura(
+    percentualGordura,
+    resultado.sexo ?? "Masculino"
+  );
+
+  resultado.percentualGordura = percentualGordura;
+  resultado.classificacaoGordura = classificacaoGordura;
 
   // Ranking final
   const maiorPontuacao = Math.max(...Object.values(score));

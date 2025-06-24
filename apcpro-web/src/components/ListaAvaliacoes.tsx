@@ -15,7 +15,15 @@ import {
   useState,
 } from "react";
 import { ResultadoAvaliacao } from "./ResultadoAvaliacao";
+import { PercentualGorduraInfo } from "./PercentualGorduraInfo";
 import apiClient from "@/lib/api-client";
+
+// Atualizar a tipagem para incluir as propriedades esperadas
+export type ResultadoAvaliacao = {
+  percentualGC_Marinha?: number;
+  classificacaoGC_Marinha?: string;
+  [key: string]: unknown; // Permite outras propriedades dinâmicas
+};
 
 // Tipagem básica para avaliação
 export type Avaliacao = {
@@ -25,7 +33,7 @@ export type Avaliacao = {
   data: string;
   objetivo?: string;
   objetivoClassificado?: string;
-  resultado?: Record<string, unknown> | string | number | null;
+  resultado?: ResultadoAvaliacao | string | number | null;
 };
 
 interface ListaAvaliacoesProps {
@@ -154,74 +162,29 @@ export const ListaAvaliacoes = forwardRef<
       >
         <DialogContent
           style={{ maxWidth: "1200px", width: "50vw" }}
-          className="!max-w-none !w-[50vw]"
+          className="!max-w-none !w-[50vw] overflow-y-auto max-h-[80vh] p-4"
         >
           <DialogHeader>
             <DialogTitle>Detalhes da Avaliação</DialogTitle>
           </DialogHeader>
           {avaliacaoSelecionada && (
             <div className="space-y-2">
-              {/* Detalhes em 2 colunas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 mb-2">
-                <p>
-                  <b>ID:</b> {avaliacaoSelecionada.id}
-                </p>
-                <p>
-                  <b>Tipo:</b> {avaliacaoSelecionada.tipo}
-                </p>
-                <p>
-                  <b>Data:</b>{" "}
-                  {new Date(avaliacaoSelecionada.data).toLocaleDateString(
-                    "pt-BR"
-                  )}
-                </p>
-                <p>
-                  <b>Status:</b> {avaliacaoSelecionada.status}
-                </p>
-                {avaliacaoSelecionada.objetivo && (
-                  <p className="md:col-span-2">
-                    <b>Objetivo:</b> {avaliacaoSelecionada.objetivo}
-                  </p>
-                )}
-                {avaliacaoSelecionada.objetivoClassificado && (
-                  <p className="md:col-span-2">
-                    <b>Objetivo Classificado:</b>{" "}
-                    {avaliacaoSelecionada.objetivoClassificado}
-                  </p>
-                )}
-              </div>
-              {/* Card de resultado */}
+              {/* Conteúdo do modal */}
               {avaliacaoSelecionada.resultado && (
                 <>
                   <h4 className="font-semibold mt-4 mb-2 text-sm text-zinc-700">
                     Resultado:
                   </h4>
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 shadow-sm">
+                  {typeof avaliacaoSelecionada.resultado === "object" &&
+                  avaliacaoSelecionada.resultado !== null ? (
                     <ResultadoAvaliacao
-                      resultado={
-                        typeof avaliacaoSelecionada.resultado === "string"
-                          ? (() => {
-                              try {
-                                // Centraliza o parsing do JSON aqui
-                                const parsed = JSON.parse(
-                                  avaliacaoSelecionada.resultado as string
-                                );
-                                return typeof parsed === "object" &&
-                                  parsed !== null
-                                  ? parsed
-                                  : {};
-                              } catch {
-                                return {};
-                              }
-                            })()
-                          : typeof avaliacaoSelecionada.resultado ===
-                              "object" &&
-                            avaliacaoSelecionada.resultado !== null
-                          ? avaliacaoSelecionada.resultado
-                          : {}
-                      }
+                      resultado={avaliacaoSelecionada.resultado as any}
                     />
-                  </div>
+                  ) : (
+                    <span className="text-sm text-gray-500">
+                      Sem resultado detalhado.
+                    </span>
+                  )}
                 </>
               )}
             </div>

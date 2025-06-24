@@ -1,15 +1,23 @@
+// Importação de dependências e utilitários necessários para o componente.
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ImcInfo } from "./ImcInfo";
 import {
   avaliarCA,
   CircunferenciaAbdominalResultado,
 } from "@/services/ca-service";
-import { CaInfo } from "./CaInfo";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
+import { Table, BookOpen, FlaskConical } from "lucide-react"; // Ajustando os ícones para padronização.
+import { renderBadge } from "@/utils/badge-utils";
 
-// Utilitário para formatar nomes de campos
+// Função utilitária para formatar nomes de campos.
+// Exemplo: "percentualGC" -> "Percentual GC".
 function formatLabel(label: string) {
   return label
     .replace(/([A-Z])/g, " $1")
@@ -21,9 +29,11 @@ function formatLabel(label: string) {
     .replace("Marinha", " (Marinha)");
 }
 
+// Tipagem para dados chave-valor dinâmicos.
 type KeyValueData = Record<string, string | number | null | undefined>;
 type IndicesData = Record<string, string | number | undefined | null>;
 
+// Componente para exibir uma lista de dados chave-valor formatados.
 function KeyValueList({ data }: { data: KeyValueData }) {
   const entries = Object.entries(data).filter(
     ([, v]) => v !== null && v !== undefined
@@ -35,7 +45,7 @@ function KeyValueList({ data }: { data: KeyValueData }) {
         let unidade = "";
         const keyLower = k.toLowerCase();
 
-        // Identifica campos de medida linear e aplica 'cm'
+        // Identifica campos de medida linear e aplica 'cm'.
         if (isCampoMedidaCm(k)) {
           unidade = "cm";
         } else if (keyLower.includes("peso")) {
@@ -48,7 +58,7 @@ function KeyValueList({ data }: { data: KeyValueData }) {
           unidade = "%";
         }
 
-        // Formatação de campo de data para dd/mm/aaaa
+        // Formatação de campo de data para dd/mm/aaaa.
         if (
           keyLower.includes("data") &&
           typeof v === "string" &&
@@ -73,7 +83,7 @@ function KeyValueList({ data }: { data: KeyValueData }) {
             </React.Fragment>
           );
         }
-        // Formatação para idade sem casas decimais
+        // Formatação para idade sem casas decimais.
         if (keyLower === "idade" && typeof v === "number") {
           return (
             <React.Fragment key={k}>
@@ -103,78 +113,18 @@ function KeyValueList({ data }: { data: KeyValueData }) {
   );
 }
 
-function getBadgeColor(text: string): string {
-  const t = text.toLowerCase();
-  if (
-    t.includes("baixo peso") ||
-    t.includes("abaixo do ideal") ||
-    t.includes("muito aumentado") ||
-    t.includes("alto risco") ||
-    t.includes("ruim") ||
-    t.includes("obesidade") ||
-    t.includes("sobrepeso")
-  ) {
-    return "bg-red-100 text-red-700 border border-red-200";
-  }
-  if (
-    t.includes("ideal") ||
-    t.includes("bom") ||
-    t.includes("normal") ||
-    t.includes("desejável") ||
-    t.includes("adequado")
-  ) {
-    return "bg-green-100 text-green-700 border border-green-200";
-  }
-  if (
-    t.includes("moderado") ||
-    t.includes("atenção") ||
-    t.includes("limítrofe")
-  ) {
-    return "bg-yellow-100 text-yellow-800 border border-yellow-200";
-  }
-  return "bg-zinc-100 text-zinc-700 border border-zinc-200";
-}
-
-function Classificacoes({ resultado }: { resultado: KeyValueData }) {
-  const classificacoes = Object.entries(resultado)
-    .filter(
-      ([k]) =>
-        k.toLowerCase().includes("classificacao") ||
-        k.toLowerCase().includes("percentual")
-    )
-    .filter(([, v]) => v !== null && v !== undefined);
-
-  if (classificacoes.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap gap-2 font-sans">
-      {classificacoes.map(([k, v]) => (
-        <Badge
-          key={k}
-          className={cn(
-            "text-xs font-semibold font-sans px-2 py-0.5 rounded border",
-            getBadgeColor(String(v))
-          )}
-        >
-          {formatLabel(k)}: {String(v)}
-        </Badge>
-      ))}
-    </div>
-  );
-}
-
-// Função para normalizar as chaves (remove espaços, parênteses, acentos e deixa minúsculo)
+// Função para normalizar as chaves (remove espaços, parênteses, acentos e deixa minúsculo).
 function normalizeKey(key: string) {
   return key
-    .normalize("NFD") // separa acentos das letras
-    .replace(/[\u0300-\u036f]/g, "") // remove acentos
-    .replace(/\s+/g, "") // remove todos os espaços
-    .replace(/[()]/g, "") // remove todos os parênteses
-    .replace(/[^a-zA-Z0-9]/g, "") // remove outros caracteres especiais
+    .normalize("NFD") // separa acentos das letras.
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos.
+    .replace(/\s+/g, "") // remove todos os espaços.
+    .replace(/[()]/g, "") // remove todos os parênteses.
+    .replace(/[^a-zA-Z0-9]/g, "") // remove outros caracteres especiais.
     .toLowerCase();
 }
 
-// Função utilitária para identificar campos de medidas lineares (cm)
+// Função utilitária para identificar campos de medidas lineares (cm).
 function isCampoMedidaCm(label: string) {
   const l = label.toLowerCase();
   return (
@@ -189,290 +139,104 @@ function isCampoMedidaCm(label: string) {
     l.includes("torax") ||
     l.includes("abdomen") ||
     l.includes("quadril") ||
-    l.includes("biceps") || // Adicionado para pegar bíceps
-    l.includes("cintura") || // Adicionado para pegar cintura
+    l.includes("biceps") || // Adicionado para pegar bíceps.
+    l.includes("cintura") || // Adicionado para pegar cintura.
     l.includes("pescoco")
   );
 }
 
-function IndicesColunasAgrupados({ data }: { data: IndicesData }) {
-  const ordem: [string, string, string?][] = [
-    ["Ca", "Classificacao C A"],
-    ["Rcq", "Classificacao R C Q"],
-    ["Percentual G C (Gomez)", "Classificacao G C (Gomez)", "%"],
-    ["Percentual G C (Marinha)", "Classificacao G C (Marinha)", "%"],
-    ["Percentual G C (Deurenberg)", "Classificacao G C (Deurenberg)", "%"],
-    ["Massa Muscular (Lee)", "Massa Muscular (Doupe)"],
-  ];
-
-  // Normaliza todas as chaves do data para facilitar busca
-  const dataNormalizado: Record<string, string | number | null | undefined> =
-    {};
-  Object.entries(data).forEach(([k, v]) => {
-    dataNormalizado[normalizeKey(k)] = v;
-  });
-
-  const usados = new Set(
-    ordem
-      .flat()
-      .filter((k): k is string => typeof k === "string")
-      .map(normalizeKey)
-  );
-
-  const linhas = ordem.map(([indice, classificacao, unidade]) => {
-    const valor = dataNormalizado[normalizeKey(indice)];
-    const valorClassificacao = dataNormalizado[normalizeKey(classificacao)];
-    const isDoupe =
-      normalizeKey(classificacao) === normalizeKey("Massa Muscular (Doupe)");
-    const isMedidaCm = isCampoMedidaCm(indice);
-
-    return (
-      <React.Fragment key={indice}>
-        <span className="text-zinc-500 text-xs font-sans px-2">
-          {formatLabel(indice)}
-        </span>
-        <span className="text-zinc-900 text-xs font-mono font-bold px-2">
-          {valor !== undefined && valor !== null
-            ? typeof valor === "number"
-              ? `${valor.toFixed(2)}${
-                  isMedidaCm ? " cm" : unidade ? ` ${unidade}` : ""
-                }`
-              : valor
-            : "--"}
-        </span>
-        <span className="text-zinc-500 text-xs font-sans px-2">
-          {formatLabel(classificacao)}
-        </span>
-        {valorClassificacao !== undefined &&
-        valorClassificacao !== null &&
-        valorClassificacao !== "" ? (
-          isDoupe ? (
-            <span className="text-zinc-900 text-xs font-mono font-bold">
-              {String(valorClassificacao)}
-            </span>
-          ) : (
-            <Badge
-              className={cn(
-                "ml-2 text-xs font-semibold font-sans px-2 py-0.5 rounded border",
-                getBadgeColor(String(valorClassificacao))
-              )}
-            >
-              {String(valorClassificacao)}
-            </Badge>
-          )
-        ) : (
-          <span className="text-zinc-400 text-xs font-sans">--</span>
-        )}
-      </React.Fragment>
-    );
-  });
-
-  // Mostra os índices extras (não previstos na ordem)
-  const extras = Object.entries(dataNormalizado)
-    .filter(([k, v]) => !usados.has(k) && v !== undefined && v !== null)
-    .flatMap(([k, v]) => [
-      <span key={k + "-label"} className="text-zinc-500 text-xs font-sans px-2">
-        {formatLabel(k)}
-      </span>,
-      <span
-        key={k + "-valor"}
-        className="text-zinc-900 text-xs font-mono font-bold px-2"
-      >
-        {typeof v === "number" ? v.toFixed(2) : String(v)}
-      </span>,
-      <span key={k + "-empty1"} />,
-      <span key={k + "-empty2"} />,
-    ]);
-
-  return (
-    <div className="w-full">
-      <div className="grid grid-cols-4 gap-x-2 gap-y-2 items-center">
-        {linhas}
-        {extras}
-      </div>
-    </div>
-  );
-}
-
-// Legenda das siglas dos índices
-const legendaSiglas: Record<string, string> = {
-  Ca: "Circunferência abdominal",
-  Rcq: "Relação cintura x quadril",
-  Imc: "Índice de Massa Corporal",
-  GC: "Gordura Corporal",
-
-  // Adicione outras siglas conforme necessário
+// Tipagem para a prop do componente ResultadoAvaliacao
+type ResultadoAvaliacaoProps = {
+  resultado: Record<string, any>;
 };
 
-interface ResultadoAvaliacaoProps {
-  resultado: KeyValueData;
-  inModal?: boolean;
-}
-
+// Componente principal que exibe os resultados de avaliação.
 export function ResultadoAvaliacao({ resultado }: ResultadoAvaliacaoProps) {
   if (!resultado || typeof resultado !== "object") return null;
 
-  // Separar campos primitivos e objetos
-  const dadosGerais: KeyValueData = {};
-  const grupos: Record<string, KeyValueData> = {};
+  const indices: Record<string, any> =
+    resultado.indices &&
+    typeof resultado.indices === "object" &&
+    !Array.isArray(resultado.indices)
+      ? resultado.indices
+      : {};
 
-  Object.entries(resultado).forEach(([k, v]) => {
-    if (v === null || v === undefined) return;
-    if (typeof v === "object" && !Array.isArray(v)) {
-      if (k.toLowerCase() === "indices") {
-        // Nada a fazer, já usamos resultado.indices abaixo
-      } else {
-        grupos[k] = v as KeyValueData;
-      }
-    } else if (
-      !k.toLowerCase().includes("classificacao") &&
-      !k.toLowerCase().includes("percentual")
-    ) {
-      dadosGerais[k] = v as string | number;
-    }
-  });
-
-  const Section = ({
-    title,
-    children,
-  }: {
-    title: string;
-    children: React.ReactNode;
-  }) => (
-    <Card className="mb-0 bg-zinc-50 border-none shadow-none">
-      <CardHeader className="py-0 px-1 min-h-0">
-        <CardTitle className="text-sm font-bold font-sans leading-tight py-0 my-0">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="font-sans pt-0 mt-0">{children}</CardContent>
-    </Card>
-  );
-
-  // Utiliza a prop resultado diretamente
-
-  const indices = (resultado.indices ?? {}) as Record<string, unknown>;
   const imc = indices.imc ?? resultado.imc ?? undefined;
   const classificacaoImc =
-    indices?.classificacaoIMC ?? resultado.classificacaoImc ?? undefined;
+    indices.classificacaoIMC ?? resultado.classificacaoIMC ?? undefined;
 
   const ca = indices.ca ?? resultado.ca ?? undefined;
   const classificacaoCa =
-    indices?.classificacaoCA ??
-    resultado.classificacaoCa ??
-    resultado.classificacaoCA ??
-    undefined;
-  const riscoCa =
-    indices?.riscoCA ?? resultado.riscoCa ?? resultado.riscoCA ?? undefined;
-  const referenciaCa =
-    indices?.referenciaCA ??
-    resultado.referenciaCa ??
-    resultado.referenciaCA ??
-    undefined;
+    indices.classificacaoCA ?? resultado.classificacaoCA ?? undefined;
 
-  const exibirImcInfo =
-    (typeof imc === "number" ||
-      (!isNaN(Number(imc)) &&
-        imc !== "" &&
-        imc !== null &&
-        imc !== undefined)) &&
-    typeof classificacaoImc === "string" &&
-    classificacaoImc !== "" &&
-    classificacaoImc !== undefined;
+  const rcq = indices.rcq ?? resultado.rcq ?? undefined;
+  const genero = resultado.genero ?? "não informado";
+  const classificacaoRcq =
+    rcq !== undefined && rcq !== null && !isNaN(Number(rcq))
+      ? classificarRCQ(Number(rcq), String(genero))
+      : "Dados de RCQ não disponíveis";
 
-  const exibirCaInfo =
-    (typeof ca === "number" ||
-      (!isNaN(Number(ca)) && ca !== "" && ca !== null && ca !== undefined)) &&
-    typeof classificacaoCa === "string" &&
-    classificacaoCa !== "" &&
-    classificacaoCa !== undefined;
+  const percentualGC_Marinha = indices.percentualGC_Marinha ?? undefined;
+  const classificacaoGC_Marinha = indices.classificacaoGC_Marinha ?? undefined;
 
   return (
-    <div className="max-h-[80vh] overflow-y-auto p-4">
-      <div className="space-y-1">
-        <Classificacoes resultado={resultado} />
+    <div className="space-y-4">
+      {/* Exibe IMC usando ImcInfo */}
+      {imc && classificacaoImc && (
+        <ImcInfo imc={imc} classificacao={classificacaoImc} />
+      )}
 
-        {/* Exibe ImcInfo se for avaliação de medidas */}
-        {exibirImcInfo && (
-          <div className="mb-2">
-            <ImcInfo
-              imc={Number(imc)}
-              classificacao={String(classificacaoImc)}
-            />
-          </div>
-        )}
-        {/* Exibe CaInfo no mesmo padrão visual do ImcInfo */}
-        {exibirCaInfo && (
-          <div className="mb-2">
-            <CaInfo
-              resultado={{
-                valor: Number(ca),
-                classificacao: String(classificacaoCa),
-                risco: String(riscoCa ?? ""),
-                referencia: String(referenciaCa ?? ""),
-              }}
-            />
-          </div>
-        )}
+      {/* Exibe CA usando CaInfo */}
+      {ca && classificacaoCa && (
+        <CaInfo
+          resultado={{
+            valor: ca,
+            classificacao: classificacaoCa,
+            risco:
+              typeof resultado.indices === "object" &&
+              resultado.indices !== null
+                ? (resultado.indices as Record<string, any>).riscoCA ?? ""
+                : resultado.riscoCA ?? "",
+            referencia:
+              typeof resultado.indices === "object" &&
+              resultado.indices !== null &&
+              "referenciaCA" in resultado.indices
+                ? (resultado.indices as Record<string, any>).referenciaCA ?? ""
+                : resultado.referenciaCA ?? "",
+          }}
+        />
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-          {Object.keys(dadosGerais).length > 0 && (
-            <Section title="Dados Gerais">
-              <KeyValueList data={dadosGerais} />
-            </Section>
-          )}
-          {grupos.Tronco && Object.keys(grupos.Tronco).length > 0 && (
-            <Section title="Tronco">
-              <KeyValueList data={grupos.Tronco} />
-            </Section>
-          )}
-          {Object.entries(grupos).map(
-            ([nome, grupo]) =>
-              nome !== "Tronco" &&
-              Object.keys(grupo).length > 0 && (
-                <Section title={formatLabel(nome)} key={nome}>
-                  <KeyValueList data={grupo} />
-                </Section>
-              )
-          )}
-        </div>
-        {indices && Object.keys(indices).length > 0 && (
-          <Section title="Índices">
-            <IndicesColunasAgrupados
-              data={
-                Object.fromEntries(
-                  Object.entries(indices).filter(
-                    ([k]) =>
-                      ![
-                        "imc",
-                        "Imc",
-                        "IMC",
-                        "classificacaoimc",
-                        "Classificacaoimc",
-                        "classificacaoImc",
-                        "classificacaoIMC",
-                        "Classificacao I M C",
-                        "classificacao imc",
-                        "Classificação IMC",
-                      ].includes(k.trim())
-                  )
-                ) as IndicesData
-              }
-            />
-            {/* Legenda das siglas */}
-            <div className="pt-4 text-[11px] text-zinc-400">
-              <ul className="grid grid-cols-2 gap-x-8 gap-y-1 list-none pl-0 justify-center items-center">
-                {Object.entries(legendaSiglas).map(([sigla, desc]) => (
-                  <li key={sigla} className="flex items-center justify-center">
-                    <span className="text-zinc-400">{sigla} -</span>
-                    <span className="text-zinc-400">{desc}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Section>
-        )}
-      </div>
+      {/* Exibe RCQ usando RcqInfo */}
+      {rcq && classificacaoRcq && (
+        <RcqInfo
+          valor={rcq}
+          classificacao={classificacaoRcq}
+          referencia={
+            typeof resultado.indices === "object" &&
+            resultado.indices !== null &&
+            "referenciaRCQ" in resultado.indices
+              ? (resultado.indices as Record<string, any>).referenciaRCQ ?? ""
+              : resultado.referenciaRCQ ?? ""
+          }
+        />
+      )}
+
+      {/* Exibe Percentual de Gordura Corporal (GC da Marinha) usando PercentualGorduraInfo */}
+      {percentualGC_Marinha && classificacaoGC_Marinha && (
+        <PercentualGorduraInfo
+          valor={percentualGC_Marinha}
+          classificacao={classificacaoGC_Marinha}
+          referencia={
+            typeof resultado.indices === "object" &&
+            resultado.indices !== null &&
+            "referenciaGC_Marinha" in resultado.indices
+              ? (resultado.indices as Record<string, any>)
+                  .referenciaGC_Marinha ?? ""
+              : resultado.referenciaGC_Marinha ?? ""
+          }
+        />
+      )}
     </div>
   );
 }
@@ -511,6 +275,227 @@ export function ResultadoAvaliacoes({
 }
 
 // Remover hooks não utilizados do ModalMedidasCorporais
+// Componente para exibir o percentual de gordura corporal com badge de classificação
+type PercentualGorduraInfoProps = {
+  valor: number;
+  classificacao: string;
+  referencia: string;
+};
+
+function getBadgeColorWrapper(classificacao: string): string {
+  const t = classificacao.toLowerCase();
+  if (t.includes("obeso") || t.includes("alto")) {
+    return "bg-red-100 text-red-700 border border-red-200";
+  }
+  if (t.includes("essencial") || t.includes("atletas")) {
+    return "bg-green-100 text-green-700 border border-green-200";
+  }
+  if (t.includes("fitness") || t.includes("média")) {
+    return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+  }
+  return "bg-zinc-100 text-zinc-700 border border-zinc-200";
+}
+
+// Componente reutilizável para renderizar tabelas de classificação
+function TabelaClassificacao({
+  classificacoes,
+  badgeClassificacoes,
+}: {
+  classificacoes: Array<{ label: string; homens: string; mulheres: string }>;
+  badgeClassificacoes: Array<{
+    min: number;
+    max: number;
+    label: string;
+    color: string;
+  }>;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-xs border mt-2 mb-4 text-center">
+        <thead>
+          <tr>
+            <th className="border px-2 py-1">Classificação</th>
+            <th className="border px-2 py-1">Homens</th>
+            <th className="border px-2 py-1">Mulheres</th>
+          </tr>
+        </thead>
+        <tbody>
+          {classificacoes.map(({ label, homens, mulheres }) => (
+            <tr key={label}>
+              <td className="border px-2 py-1">
+                {renderBadge(label, badgeClassificacoes)}
+              </td>
+              <td className="border px-2 py-1">
+                {renderBadge(homens, badgeClassificacoes)}
+              </td>
+              <td className="border px-2 py-1">
+                {renderBadge(mulheres, badgeClassificacoes)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function PercentualGorduraInfo({
+  valor,
+  classificacao,
+  referencia,
+}: PercentualGorduraInfoProps) {
+  // Array para exibição da tabela
+  const classificacoes = [
+    { label: "Essencial", homens: "2–5%", mulheres: "10–13%" },
+    { label: "Atletas", homens: "6–13%", mulheres: "14–20%" },
+    { label: "Fitness", homens: "14–17%", mulheres: "21–24%" },
+    { label: "Média", homens: "18–24%", mulheres: "25–31%" },
+    { label: "Obeso", homens: "≥ 25%", mulheres: "≥ 32%" },
+  ];
+
+  // Array para o renderBadge, conforme tipagem BadgeClassificacao[]
+  const badgeClassificacoes = [
+    {
+      min: 0,
+      max: 5,
+      label: "Essencial",
+      color: "bg-green-100 text-green-700 border border-green-200",
+    },
+    {
+      min: 6,
+      max: 13,
+      label: "Atletas",
+      color: "bg-green-100 text-green-700 border border-green-200",
+    },
+    {
+      min: 14,
+      max: 17,
+      label: "Fitness",
+      color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+    },
+    {
+      min: 18,
+      max: 24,
+      label: "Média",
+      color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+    },
+    {
+      min: 25,
+      max: 100,
+      label: "Obeso",
+      color: "bg-red-100 text-red-700 border border-red-200",
+    },
+  ];
+
+  return (
+    <Card className="mb-4 shadow-sm border border-zinc-200">
+      <CardContent className="p-4">
+        <div className="mb-2">
+          <h3 className="font-bold text-lg text-zinc-800 mb-1">
+            Percentual de Gordura Corporal (Marinha):{" "}
+            <span className="text-2xl font-mono">{valor.toFixed(2)}%</span>
+          </h3>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-semibold text-zinc-700">Classificação:</span>
+            {renderBadge(classificacao, badgeClassificacoes)}
+          </div>
+        </div>
+        <Accordion type="single" collapsible className="w-full mt-2">
+          <AccordionItem value="tabela">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <Table className="w-4 h-4 text-blue-600" />
+                Tabela de classificação
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <TabelaClassificacao
+                classificacoes={classificacoes}
+                badgeClassificacoes={badgeClassificacoes}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="referencias">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-blue-600" />
+                Referências científicas
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ul className="list-disc pl-5 text-sm mb-4">
+                <li>
+                  Hodgdon, J. A., & Beckett, M. B. (1984). Prediction of body
+                  density using Navy equations.{" "}
+                  <a
+                    href="https://en.wikipedia.org/wiki/Body_fat_percentage"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    Wikipedia
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4869763/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    NCBI - Percentual de Gordura Corporal
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://10dglab.com.br"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    10DG Lab
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://portalrevistas.ucb.br"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    Portal Revistas UCB
+                  </a>
+                </li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="aplicacao">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <FlaskConical className="w-4 h-4 text-blue-600" />
+                Aplicação
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ul className="list-disc pl-5 text-sm mb-4">
+                <li>Indicador de saúde metabólica e cardiovascular.</li>
+                <li>Útil para monitoramento de atletas e pacientes.</li>
+                <li>
+                  Complementa o IMC para avaliação de composição corporal.
+                </li>
+                <li>
+                  Baseado no método da Marinha dos EUA, validado
+                  cientificamente.
+                </li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ModalMedidasCorporais({
   tipoAvaliacao,
 }: {
@@ -533,5 +518,428 @@ export function ModalMedidasCorporais({
       )}
       {resultadoCA && <CaInfo resultado={resultadoCA} />}
     </div>
+  );
+}
+
+// Nova função para classificar RCQ
+export function classificarRCQ(rcq: number, genero: string): string {
+  if (!genero || (genero !== "masculino" && genero !== "feminino")) {
+    return "Gênero não reconhecido";
+  }
+
+  if (genero === "masculino") {
+    if (rcq < 0.9) return "Baixo risco";
+    if (rcq >= 0.9 && rcq <= 0.99) return "Moderado risco";
+    return "Alto risco";
+  }
+
+  if (genero === "feminino") {
+    if (rcq < 0.8) return "Baixo risco";
+    if (rcq >= 0.8 && rcq <= 0.84) return "Moderado risco";
+    return "Alto risco";
+  }
+
+  return "Gênero não reconhecido";
+}
+
+// Atualizar o componente RcqInfo para usar TabelaClassificacao
+export function RcqInfo({
+  valor,
+  classificacao,
+  referencia,
+}: {
+  valor: number;
+  classificacao: string;
+  referencia: string;
+}) {
+  const classificacoes = [
+    { label: "Baixo risco", homens: "< 0.9", mulheres: "< 0.8" },
+    { label: "Moderado risco", homens: "0.9–0.99", mulheres: "0.8–0.84" },
+    { label: "Alto risco", homens: "> 0.99", mulheres: "> 0.84" },
+  ];
+
+  const badgeClassificacoes = [
+    {
+      min: 0,
+      max: 0.89,
+      label: "Baixo risco",
+      color: "bg-green-100 text-green-700 border border-green-200",
+    },
+    {
+      min: 0.9,
+      max: 0.99,
+      label: "Moderado risco",
+      color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+    },
+    {
+      min: 1,
+      max: 100,
+      label: "Alto risco",
+      color: "bg-red-100 text-red-700 border border-red-200",
+    },
+  ];
+
+  return (
+    <Card className="mb-4 shadow-sm border border-zinc-200">
+      <CardContent className="p-4">
+        <div className="mb-2">
+          <h3 className="font-bold text-lg text-zinc-800 mb-1">
+            Relação cintura-quadril (RCQ):{" "}
+            <span className="text-2xl font-mono">{valor.toFixed(2)}</span>
+          </h3>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-semibold text-zinc-700">Classificação:</span>
+            {renderBadge(classificacao, badgeClassificacoes)}
+          </div>
+        </div>
+        <Accordion type="single" collapsible className="w-full mt-2">
+          <AccordionItem value="tabela">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <Table className="w-4 h-4 text-blue-600" />
+                Tabela de classificação
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <TabelaClassificacao
+                classificacoes={classificacoes}
+                badgeClassificacoes={badgeClassificacoes}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="referencias">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-blue-600" />
+                Referências científicas
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ul className="list-disc pl-5 text-sm mb-4">
+                <li>
+                  Hodgdon, J. A., & Beckett, M. B. (1984). Prediction of body
+                  density using Navy equations.{" "}
+                  <a
+                    href="https://en.wikipedia.org/wiki/Body_fat_percentage"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    Wikipedia
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4869763/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    NCBI - Percentual de Gordura Corporal
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://10dglab.com.br"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    10DG Lab
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://portalrevistas.ucb.br"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    Portal Revistas UCB
+                  </a>
+                </li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="aplicacao">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <FlaskConical className="w-4 h-4 text-blue-600" />
+                Aplicação
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ul className="list-disc pl-5 text-sm mb-4">
+                <li>Indicador de saúde metabólica e cardiovascular.</li>
+                <li>Útil para monitoramento de atletas e pacientes.</li>
+                <li>
+                  Complementa o IMC para avaliação de composição corporal.
+                </li>
+                <li>
+                  Baseado no método da Marinha dos EUA, validado
+                  cientificamente.
+                </li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Atualizar o componente CaInfo para usar TabelaClassificacao
+export function CaInfo({
+  resultado,
+}: {
+  resultado: {
+    valor: number;
+    classificacao: string;
+    risco: string;
+    referencia: string;
+  };
+}) {
+  const classificacoes = [
+    { label: "Baixo risco", homens: "< 94 cm", mulheres: "< 80 cm" },
+    { label: "Moderado risco", homens: "94–102 cm", mulheres: "80–88 cm" },
+    { label: "Alto risco", homens: "> 102 cm", mulheres: "> 88 cm" },
+  ];
+
+  const badgeClassificacoes = [
+    {
+      min: 0,
+      max: 93,
+      label: "Baixo risco",
+      color: "bg-green-100 text-green-700 border border-green-200",
+    },
+    {
+      min: 94,
+      max: 102,
+      label: "Moderado risco",
+      color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+    },
+    {
+      min: 103,
+      max: 1000,
+      label: "Alto risco",
+      color: "bg-red-100 text-red-700 border border-red-200",
+    },
+  ];
+
+  return (
+    <Card className="mb-4 shadow-sm border border-zinc-200">
+      <CardContent className="p-4">
+        <div className="mb-2">
+          <h3 className="font-bold text-lg text-zinc-800 mb-1">
+            Circunferência Abdominal (CA):{" "}
+            <span className="text-2xl font-mono">
+              {resultado.valor.toFixed(2)} cm
+            </span>
+          </h3>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-semibold text-zinc-700">Classificação:</span>
+            {renderBadge(resultado.classificacao, badgeClassificacoes)}
+          </div>
+        </div>
+        <Accordion type="single" collapsible className="w-full mt-2">
+          <AccordionItem value="tabela">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <Table className="w-4 h-4 text-blue-600" />
+                Tabela de classificação
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <TabelaClassificacao
+                classificacoes={classificacoes}
+                badgeClassificacoes={badgeClassificacoes}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="referencias">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-blue-600" />
+                Referências científicas
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ul className="list-disc pl-5 text-sm mb-4">
+                <li>
+                  Organização Mundial da Saúde (OMS) - Diretrizes para avaliação
+                  de obesidade.
+                </li>
+                <li>
+                  <a
+                    href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4869763/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    NCBI - Circunferência Abdominal
+                  </a>
+                </li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="aplicacao">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <FlaskConical className="w-4 h-4 text-blue-600" />
+                Aplicação
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ul className="list-disc pl-5 text-sm mb-4">
+                <li>
+                  A circunferência abdominal (CA) é um marcador simples e
+                  prático para estimar a gordura abdominal, associada ao risco
+                  cardiovascular e metabólico.
+                </li>
+                <li>
+                  Valores elevados de CA indicam maior risco de doenças como
+                  diabetes tipo 2, hipertensão e doenças cardíacas.
+                </li>
+                <li>
+                  A CA complementa o IMC, pois avalia a distribuição da gordura
+                  corporal, especialmente a visceral.
+                </li>
+                <li>
+                  Recomenda-se medir a CA no ponto médio entre a última costela
+                  e a crista ilíaca, com a fita paralela ao solo.
+                </li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Corrigir o componente ImcInfo para exibir as indicações corretamente
+export function ImcInfo({
+  imc,
+  classificacao,
+}: {
+  imc: number;
+  classificacao: string;
+}) {
+  const classificacoes = [
+    { label: "Abaixo do peso", homens: "< 18.5", mulheres: "< 18.5" },
+    { label: "Peso normal", homens: "18.5–24.9", mulheres: "18.5–24.9" },
+    { label: "Sobrepeso", homens: "25–29.9", mulheres: "25–29.9" },
+    { label: "Obesidade", homens: "≥ 30", mulheres: "≥ 30" },
+  ];
+
+  const badgeClassificacoes = [
+    {
+      min: 0,
+      max: 18.4,
+      label: "Abaixo do peso",
+      color: "bg-blue-100 text-blue-700 border border-blue-200",
+    },
+    {
+      min: 18.5,
+      max: 24.9,
+      label: "Peso normal",
+      color: "bg-green-100 text-green-700 border border-green-200",
+    },
+    {
+      min: 25,
+      max: 29.9,
+      label: "Sobrepeso",
+      color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+    },
+    {
+      min: 30,
+      max: 100,
+      label: "Obesidade",
+      color: "bg-red-100 text-red-700 border border-red-200",
+    },
+  ];
+
+  return (
+    <Card className="mb-4 shadow-sm border border-zinc-200">
+      <CardContent className="p-4">
+        <div className="mb-2">
+          <h3 className="font-bold text-lg text-zinc-800 mb-1">
+            Índice de Massa Corporal (IMC):{" "}
+            <span className="text-2xl font-mono">{imc.toFixed(2)}</span>
+          </h3>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-semibold text-zinc-700">Classificação:</span>
+            {renderBadge(classificacao, badgeClassificacoes)}
+          </div>
+        </div>
+        <Accordion type="single" collapsible className="w-full mt-2">
+          <AccordionItem value="tabela">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <Table className="w-4 h-4 text-blue-600" />
+                Tabela de classificação
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <TabelaClassificacao
+                classificacoes={classificacoes}
+                badgeClassificacoes={badgeClassificacoes}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="referencias">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-blue-600" />
+                Referências científicas
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ul className="list-disc pl-5 text-sm mb-4">
+                <li>
+                  Organização Mundial da Saúde (OMS) - Diretrizes para IMC.
+                </li>
+                <li>
+                  <a
+                    href="https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    OMS - Obesidade e Sobrepeso
+                  </a>
+                </li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="aplicacao">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <FlaskConical className="w-4 h-4 text-blue-600" />
+                Aplicação
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ul className="list-disc pl-5 text-sm mb-4">
+                <li>
+                  O IMC é uma ferramenta útil para avaliar o estado nutricional
+                  de indivíduos, classificando-os em categorias como abaixo do
+                  peso, peso normal, sobrepeso e obesidade.
+                </li>
+                <li>
+                  É amplamente utilizado em estudos populacionais e em
+                  consultórios médicos para monitorar a saúde.
+                </li>
+                <li>
+                  Apesar de suas limitações, o IMC é um indicador prático e
+                  rápido para identificar riscos associados ao excesso ou
+                  insuficiência de peso.
+                </li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardContent>
+    </Card>
   );
 }
