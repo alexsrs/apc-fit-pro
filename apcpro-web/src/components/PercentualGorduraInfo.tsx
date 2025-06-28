@@ -11,7 +11,7 @@ import { renderBadge } from "@/utils/badge-utils";
 import { Table, BookOpen, FlaskConical } from "lucide-react"; // Ajustando os ícones para padronização.
 
 /**
- * Exibe o resultado da avaliação do Percentual de Gordura Corporal (Marinha).
+ * Exibe o resultado da avaliação do Percentual de Gordura Corporal (US Navy).
  * @param valor Percentual de gordura calculado.
  * @param classificacao Classificação correspondente ao percentual.
  * @param referencia Referência utilizada para o cálculo.
@@ -76,7 +76,6 @@ export function PercentualGorduraInfo({
             )}
           </div>
         </div>
-
         {/* Accordion para exibir informações adicionais como tabela de classificação, referências e aplicação. */}
         <Accordion type="single" collapsible className="w-full mt-2">
           {/* Item do Accordion para exibir a tabela de classificação. */}
@@ -117,7 +116,6 @@ export function PercentualGorduraInfo({
               </div>
             </AccordionContent>
           </AccordionItem>
-
           {/* Item do Accordion para exibir referências científicas. */}
           <AccordionItem value="referencias">
             <AccordionTrigger>
@@ -173,7 +171,6 @@ export function PercentualGorduraInfo({
               </ul>
             </AccordionContent>
           </AccordionItem>
-
           {/* Item do Accordion para exibir aplicação prática do percentual de gordura. */}
           <AccordionItem value="aplicacao">
             <AccordionTrigger>
@@ -189,10 +186,7 @@ export function PercentualGorduraInfo({
                 <li>
                   Complementa o IMC para avaliação de composição corporal.
                 </li>
-                <li>
-                  Baseado no método da Marinha dos EUA, validado
-                  cientificamente.
-                </li>
+                <li>Baseado no método da US Navy, validado cientificamente.</li>
               </ul>
             </AccordionContent>
           </AccordionItem>

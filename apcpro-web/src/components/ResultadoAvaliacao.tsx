@@ -13,6 +13,12 @@ import {
 } from "@/components/ui/accordion";
 import { Table, BookOpen, FlaskConical } from "lucide-react"; // Ajustando os ícones para padronização.
 import { renderBadge } from "@/utils/badge-utils";
+import { normalizarGenero } from "@/utils/normalizar-genero";
+import { useUserProfile } from "../contexts/UserProfileContext";
+import { TriagemInfo } from "./TriagemInfo";
+import { AltoRendimentoInfo } from "./AltoRendimentoInfo";
+import { InfoGeralAvaliacao } from "./InfoGeralAvaliacao";
+import { AnamneseInfo } from "./AnamneseInfo";
 
 // Tipagem para os índices de avaliação
 interface IndicesAvaliacao {
@@ -22,12 +28,13 @@ interface IndicesAvaliacao {
   classificacaoCA?: string;
   rcq?: number;
   classificacaoRCQ?: string;
-  percentualGC_Marinha?: number;
-  classificacaoGC_Marinha?: string;
+  percentualGC_Marinha?: number; // Percentual de Gordura Corporal (US Navy)
+  classificacaoGC_Marinha?: string; // Classificação do Percentual de Gordura (US Navy)
   riscoCA?: string;
   referenciaCA?: string;
   referenciaRCQ?: string;
-  referenciaGC_Marinha?: string;
+  referenciaGC_Marinha?: string; // Referência US Navy
+  genero?: string; // Adicionado para corrigir o erro
 }
 
 // Tipagem para o resultado de avaliação
@@ -39,17 +46,159 @@ export interface ResultadoAvaliacaoProps {
     referenciaCA?: string;
     referenciaRCQ?: string;
     referenciaGC_Marinha?: string;
+    // Campos específicos para triagem
+    bloco2?: Record<string, unknown>;
+    bloco3?: Record<string, unknown>;
+    bloco4?: Record<string, unknown>;
+    bloco5?: Record<string, unknown>;
+    // Campos específicos para alto rendimento
+    atleta?: Record<string, unknown>;
+    // Campos específicos para anamnese
+    historicoTreino?: Record<string, unknown>;
+    preferenciasIndividuais?: Record<string, unknown>;
+    lesoesLimitacoes?: Record<string, unknown>;
+    estiloVidaRecuperacao?: Record<string, unknown>;
+    // Campos comuns para informações gerais
+    criadoEm?: string;
+    atualizadoEm?: string;
+    usuario?: {
+      nome: string;
+      email: string;
+    };
+    professor?: {
+      nome: string;
+      email: string;
+    };
+    status?: string;
+    validade?: string;
+    observacoes?: string;
   };
   inModal?: boolean; // Adicionando a propriedade inModal
+  generoUsuario?: string; // Novo prop opcional para garantir o gênero correto
+  tipo?: string; // Tipo da avaliação para determinar qual componente usar
+  objetivoClassificado?: string; // Objetivo classificado automaticamente
 }
 
 // Componente principal que exibe os resultados de avaliação
 export function ResultadoAvaliacao({
   resultado,
   inModal,
+  generoUsuario,
+  tipo,
+  objetivoClassificado,
 }: ResultadoAvaliacaoProps) {
+  // Busca o gênero do contexto caso não venha por prop
+  const { profile } = useUserProfile();
+  const generoContexto = profile?.genero;
+
   if (!resultado || typeof resultado !== "object") return null;
 
+  // Debug: Log completo dos props recebidos
+  console.log("📥 ResultadoAvaliacao - Props recebidos:");
+  console.log("   - tipo:", tipo);
+  console.log("   - inModal:", inModal);
+  console.log("   - objetivoClassificado:", objetivoClassificado);
+  console.log("   - resultado:", resultado);
+
+  // Renderiza as informações gerais apenas quando não está em modal
+  const renderInfoGeral = () => {
+    if (inModal) return null;
+
+    return (
+      <InfoGeralAvaliacao
+        criadoEm={resultado.criadoEm || new Date().toISOString()}
+        atualizadoEm={resultado.atualizadoEm}
+        usuario={resultado.usuario}
+        professor={resultado.professor}
+        status={resultado.status || "concluída"}
+        tipo={tipo || "medidas"}
+        objetivoClassificado={objetivoClassificado}
+        validade={resultado.validade}
+        observacoes={resultado.observacoes}
+      />
+    );
+  };
+
+  // Verifica se é uma avaliação de triagem
+  if (
+    tipo === "triagem" ||
+    (resultado.bloco2 &&
+      resultado.bloco3 &&
+      resultado.bloco4 &&
+      resultado.bloco5)
+  ) {
+    return (
+      <div>
+        {renderInfoGeral()}
+        <TriagemInfo
+          resultado={
+            resultado as unknown as Parameters<
+              typeof TriagemInfo
+            >[0]["resultado"]
+          }
+          objetivoClassificado={objetivoClassificado}
+        />
+      </div>
+    );
+  }
+
+  // Verifica se é uma avaliação de alto rendimento
+  if (tipo === "alto_rendimento" || resultado.atleta) {
+    return (
+      <div>
+        {renderInfoGeral()}
+        <AltoRendimentoInfo
+          resultado={
+            resultado as unknown as Parameters<
+              typeof AltoRendimentoInfo
+            >[0]["resultado"]
+          }
+        />
+      </div>
+    );
+  }
+
+  // Verifica se é uma avaliação de anamnese
+  console.log("🔍 ResultadoAvaliacao - Tipo:", tipo);
+  console.log("🔍 ResultadoAvaliacao - Resultado completo:", resultado);
+  console.log("🔍 ResultadoAvaliacao - Verificando anamnese...");
+  console.log("   - tipo === 'anamnese':", tipo === "anamnese");
+  console.log("   - resultado.historicoTreino:", !!resultado.historicoTreino);
+  console.log(
+    "   - resultado.preferenciasIndividuais:",
+    !!resultado.preferenciasIndividuais
+  );
+  console.log("   - resultado.lesoesLimitacoes:", !!resultado.lesoesLimitacoes);
+  console.log(
+    "   - resultado.estiloVidaRecuperacao:",
+    !!resultado.estiloVidaRecuperacao
+  );
+
+  if (
+    tipo === "anamnese" ||
+    resultado.historicoTreino ||
+    resultado.preferenciasIndividuais ||
+    resultado.lesoesLimitacoes ||
+    resultado.estiloVidaRecuperacao
+  ) {
+    console.log(
+      "✅ ResultadoAvaliacao - Detectada como anamnese, renderizando AnamneseInfo"
+    );
+    return (
+      <div>
+        {renderInfoGeral()}
+        <AnamneseInfo
+          resultado={
+            resultado as unknown as Parameters<
+              typeof AnamneseInfo
+            >[0]["resultado"]
+          }
+        />
+      </div>
+    );
+  }
+
+  // Continua com a lógica existente para avaliações de medidas
   const indices: IndicesAvaliacao = resultado.indices ?? {};
 
   const imc = indices.imc ?? resultado.indices?.imc;
@@ -59,10 +208,17 @@ export function ResultadoAvaliacao({
   const classificacaoCa =
     indices.classificacaoCA ?? resultado.indices?.classificacaoCA;
   const rcq = indices.rcq ?? resultado.indices?.rcq;
-  const genero = resultado.genero ?? "não informado";
+  // Busca o gênero na seguinte ordem: prop, contexto, indices, resultado
+  const generoRaw =
+    generoUsuario ??
+    generoContexto ??
+    indices.genero ??
+    resultado.genero ??
+    "não informado";
+  const genero = normalizarGenero(generoRaw) ?? "não reconhecido";
   const classificacaoRcq =
     rcq !== undefined && rcq !== null && !isNaN(Number(rcq))
-      ? classificarRCQ(Number(rcq), String(genero))
+      ? classificarRCQ(Number(rcq), genero)
       : "Dados de RCQ não disponíveis";
 
   const percentualGC_Marinha = indices.percentualGC_Marinha;
@@ -70,6 +226,21 @@ export function ResultadoAvaliacao({
 
   return (
     <div className={`space-y-4 ${inModal ? "modal-class" : ""}`}>
+      {/* Exibe informações gerais apenas quando não está em modal */}
+      {!inModal && (
+        <InfoGeralAvaliacao
+          criadoEm={resultado.criadoEm || new Date().toISOString()}
+          atualizadoEm={resultado.atualizadoEm}
+          usuario={resultado.usuario}
+          professor={resultado.professor}
+          status={resultado.status || "concluída"}
+          tipo={tipo || "medidas"}
+          objetivoClassificado={objetivoClassificado}
+          validade={resultado.validade}
+          observacoes={resultado.observacoes}
+        />
+      )}
+
       {/* Exibe IMC usando ImcInfo */}
       {imc && classificacaoImc && (
         <ImcInfo imc={imc} classificacao={classificacaoImc} />
@@ -96,7 +267,7 @@ export function ResultadoAvaliacao({
         />
       )}
 
-      {/* Exibe Percentual de Gordura Corporal (GC da Marinha) usando PercentualGorduraInfo */}
+      {/* Exibe Percentual de Gordura Corporal (US Navy) usando PercentualGorduraInfo */}
       {percentualGC_Marinha && classificacaoGC_Marinha && (
         <PercentualGorduraInfo
           valor={percentualGC_Marinha}
@@ -141,14 +312,6 @@ export function ResultadoAvaliacoes({
   );
 }
 
-// Remover hooks não utilizados do ModalMedidasCorporais
-// Componente para exibir o percentual de gordura corporal com badge de classificação
-type PercentualGorduraInfoProps = {
-  valor: number;
-  classificacao: string;
-  referencia: string;
-};
-
 // Componente reutilizável para renderizar tabelas de classificação
 function TabelaClassificacao({
   classificacoes,
@@ -191,6 +354,13 @@ function TabelaClassificacao({
     </div>
   );
 }
+
+// Tipagem para o componente PercentualGorduraInfo
+type PercentualGorduraInfoProps = {
+  valor: number;
+  classificacao: string;
+  referencia?: string;
+};
 
 export function PercentualGorduraInfo({
   valor,
@@ -244,7 +414,7 @@ export function PercentualGorduraInfo({
       <CardContent className="p-4">
         <div className="mb-2">
           <h3 className="font-bold text-lg text-zinc-800 mb-1">
-            Percentual de Gordura Corporal (Marinha):{" "}
+            Percentual de Gordura Corporal (US Navy):{" "}
             <span className="text-2xl font-mono">{valor.toFixed(2)}%</span>
           </h3>
           <div className="flex items-center gap-2 mb-2">
@@ -335,10 +505,7 @@ export function PercentualGorduraInfo({
                 <li>
                   Complementa o IMC para avaliação de composição corporal.
                 </li>
-                <li>
-                  Baseado no método da Marinha dos EUA, validado
-                  cientificamente.
-                </li>
+                <li>Baseado no método da US Navy, validado cientificamente.</li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -381,13 +548,13 @@ export function classificarRCQ(rcq: number, genero: string): string {
 
   if (genero === "masculino") {
     if (rcq < 0.9) return "Baixo risco";
-    if (rcq >= 0.9 && rcq <= 0.99) return "Moderado risco";
+    if (rcq >= 0.9 && rcq <= 0.99) return "Risco moderado";
     return "Alto risco";
   }
 
   if (genero === "feminino") {
     if (rcq < 0.8) return "Baixo risco";
-    if (rcq >= 0.8 && rcq <= 0.84) return "Moderado risco";
+    if (rcq >= 0.8 && rcq <= 0.84) return "Risco moderado";
     return "Alto risco";
   }
 
@@ -405,7 +572,7 @@ export function RcqInfo({
 }) {
   const classificacoes = [
     { label: "Baixo risco", homens: "< 0.9", mulheres: "< 0.8" },
-    { label: "Moderado risco", homens: "0.9–0.99", mulheres: "0.8–0.84" },
+    { label: "Risco moderado", homens: "0.9–0.99", mulheres: "0.8–0.84" },
     { label: "Alto risco", homens: "> 0.99", mulheres: "> 0.84" },
   ];
 
@@ -419,7 +586,7 @@ export function RcqInfo({
     {
       min: 0.9,
       max: 0.99,
-      label: "Moderado risco",
+      label: "Risco moderado",
       color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
     },
     {
@@ -526,10 +693,7 @@ export function RcqInfo({
                 <li>
                   Complementa o IMC para avaliação de composição corporal.
                 </li>
-                <li>
-                  Baseado no método da Marinha dos EUA, validado
-                  cientificamente.
-                </li>
+                <li>Baseado no método da US Navy, validado cientificamente.</li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -552,7 +716,7 @@ export function CaInfo({
 }) {
   const classificacoes = [
     { label: "Baixo risco", homens: "< 94 cm", mulheres: "< 80 cm" },
-    { label: "Moderado risco", homens: "94–102 cm", mulheres: "80–88 cm" },
+    { label: "Risco moderado", homens: "94–102 cm", mulheres: "80–88 cm" },
     { label: "Alto risco", homens: "> 102 cm", mulheres: "> 88 cm" },
   ];
 
@@ -566,7 +730,7 @@ export function CaInfo({
     {
       min: 94,
       max: 102,
-      label: "Moderado risco",
+      label: "Risco moderado",
       color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
     },
     {

@@ -458,15 +458,6 @@ export class UsersService {
         peso:
           getNumberProp(medidasRecente, "peso") -
           getNumberProp(medidasAnterior, "peso"),
-        massaMagra:
-          (indicesRecente.massaMuscular_Lee ?? 0) -
-          (indicesAnterior.massaMuscular_Lee ?? 0),
-        percentualGC_Deurenberg:
-          (indicesRecente.percentualGC_Deurenberg ?? 0) -
-          (indicesAnterior.percentualGC_Deurenberg ?? 0),
-        percentualGC_Gomez:
-          (indicesRecente.percentualGC_Gomez ?? 0) -
-          (indicesAnterior.percentualGC_Gomez ?? 0),
         percentualGC_Marinha:
           (indicesRecente.percentualGC_Marinha ?? 0) -
           (indicesAnterior.percentualGC_Marinha ?? 0),

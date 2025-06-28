@@ -26,7 +26,7 @@ export type ResultadoAvaliacao = {
   riscoCA?: string;
   referenciaCA?: string;
   referenciaRCQ?: string;
-  referenciaGC_Marinha?: string;
+  referenciaGC_Marinha?: string; // Referência US Navy
 };
 
 // Tipagem básica para avaliação
@@ -181,11 +181,33 @@ export const ListaAvaliacoes = forwardRef<
                   </h4>
                   {typeof avaliacaoSelecionada.resultado === "object" &&
                   avaliacaoSelecionada.resultado !== null ? (
-                    <ResultadoAvaliacao
-                      resultado={
-                        avaliacaoSelecionada.resultado as ResultadoAvaliacao
-                      }
-                    />
+                    <>
+                      {console.log(
+                        "📤 ListaAvaliacoes - Dados enviados para ResultadoAvaliacao:"
+                      )}
+                      {console.log(
+                        "   - avaliacaoSelecionada:",
+                        avaliacaoSelecionada
+                      )}
+                      {console.log("   - tipo:", avaliacaoSelecionada.tipo)}
+                      {console.log(
+                        "   - resultado:",
+                        avaliacaoSelecionada.resultado
+                      )}
+                      {console.log(
+                        "   - objetivoClassificado:",
+                        avaliacaoSelecionada.objetivoClassificado
+                      )}
+                      <ResultadoAvaliacao
+                        resultado={
+                          avaliacaoSelecionada.resultado as ResultadoAvaliacao
+                        }
+                        tipo={avaliacaoSelecionada.tipo}
+                        objetivoClassificado={
+                          avaliacaoSelecionada.objetivoClassificado
+                        }
+                      />
+                    </>
                   ) : (
                     <span className="text-sm text-gray-500">
                       Sem resultado detalhado.

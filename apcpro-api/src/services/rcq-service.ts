@@ -53,13 +53,13 @@ export function classificarRCQ(rcq: number, genero: string): string {
 
   if (genero === "masculino") {
     if (rcq < 0.9) return "Baixo risco";
-    if (rcq >= 0.9 && rcq <= 0.99) return "Moderado risco";
+    if (rcq >= 0.9 && rcq <= 0.99) return "Risco moderado";
     return "Alto risco";
   }
 
   if (genero === "feminino") {
     if (rcq < 0.8) return "Baixo risco";
-    if (rcq >= 0.8 && rcq <= 0.84) return "Moderado risco";
+    if (rcq >= 0.8 && rcq <= 0.84) return "Risco moderado";
     return "Alto risco";
   }
 

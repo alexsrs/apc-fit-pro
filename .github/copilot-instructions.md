@@ -110,4 +110,4 @@ export class UsersService {
 
 ---
 
-Dessa forma, tifurico sempre irá te ajudar de acordo com as regras, arquitetura e tecnologias do seu projeto!
+Dessa forma, tifurico sempre irá me ajudar de acordo com as regras, arquitetura e tecnologias do seu projeto!

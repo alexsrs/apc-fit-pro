@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
 import apiClient from "@/lib/api-client";
-import { TeamSwitcher } from "@/components/team-switcher";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   type Profile = {
@@ -283,7 +282,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
-        <TeamSwitcher teams={grupos} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

@@ -8,6 +8,7 @@ type Profile = {
   userId?: string;
   role?: string;
   dataNascimento?: Date | null;
+  genero?: "masculino" | "feminino" | null;
   // ...outros campos do perfil
 } | null;
 

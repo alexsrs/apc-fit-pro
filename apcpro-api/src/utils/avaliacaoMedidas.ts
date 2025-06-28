@@ -169,12 +169,12 @@ function classificarRCQ(rcq: number, sexo: Genero): string {
 export function classificarCA(ca: number, genero: Genero): string {
   if (genero === Genero.Masculino) {
     if (ca < 94) return "Baixo risco";
-    if (ca < 102) return "Risco moderado";
-    return "Risco muito aumentado";
+    if (ca >= 94 && ca <= 102) return "Risco moderado";
+    return "Alto risco";
   } else {
     if (ca < 80) return "Baixo risco";
-    if (ca < 88) return "Risco moderado";
-    return "Risco muito aumentado";
+    if (ca >= 80 && ca <= 88) return "Risco moderado";
+    return "Alto risco";
   }
 }
 

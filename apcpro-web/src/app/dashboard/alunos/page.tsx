@@ -45,6 +45,7 @@ import {
   ResultadoAvaliacao,
   type ResultadoAvaliacaoProps,
 } from "@/components/ResultadoAvaliacao";
+import { normalizarGenero } from "@/utils/normalizar-genero";
 
 // Função utilitária para calcular idade
 function calcularIdade(dataNascimento?: string): number | undefined {
@@ -501,6 +502,11 @@ export default function AlunosDashboard() {
                           : (avaliacaoSelecionada.resultado as ResultadoAvaliacaoProps["resultado"])
                       }
                       inModal={true}
+                      generoUsuario={normalizarGenero(profile?.genero)}
+                      tipo={avaliacaoSelecionada.tipo}
+                      objetivoClassificado={
+                        avaliacaoSelecionada.objetivoClassificado
+                      }
                     />
                   </>
                 )}
