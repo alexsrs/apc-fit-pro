@@ -144,6 +144,55 @@ az role assignment create \
 
 ---
 
+## 🔒 IMPORTANTE: Configuração Segura das Credenciais
+
+### ⚠️ CREDENCIAIS FORAM CRIADAS COM SUCESSO!
+
+O Service Principal foi criado e você deve ter visto o JSON retornado no terminal anterior.
+
+**🚨 SEGURANÇA CRÍTICA:**
+- **NUNCA** commite credenciais no repositório
+- **NUNCA** compartilhe o client secret
+- **SEMPRE** use GitHub Secrets para armazenar credenciais
+
+### 📋 Próximos Passos SEGUROS
+
+#### 1. Copiar Credenciais do Terminal
+Copie o JSON completo que foi exibido no terminal quando criamos o Service Principal.
+
+#### 2. Configurar Secret no GitHub
+1. Acesse: https://github.com/alexsrs/apc-fit-pro/settings/secrets/actions
+2. Clique em "New repository secret"
+3. Nome: `AZURE_CREDENTIALS`
+4. Valor: **Cole o JSON completo do terminal**
+
+#### 3. Verificar Proteção do .gitignore
+✅ Arquivos de credenciais estão protegidos no `.gitignore`
+
+#### 4. Testar Deploy Seguro
+```powershell
+# Sem arquivos de credenciais!
+git add .
+git commit -m "docs: finalizar configuração deploy Azure (sem credenciais)"
+git push origin main
+```
+
+## 🛡️ Boas Práticas de Segurança
+
+- ✅ Credenciais removidas do filesystem local
+- ✅ .gitignore protegendo arquivos sensíveis
+- ✅ Credenciais apenas no GitHub Secrets
+- ✅ Service Principal com permissões mínimas
+
+## 🔧 Monitoramento
+
+Após configurar o secret:
+1. GitHub Actions: https://github.com/alexsrs/apc-fit-pro/actions
+2. API Health: https://apcpro-api.azurewebsites.net/health
+3. Logs do Azure: Portal Azure → App Services → Logs
+
+---
+
 ## 📋 Checklist Final
 
 - [ ] Service Principal criado no Azure

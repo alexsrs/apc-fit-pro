@@ -8,3 +8,31 @@
 /apcpro-web/.exemplo.env
 /apcpro-web/.exemplo.env.local
 /apcpro-api/.deployment
+
+# 🔐 CREDENCIAIS E ARQUIVOS SENSÍVEIS - NUNCA COMMITAR
+azure-credentials.json
+azure-credentials*.json
+*.pem
+*.key
+*.p12
+*.pfx
+service-principal*.json
+auth*.json
+
+# Azure e Deploy
+.azure/
+.deployment
+deployment-credentials*.json
+
+# Ambiente e Configurações Locais
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Logs e Temporários
+*.log
+logs/
+temp/
+tmp/
