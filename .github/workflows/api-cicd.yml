@@ -6,80 +6,80 @@ name: 🚀 APC API CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
-    paths: 
-      - 'apcpro-api/**'
-      - '.github/workflows/api-cicd.yml'
+    branches: [main, develop]
+    paths:
+      - "apcpro-api/**"
+      - ".github/workflows/api-cicd.yml"
   pull_request:
-    branches: [ main, develop ]
-    paths: 
-      - 'apcpro-api/**'
+    branches: [main, develop]
+    paths:
+      - "apcpro-api/**"
 
 env:
   AZURE_WEBAPP_NAME_PROD: apcpro-api
   AZURE_WEBAPP_NAME_DEV: apcpro-api-dev
-  NODE_VERSION: '22.x'
-  WORKING_DIRECTORY: './apcpro-api'
+  NODE_VERSION: "22.x"
+  WORKING_DIRECTORY: "./apcpro-api"
 
 jobs:
   # 🏗️ Job de Build e Testes
   build-and-test:
     name: 🏗️ Build & Test
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: 📥 Checkout do código
-      uses: actions/checkout@v4
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v4
 
-    - name: 📦 Setup Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package-lock.json
+      - name: 📦 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package-lock.json
 
-    - name: 📋 Instalar dependências
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-      run: |
-        npm ci
-        
-    - name: 🔨 Gerar cliente Prisma
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-      run: npm run prisma:generate
+      - name: 📋 Instalar dependências
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          npm ci
 
-    - name: 🏗️ Build da aplicação
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-      run: npm run build
+      - name: 🔨 Gerar cliente Prisma
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm run prisma:generate
 
-    - name: 🧪 Executar testes (se disponíveis)
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-      run: npm run test || echo "⚠️ Testes não configurados"
-      continue-on-error: true
+      - name: 🏗️ Build da aplicação
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm run build
 
-    - name: 🧹 Lint do código (se disponível)
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-      run: npm run lint || echo "⚠️ Lint não configurado"
-      continue-on-error: true
+      - name: 🧪 Executar testes (se disponíveis)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm run test || echo "⚠️ Testes não configurados"
+        continue-on-error: true
 
-    - name: 📦 Preparar artefatos para deploy
-      if: github.event_name == 'push'
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-      run: |
-        # Criar diretório de deploy
-        mkdir -p ../deploy-package
-        
-        # Copiar arquivos necessários
-        cp -r dist package*.json ../deploy-package/
-        cp -r node_modules ../deploy-package/ || echo "node_modules será instalado no deploy"
-        cp -r prisma ../deploy-package/
+      - name: 🧹 Lint do código (se disponível)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm run lint || echo "⚠️ Lint não configurado"
+        continue-on-error: true
 
-    - name: 📤 Upload de artefatos
-      if: github.event_name == 'push'
-      uses: actions/upload-artifact@v4
-      with:
-        name: api-build-${{ github.sha }}
-        path: deploy-package/
-        retention-days: 1
+      - name: 📦 Preparar artefatos para deploy
+        if: github.event_name == 'push'
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          # Criar diretório de deploy
+          mkdir -p ../deploy-package
+
+          # Copiar arquivos necessários
+          cp -r dist package*.json ../deploy-package/
+          cp -r node_modules ../deploy-package/ || echo "node_modules será instalado no deploy"
+          cp -r prisma ../deploy-package/
+
+      - name: 📤 Upload de artefatos
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-build-${{ github.sha }}
+          path: deploy-package/
+          retention-days: 1
 
   # 🚀 Deploy para Development (branch develop)
   deploy-dev:
@@ -87,30 +87,30 @@ jobs:
     name: 🚀 Deploy DEV
     needs: build-and-test
     runs-on: ubuntu-latest
-    environment: 
-      name: 'development'
+    environment:
+      name: "development"
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-    - name: 📥 Download artefatos
-      uses: actions/download-artifact@v4
-      with:
-        name: api-build-${{ github.sha }}
-        path: ./deploy
+      - name: 📥 Download artefatos
+        uses: actions/download-artifact@v4
+        with:
+          name: api-build-${{ github.sha }}
+          path: ./deploy
 
-    - name: 🌐 Deploy para Azure Web App (DEV)
-      id: deploy-to-webapp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME_DEV }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
-        package: ./deploy
-        startup-command: 'npm run start'
+      - name: 🌐 Deploy para Azure Web App (DEV)
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME_DEV }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
+          package: ./deploy
+          startup-command: "npm run start"
 
-    - name: ✅ Verificar saúde da aplicação
-      run: |
-        sleep 30
-        curl -f ${{ steps.deploy-to-webapp.outputs.webapp-url }}/health || echo "⚠️ Health check falhou"
+      - name: ✅ Verificar saúde da aplicação
+        run: |
+          sleep 30
+          curl -f ${{ steps.deploy-to-webapp.outputs.webapp-url }}/health || echo "⚠️ Health check falhou"
 
   # 🎯 Deploy para Production (branch main)
   deploy-prod:
@@ -118,36 +118,36 @@ jobs:
     name: 🎯 Deploy PROD
     needs: build-and-test
     runs-on: ubuntu-latest
-    environment: 
-      name: 'production'
+    environment:
+      name: "production"
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-    - name: 📥 Download artefatos
-      uses: actions/download-artifact@v4
-      with:
-        name: api-build-${{ github.sha }}
-        path: ./deploy
+      - name: 📥 Download artefatos
+        uses: actions/download-artifact@v4
+        with:
+          name: api-build-${{ github.sha }}
+          path: ./deploy
 
-    - name: 🌐 Deploy para Azure Web App (PROD)
-      id: deploy-to-webapp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME_PROD }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
-        package: ./deploy
-        startup-command: 'npm run start'
+      - name: 🌐 Deploy para Azure Web App (PROD)
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME_PROD }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+          package: ./deploy
+          startup-command: "npm run start"
 
-    - name: ✅ Verificar saúde da aplicação
-      run: |
-        sleep 30
-        curl -f ${{ steps.deploy-to-webapp.outputs.webapp-url }}/health || echo "⚠️ Health check falhou"
+      - name: ✅ Verificar saúde da aplicação
+        run: |
+          sleep 30
+          curl -f ${{ steps.deploy-to-webapp.outputs.webapp-url }}/health || echo "⚠️ Health check falhou"
 
-    - name: 🏷️ Criar tag de release
-      if: success()
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        TAG_NAME="api-v$(date +'%Y.%m.%d')-${{ github.run_number }}"
-        git tag $TAG_NAME
-        git push origin $TAG_NAME || echo "Tag já existe"
+      - name: 🏷️ Criar tag de release
+        if: success()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          TAG_NAME="api-v$(date +'%Y.%m.%d')-${{ github.run_number }}"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME || echo "Tag já existe"

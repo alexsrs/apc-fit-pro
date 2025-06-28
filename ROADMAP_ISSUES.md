@@ -5,6 +5,7 @@ Este arquivo contém exemplos das primeiras issues que devem ser criadas no GitH
 ## 🔥 Issues de Alta Prioridade (Sprint Atual)
 
 ### 1. Issue #1: Melhorias UX das Avaliações
+
 ```
 Título: feat: melhorar UX e responsividade dos componentes de avaliação
 
@@ -41,6 +42,7 @@ Aprimorar a interface e experiência do usuário dos componentes de avaliação 
 ```
 
 ### 2. Issue #2: Validação Robusta de Dados
+
 ```
 Título: feat: implementar validação completa para dados de avaliação
 
@@ -79,6 +81,7 @@ Implementar sistema robusto de validação para garantir integridade dos dados d
 ## ⚡ Issues de Média Prioridade (Próxima Sprint)
 
 ### 3. Issue #3: Sistema de Relatórios
+
 ```
 Título: feat: implementar dashboard de relatórios e analytics
 
@@ -115,6 +118,7 @@ Criar sistema completo de relatórios para professores acompanharem evolução d
 ```
 
 ### 4. Issue #4: Notificações Inteligentes
+
 ```
 Título: feat: sistema de notificações automáticas e alertas
 
@@ -155,16 +159,19 @@ Implementar sistema completo de notificações para alertas automáticos, lembre
 ### Passo a Passo:
 
 1. **Acessar GitHub:**
+
    ```
    https://github.com/alexsrs/apc-fit-pro/issues/new/choose
    ```
 
 2. **Escolher Template:**
+
    - Para funcionalidades: "🚀 Feature Request"
-   - Para bugs: "🐛 Bug Report"  
+   - Para bugs: "🐛 Bug Report"
    - Para melhorias: "🔧 Improvement"
 
 3. **Preencher Dados:**
+
    - Copiar título e descrição deste arquivo
    - Ajustar labels manualmente se necessário
    - Adicionar milestone (Sprint 5, Sprint 6, etc.)
@@ -176,6 +183,7 @@ Implementar sistema completo de notificações para alertas automáticos, lembre
    - Definir prioridade
 
 ### Comandos CLI (Opcional):
+
 ```bash
 # Instalar GitHub CLI
 gh auth login
@@ -196,14 +204,17 @@ gh issue view 1
 ## 📊 Ordem de Priorização Sugerida
 
 1. **Sprint 5 (Atual):**
+
    - Issue #1: Melhorias UX Avaliações
    - Issue #2: Validação de Dados
 
 2. **Sprint 6:**
+
    - Issue #3: Sistema de Relatórios
    - Issue #4: Notificações Inteligentes
 
 3. **Sprint 7:**
+
    - Exportação Avançada
    - Dashboard Analytics
 

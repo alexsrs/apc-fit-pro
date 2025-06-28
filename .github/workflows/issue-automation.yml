@@ -24,7 +24,7 @@ jobs:
               issue_number: context.issue.number,
               assignees: [context.repo.owner]
             });
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -54,7 +54,7 @@ jobs:
           script: |
             const body = context.payload.issue.body.toLowerCase();
             let sizeLabel = '';
-            
+
             if (body.includes('1-2 horas') || body.includes('pontos: 1') || body.includes('pontos: 2')) {
               sizeLabel = 'size:xs';
             } else if (body.includes('3-8 horas') || body.includes('pontos: 3') || body.includes('pontos: 4')) {
@@ -66,7 +66,7 @@ jobs:
             } else if (body.includes('1+ semana') || body.includes('pontos: 9') || body.includes('pontos de história:** 1')) {
               sizeLabel = 'size:xl';
             }
-            
+
             if (sizeLabel) {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
@@ -107,7 +107,7 @@ jobs:
               4. 📅 Priorização no backlog
               
               **Acompanhe o progresso:** Esta issue será atualizada conforme avançamos.`;
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -134,12 +134,12 @@ jobs:
           script: |
             const prBody = context.payload.pull_request.body || '';
             const prTitle = context.payload.pull_request.title;
-            
+
             // Verificar se o PR menciona uma issue
             const hasIssueReference = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+/i.test(prBody) || 
                                      /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+/i.test(prTitle) ||
                                      /#\d+/.test(prBody);
-            
+
             if (!hasIssueReference) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -183,7 +183,7 @@ jobs:
           script: |
             const prTitle = context.payload.pull_request.title;
             const author = context.payload.pull_request.user.login;
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
