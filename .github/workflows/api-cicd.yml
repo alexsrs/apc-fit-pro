@@ -127,6 +127,11 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessário para tags
+
       - name: 📥 Download artefatos
         uses: actions/download-artifact@v4
         with:
@@ -154,8 +159,9 @@ jobs:
       - name: 🏷️ Criar tag de release
         if: success()
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          # Configurar Git no workspace
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
           TAG_NAME="api-v$(date +'%Y.%m.%d')-${{ github.run_number }}"
           git tag $TAG_NAME
           git push origin $TAG_NAME || echo "Tag já existe"
