@@ -14,7 +14,6 @@ import {
   AlertTriangle,
   User,
   CheckCircle,
-  XCircle,
   Info,
 } from "lucide-react";
 
@@ -97,7 +96,7 @@ export function AnamneseInfo({ resultado }: AnamneseInfoProps) {
    */
   const renderSection = (
     title: string,
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     icon: React.ReactNode
   ) => {
     const hasData = Object.values(data || {}).some(
@@ -140,7 +139,7 @@ export function AnamneseInfo({ resultado }: AnamneseInfoProps) {
                   </div>
                 ) : (
                   <p className="text-sm text-gray-600 ml-2 bg-gray-50 p-2 rounded">
-                    {value}
+                    {String(value)}
                   </p>
                 )}
               </div>
