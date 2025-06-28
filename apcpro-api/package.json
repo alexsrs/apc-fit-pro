@@ -17,7 +17,9 @@
     "health": "curl -f http://localhost:8080/health || exit 1",
     "lint": "echo 'Lint não configurado ainda'",
     "test": "echo 'Testes não configurados ainda'",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "azure:build": "npm ci --production=false && npm run prisma:generate && npm run build",
+    "azure:start": "npm run prisma:migrate && npm start"
   },
   "keywords": [],
   "author": "",
@@ -54,5 +56,13 @@
     "typescript": "^5.8.3",
     "uuid": "^11.1.0",
     "zod": "^3.24.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "azure": {
+    "optimize": false,
+    "zipDeploy": true
   }
 }
