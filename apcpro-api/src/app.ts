@@ -56,6 +56,18 @@ function createApp() {
   );
 
   app.use(express.json());
+
+  // 🩺 Health check na raiz para compatibilidade com Azure/monitoramento
+  app.get("/health", (req, res) => {
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      service: "apcpro-api",
+      version: "1.0.0",
+      environment: process.env.NODE_ENV || "development",
+    });
+  });
+
   // 📚 Configurar Swagger (documentação da API)
   setupSwagger(app);
   // 🛣️ Configurar rotas da API
