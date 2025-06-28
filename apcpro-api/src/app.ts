@@ -27,14 +27,19 @@ function createApp() {
       origin: function (origin, callback) {
         // Permite requisições sem origin (Postman, curl, etc.)
         if (!origin) {
-          console.log(`🌐 CORS: Permitindo requisição sem origin (Postman/curl)`);
+          console.log(
+            `🌐 CORS: Permitindo requisição sem origin (Postman/curl)`
+          );
           return callback(null, true);
         }
 
         // Em produção, bloqueia localhost por segurança
         if (isProduction && origin.includes("localhost")) {
           console.log(`🚫 CORS: Bloqueando localhost em produção: ${origin}`);
-          return callback(new Error("Localhost não permitido em produção"), false);
+          return callback(
+            new Error("Localhost não permitido em produção"),
+            false
+          );
         }
 
         if (allowedOrigins.includes(origin)) {
@@ -56,7 +61,7 @@ function createApp() {
 
   // 🛣️ Configurar rotas da API
   app.use("/api", router);
-  
+
   return app;
 }
 

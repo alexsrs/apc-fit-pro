@@ -59,7 +59,7 @@ router.get("/health", (req: Request, res: Response) => {
  *     description: |
  *       Endpoint para debugging que extrai e retorna o token JWT enviado no header Authorization.
  *       **APENAS PARA DESENVOLVIMENTO** - não disponível em produção.
- *       
+ *
  *       ### Como usar:
  *       1. Obtenha um token válido do frontend (localhost:3000)
  *       2. Faça uma requisição com o header: `Authorization: Bearer SEU_TOKEN`
@@ -103,14 +103,14 @@ router.get("/debug/token", (req: Request, res: Response): void => {
 
   const authHeader = req.headers.authorization;
   const token = authHeader?.replace("Bearer ", "").trim();
-  
+
   if (!token || !authHeader) {
     res.status(401).json({
       message: "❌ Nenhum token encontrado",
       help: [
         "1. Faça login no frontend (localhost:3000)",
         "2. Copie o header Authorization de qualquer requisição para API",
-        "3. Envie novamente com o header correto"
+        "3. Envie novamente com o header correto",
       ],
       headers: req.headers,
     });
@@ -126,8 +126,8 @@ router.get("/debug/token", (req: Request, res: Response): void => {
       "3. Clique em 'Authorize' 🔒",
       "4. Cole o token no campo 'Bearer'",
       "5. Clique 'Authorize'",
-      "6. Teste endpoints protegidos como GET /users"
-    ]
+      "6. Teste endpoints protegidos como GET /users",
+    ],
   });
 });
 
