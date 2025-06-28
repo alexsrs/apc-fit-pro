@@ -105,6 +105,38 @@ https://apc-fit-pro.vercel.app
 
 ---
 
+## 🚨 Problema Identificado e Solução
+
+### **❌ Erro Encontrado:**
+```
+🎯 Deploy PROD
+Deployment Failed, Error: No credentials found. Add an Azure login action before this action.
+```
+
+### **✅ Correção Aplicada:**
+1. **Workflow atualizado** - Adicionado `azure/login@v1` step
+2. **Documentação criada** - Guia completo em `docs/azure-credentials-setup.md`
+3. **Próximo passo** - Configurar `AZURE_CREDENTIALS` secret no GitHub
+
+### **📋 Ação Necessária:**
+Para completar a correção, você precisa:
+
+1. **Criar Service Principal no Azure:**
+```bash
+az ad sp create-for-rbac --name "apcpro-github-actions" --role contributor --scopes /subscriptions/[SUBSCRIPTION_ID]/resourceGroups/apcpro-rg --sdk-auth
+```
+
+2. **Adicionar secret no GitHub:**
+- Ir para: https://github.com/alexsrs/apc-fit-pro/settings/secrets/actions
+- Criar secret: `AZURE_CREDENTIALS`
+- Valor: JSON retornado pelo comando acima
+
+3. **Testar novo deploy:**
+- Fazer um commit/push para main
+- Acompanhar em: https://github.com/alexsrs/apc-fit-pro/actions
+
+---
+
 ## 🔧 Comandos de Diagnóstico
 
 ### **📋 Verificar Status do Deploy:**
