@@ -29,6 +29,9 @@ import { avaliarCAController } from "./controllers/avaliarCA-controller";
 
 const router = Router();
 
+// 🚀 Deploy Test - CI/CD Pipeline Trigger
+// Este comentário serve para triggerar o deploy automático
+
 // 🩺 Health Check endpoint - deve estar sempre disponível
 router.get("/health", (req: Request, res: Response) => {
   const healthCheck = {
