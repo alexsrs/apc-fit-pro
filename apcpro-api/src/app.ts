@@ -58,6 +58,7 @@ function createApp() {
   app.use(express.json());
 
   // 🩺 Health check na raiz para compatibilidade com Azure/monitoramento
+  // Deploy: 28/06/2025 16:19 - Endpoint /health deve estar acessível
   app.get("/health", (req, res) => {
     res.status(200).json({
       status: "ok",
@@ -65,6 +66,7 @@ function createApp() {
       service: "apcpro-api",
       version: "1.0.0",
       environment: process.env.NODE_ENV || "development",
+      endpoint: "root-health-check",
     });
   });
 
