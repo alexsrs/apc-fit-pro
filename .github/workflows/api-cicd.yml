@@ -98,12 +98,16 @@ jobs:
           name: api-build-${{ github.sha }}
           path: ./deploy
 
+      - name: 🔐 Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: 🌐 Deploy para Azure Web App (DEV)
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME_DEV }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
           package: ./deploy
           startup-command: "npm run start"
 
@@ -129,12 +133,16 @@ jobs:
           name: api-build-${{ github.sha }}
           path: ./deploy
 
+      - name: 🔐 Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: 🌐 Deploy para Azure Web App (PROD)
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME_PROD }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
           package: ./deploy
           startup-command: "npm run start"
 
