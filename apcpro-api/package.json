@@ -9,7 +9,15 @@
     "start:dev": "tsx src/server.ts",
     "start:watch": "tsx watch src/server.ts",
     "prisma:generate": "prisma generate",
-    "postinstall": "prisma generate && npm run build"
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "deploy:build": "npm ci && npm run prisma:generate && npm run build",
+    "deploy:migrate": "npm run prisma:migrate",
+    "health": "curl -f http://localhost:8080/health || exit 1",
+    "lint": "echo 'Lint não configurado ainda'",
+    "test": "echo 'Testes não configurados ainda'",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",

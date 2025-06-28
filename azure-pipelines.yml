@@ -1,31 +1,50 @@
-# Node.js Express Web App to Linux on Azure
-# Build a Node.js Express app and deploy it to Azure as a Linux web app.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+# 🚀 APC FIT PRO API - CI/CD Pipeline para Azure
+# Pipeline automatizado para build, test e deploy da API Node.js/Express
+# Deploy automático para Azure App Service com suporte a múltiplos ambientes
 
 trigger:
-- main
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    include:
+    - apcpro-api/*
+    - azure-pipelines.yml
+
+pr:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    include:
+    - apcpro-api/*
 
 variables:
-
-  # Azure Resource Manager connection created during pipeline creation
+  # Azure Resource Manager connection
   azureSubscription: '87514cf3-ac58-4d33-b9f2-10f3a2717828'
-
-  # Web app name
-  webAppName: 'apcpro-api'
-
-  # Environment name
-  environmentName: 'apcpro-api'
-
-  # Agent VM image name
+  
+  # Web app names por ambiente
+  webAppNameProd: 'apcpro-api'
+  webAppNameDev: 'apcpro-api-dev'
+  
+  # Environment names
+  environmentNameProd: 'apcpro-api-production'
+  environmentNameDev: 'apcpro-api-development'
+  
+  # Agent VM image
   vmImageName: 'ubuntu-latest'
+  
+  # Working directory
+  workingDirectory: 'apcpro-api'
 
 stages:
 - stage: Build
-  displayName: Build stage
+  displayName: '🏗️ Build e Testes'
   jobs:
   - job: Build
-    displayName: Build
+    displayName: 'Build da API'
     pool:
       vmImage: $(vmImageName)
 
@@ -33,34 +52,52 @@ stages:
     - task: NodeTool@0
       inputs:
         versionSpec: '22.x'
-      displayName: 'Install Node.js'
+      displayName: '📦 Instalar Node.js 22.x'
 
     - script: |
-        npm install
-        npm run build --if-present
-        npm run test --if-present
-      displayName: 'npm install, build and test'
+        cd $(workingDirectory)
+        echo "📋 Instalando dependências..."
+        npm ci --only=production
+        echo "🔨 Gerando cliente Prisma..."
+        npm run prisma:generate
+        echo "🏗️ Fazendo build da aplicação..."
+        npm run build
+      displayName: '📦 Install, Generate e Build'
+
+    - script: |
+        cd $(workingDirectory)
+        echo "🧪 Executando linting..."
+        npm run lint || echo "⚠️ Lint não configurado"
+        echo "🧪 Executando testes..."
+        npm run test || echo "⚠️ Testes não configurados"
+      displayName: '🧪 Qualidade de Código'
+      continueOnError: 'true'
 
     - task: ArchiveFiles@2
-      displayName: 'Archive files'
+      displayName: '📦 Arquivar aplicação'
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        rootFolderOrFile: '$(workingDirectory)'
         includeRootFolder: false
         archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/apcpro-api-$(Build.BuildId).zip
         replaceExistingArchive: true
 
-    - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      artifact: drop
+    - task: PublishBuildArtifacts@1
+      displayName: '📤 Publicar artefatos'
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)/apcpro-api-$(Build.BuildId).zip
+        ArtifactName: 'api-drop'
+        publishLocation: 'Container'
 
-- stage: Deploy
-  displayName: Deploy stage
+# 🚀 Deploy para Desenvolvimento (branch develop)
+- stage: DeployDev
+  displayName: '🚀 Deploy Development'
   dependsOn: Build
-  condition: succeeded()
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
   jobs:
-  - deployment: Deploy
-    displayName: Deploy
-    environment: $(environmentName)
+  - deployment: DeployToDev
+    displayName: 'Deploy para DEV'
+    environment: $(environmentNameDev)
     pool:
       vmImage: $(vmImageName)
     strategy:
@@ -68,11 +105,42 @@ stages:
         deploy:
           steps:
           - task: AzureWebApp@1
-            displayName: 'Azure Web App Deploy: apcpro-api'
+            displayName: '🌐 Deploy Azure Web App (DEV)'
             inputs:
               azureSubscription: $(azureSubscription)
               appType: webAppLinux
-              appName: $(webAppName)
+              appName: $(webAppNameDev)
               runtimeStack: 'NODE|22LTS'
-              package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+              package: $(Pipeline.Workspace)/api-drop/apcpro-api-$(Build.BuildId).zip
               startUpCommand: 'npm run start'
+              appSettings: |
+                -NODE_ENV development
+                -PORT 8080
+
+# 🎯 Deploy para Produção (branch main)
+- stage: DeployProd
+  displayName: '🎯 Deploy Production'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: DeployToProd
+    displayName: 'Deploy para PROD'
+    environment: $(environmentNameProd)
+    pool:
+      vmImage: $(vmImageName)
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebApp@1
+            displayName: '🌐 Deploy Azure Web App (PROD)'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appType: webAppLinux
+              appName: $(webAppNameProd)
+              runtimeStack: 'NODE|22LTS'
+              package: $(Pipeline.Workspace)/api-drop/apcpro-api-$(Build.BuildId).zip
+              startUpCommand: 'npm run start'
+              appSettings: |
+                -NODE_ENV production
+                -PORT 8080

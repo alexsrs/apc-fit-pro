@@ -623,7 +623,167 @@ gh pr checks
 gh pr merge --squash
 ```
 
-## 📈 Métricas de Sucesso
+## �️ Roadmap e Próximos Passos
+
+### **📋 Lista de Funcionalidades Priorizadas**
+
+#### **🚀 Sprint Atual (Prioridade Alta)**
+1. **Sistema de Relatórios** (`feature/sistema-relatorios`)
+   - Dashboard de analytics de progresso dos alunos
+   - Gráficos de evolução das medidas corporais
+   - Exportação de relatórios em PDF
+   - **Estimativa:** 3-5 dias
+   - **Responsável:** A definir
+
+2. **Melhorias UX nas Avaliações** (`feature/melhorias-ux-avaliacoes`)
+   - Otimizar carregamento dos componentes
+   - Melhorar responsividade mobile
+   - Adicionar loading states
+   - **Estimativa:** 2-3 dias
+   - **Responsável:** A definir
+
+#### **🎯 Próxima Sprint (Prioridade Média)**
+3. **Sistema de Notificações** (`feature/notificacoes-push`)
+   - Alertas de reavaliações pendentes
+   - Notificações de novos alunos
+   - Sistema de lembretes automáticos
+   - **Estimativa:** 4-6 dias
+
+4. **Dashboard Analytics Avançado** (`feature/dashboard-analytics`)
+   - Métricas detalhadas por professor
+   - Comparativos temporais
+   - Insights automáticos
+   - **Estimativa:** 5-7 dias
+
+#### **🔮 Backlog (Futuras Funcionalidades)**
+5. **Exportação de Dados** (`feature/exportacao-dados`)
+   - Export para Excel/CSV
+   - Backup de dados dos alunos
+   - Relatórios personalizáveis
+
+6. **Sistema de Prescrição de Treinos** (`feature/prescricao-treinos`)
+   - Base nas avaliações APC
+   - Templates de treino
+   - Progressão automática
+
+7. **App Mobile** (`feature/mobile-app`)
+   - React Native ou Progressive Web App
+   - Sincronização offline
+   - Push notifications nativas
+
+### **🎛️ Controle via GitHub**
+
+#### **1. GitHub Issues para Planejamento**
+```bash
+# Criar issue para nova funcionalidade
+gh issue create --title "feat: Sistema de Relatórios" \
+  --body "Implementar dashboard de analytics..." \
+  --label "enhancement,priority:high" \
+  --assignee @me
+```
+
+#### **2. GitHub Projects para Kanban**
+- **Colunas sugeridas:**
+  - 📋 **Backlog** - Issues criadas
+  - 🔄 **In Progress** - Em desenvolvimento
+  - 👁️ **Review** - Em revisão de código
+  - ✅ **Done** - Concluídas
+
+#### **3. Milestones para Sprints**
+```bash
+# Criar milestone para sprint
+gh api repos/:owner/:repo/milestones \
+  --method POST \
+  --field title="Sprint 1 - Q1 2025" \
+  --field description="Foco em relatórios e UX" \
+  --field due_on="2025-07-15T00:00:00Z"
+```
+
+#### **4. Labels para Organização**
+- `priority:critical` 🔴 - Correções urgentes
+- `priority:high` 🟠 - Funcionalidades importantes
+- `priority:medium` 🟡 - Melhorias desejáveis
+- `priority:low` 🟢 - Nice to have
+- `type:feature` - Nova funcionalidade
+- `type:bug` - Correção de bug
+- `type:docs` - Documentação
+- `area:frontend` - Frontend (Next.js)
+- `area:backend` - Backend (Node.js)
+- `area:database` - Banco de dados
+- `size:xs` - 1-2 horas
+- `size:s` - 3-8 horas
+- `size:m` - 1-2 dias
+- `size:l` - 3-5 dias
+- `size:xl` - 1+ semana
+
+### **📊 Template de Issue para Funcionalidades**
+```markdown
+## 🎯 Objetivo
+Descrever o que queremos alcançar
+
+## 📋 Critérios de Aceitação
+- [ ] Como usuário, posso...
+- [ ] O sistema deve...
+- [ ] A interface precisa...
+
+## 🔧 Tarefas Técnicas
+- [ ] Criar componentes React
+- [ ] Implementar API endpoints
+- [ ] Adicionar testes
+- [ ] Atualizar documentação
+
+## 📐 Estimativa
+**Pontos de História:** 5
+**Tempo Estimado:** 3-4 dias
+
+## 🏷️ Dependências
+- Depende de #123 (Autenticação)
+- Bloqueia #125 (Dashboard)
+```
+
+### **⚡ Automação com GitHub Actions**
+```yaml
+# .github/workflows/issue-management.yml
+name: Issue Management
+on:
+  issues:
+    types: [opened, labeled]
+jobs:
+  auto-assign:
+    if: contains(github.event.label.name, 'priority:high')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto-assign high priority
+        run: |
+          gh issue edit ${{ github.event.issue.number }} \
+            --add-assignee ${{ github.repository_owner }}
+```
+
+### **🔄 Processo de Desenvolvimento**
+1. **Criar Issue** → Definir funcionalidade no GitHub
+2. **Priorizar** → Adicionar labels e milestone
+3. **Estimar** → Definir pontos de história
+4. **Desenvolver** → Criar branch e implementar
+5. **Review** → Pull Request e code review
+6. **Deploy** → Merge e release
+7. **Validar** → Testar e fechar issue
+
+### **📱 Comandos Úteis GitHub CLI**
+```bash
+# Listar issues em aberto por prioridade
+gh issue list --label "priority:high" --state open
+
+# Criar issue a partir de template
+gh issue create --template feature_request.md
+
+# Mover issue para projeto
+gh issue edit 123 --add-project "APC FIT PRO Roadmap"
+
+# Fechar issue com commit
+git commit -m "feat: sistema de relatórios - closes #123"
+```
+
+## �📈 Métricas de Sucesso
 
 ### **KPIs do Projeto:**
 - **Velocity:** Pontos entregues por sprint

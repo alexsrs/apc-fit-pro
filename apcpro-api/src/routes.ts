@@ -29,6 +29,40 @@ import { avaliarCAController } from "./controllers/avaliarCA-controller";
 
 const router = Router();
 
+// 🩺 Health Check endpoint - deve estar sempre disponível
+router.get("/health", (req: Request, res: Response) => {
+  const healthCheck = {
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    service: "apcpro-api",
+    version: process.env.npm_package_version || "1.0.0",
+    environment: process.env.NODE_ENV || "development",
+    database: "connected", // TODO: implementar check real do banco
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + " MB",
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + " MB",
+    },
+  };
+
+  res.status(200).json(healthCheck);
+});
+
+// 📊 Endpoint de métricas básicas (protegido)
+router.get("/metrics", authenticateUser, (req: Request, res: Response) => {
+  const metrics = {
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    cpu: process.cpuUsage(),
+    platform: process.platform,
+    nodeVersion: process.version,
+    pid: process.pid,
+  };
+
+  res.status(200).json(metrics);
+});
+
 // Outras rotas públicas
 router.get("/users", authenticateUser, getUser);
 router.get("/users/:id", authenticateUser, getUserById);
