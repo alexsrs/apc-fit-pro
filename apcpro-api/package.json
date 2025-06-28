@@ -18,8 +18,10 @@
     "lint": "echo 'Lint não configurado ainda'",
     "test": "echo 'Testes não configurados ainda'",
     "postinstall": "prisma generate",
-    "azure:build": "npm ci --production=false && npm run prisma:generate && npm run build",
-    "azure:start": "npm run prisma:migrate && npm start"
+    "azure:build": "npm run clean:deps && npm ci --production=false && npm run prisma:generate && npm run build",
+    "azure:start": "npm run prisma:migrate && npm start",
+    "clean:deps": "powershell -Command \"Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue; Remove-Item -Force package-lock.json -ErrorAction SilentlyContinue\"",
+    "fix:rollup": "npm run clean:deps && npm install --omit=optional && npm install --include=optional"
   },
   "keywords": [],
   "author": "",
