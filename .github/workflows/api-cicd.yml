@@ -130,7 +130,7 @@ jobs:
       - name: 📥 Checkout do código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Necessário para tags
+          fetch-depth: 0 # Necessário para tags
 
       - name: 📥 Download artefatos
         uses: actions/download-artifact@v4

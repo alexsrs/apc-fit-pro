@@ -50,15 +50,16 @@ const swaggerOptions: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: "http://localhost:3333/api",
-        description: "🚀 Servidor Local (DESENVOLVIMENTO) - Use este para testes locais",
+        url: "http://localhost:3333",
+        description:
+          "🚀 Servidor Local (DESENVOLVIMENTO) - Use este para testes locais",
       },
       {
-        url: "https://apcpro-api-gafxbdcud6a7f2gd.centralus-01.azurewebsites.net/api",
+        url: "https://apcpro-api-gafxbdcud6a7f2gd.centralus-01.azurewebsites.net",
         description: "🌐 Produção (Azure) - Acesse via navegador ou frontend",
       },
       {
-        url: "https://apcpro-api-dev.azurewebsites.net/api",
+        url: "https://apcpro-api-dev.azurewebsites.net",
         description: "🧪 Desenvolvimento (Azure) - Ambiente de testes",
       },
     ],
@@ -205,17 +206,18 @@ const swaggerOptions: swaggerJsdoc.Options = {
     ],
   },
   apis: [
-    "./src/routes.ts", 
+    "./src/routes.ts",
     "./src/controllers/*.ts",
     "./dist/routes.js", // Adiciona suporte para arquivos compilados
-    "./dist/controllers/*.js"
+    "./dist/controllers/*.js",
   ], // Caminhos para arquivos com anotações JSDoc
 };
 
 const specs = swaggerJsdoc(swaggerOptions);
 
 // Detecta se está rodando no Azure
-const isAzure = process.env.WEBSITE_SITE_NAME || process.env.APPSETTING_WEBSITE_SITE_NAME;
+const isAzure =
+  process.env.WEBSITE_SITE_NAME || process.env.APPSETTING_WEBSITE_SITE_NAME;
 
 /**
  * Configurações customizadas do Swagger UI
@@ -280,7 +282,7 @@ export function setupSwagger(app: Application): void {
     // Logs para debugging
     console.log(`📚 Configurando Swagger UI...`);
     console.log(`🌍 Ambiente: ${isAzure ? "Azure" : "Local"}`);
-    
+
     // Serve a documentação JSON
     app.get("/api/docs.json", (req, res) => {
       res.setHeader("Content-Type", "application/json");
@@ -288,7 +290,11 @@ export function setupSwagger(app: Application): void {
     });
 
     // Serve a interface do Swagger UI
-    app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
+    app.use(
+      "/api/docs",
+      swaggerUi.serve,
+      swaggerUi.setup(specs, swaggerUiOptions)
+    );
 
     console.log(`✅ Swagger UI configurado com sucesso!`);
     console.log(`📖 Documentação disponível em: /api/docs`);

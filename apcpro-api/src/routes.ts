@@ -262,7 +262,6 @@ router.get("/debug/token", (req: Request, res: Response): void => {
       ],
 
       headers: req.headers,
-
     });
     return;
   }

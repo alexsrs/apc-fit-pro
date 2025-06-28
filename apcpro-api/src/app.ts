@@ -36,12 +36,18 @@ function createApp() {
 
         // Em desenvolvimento, permite qualquer localhost
         if (isDevelopment && origin.includes("localhost")) {
-          console.log(`✅ CORS: Permitindo localhost em desenvolvimento: ${origin}`);
+          console.log(
+            `✅ CORS: Permitindo localhost em desenvolvimento: ${origin}`
+          );
           return callback(null, true);
         }
 
         // Em produção, permite apenas origens específicas (mas não localhost externo)
-        if (isProduction && origin.includes("localhost") && !allowedOrigins.includes(origin)) {
+        if (
+          isProduction &&
+          origin.includes("localhost") &&
+          !allowedOrigins.includes(origin)
+        ) {
           console.log(`🚫 CORS: Bloqueando localhost em produção: ${origin}`);
           return callback(
             new Error("Localhost não permitido em produção"),
