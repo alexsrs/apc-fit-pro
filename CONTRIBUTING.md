@@ -5,16 +5,19 @@
 ### **Estrutura de Branches:**
 
 - **`main`** - Branch principal (produção)
+
   - Código estável e testado
   - Deploy automático (se configurado)
   - Protegida contra push direto
 
 - **`develop`** - Branch de desenvolvimento
+
   - Base para novas funcionalidades
   - Integração contínua de features
   - Testes antes do merge para main
 
 - **`feature/nome-da-funcionalidade`** - Branches para funcionalidades
+
   - Uma branch por funcionalidade
   - Nome descritivo (ex: `feature/sistema-relatorios`)
   - Criada a partir de `develop`
@@ -27,6 +30,7 @@
 ## 🔄 Fluxo de Trabalho
 
 ### **1. Nova Funcionalidade:**
+
 ```bash
 # Atualizar develop
 git checkout develop
@@ -46,6 +50,7 @@ git push origin feature/nome-da-funcionalidade
 ```
 
 ### **2. Correção de Bug (Hotfix):**
+
 ```bash
 # Atualizar main
 git checkout main
@@ -65,6 +70,7 @@ git push origin hotfix/nome-do-fix
 ```
 
 ### **3. Release:**
+
 ```bash
 # Merge develop para main
 git checkout main
@@ -90,6 +96,7 @@ Seguimos o padrão [Conventional Commits](https://www.conventionalcommits.org/):
 - **`chore:`** - Tarefas de manutenção
 
 ### **Exemplos:**
+
 ```bash
 feat: implementar componente de avaliação de anamnese
 fix: corrigir cálculo de IMC em avaliações
@@ -101,6 +108,7 @@ test: adicionar testes para serviço de usuários
 ## 🧪 Antes de Fazer Merge
 
 ### **Checklist:**
+
 - [ ] Código testado localmente
 - [ ] Build sem erros (`npm run build`)
 - [ ] Lint sem erros (`npm run lint`)
@@ -109,6 +117,7 @@ test: adicionar testes para serviço de usuários
 - [ ] Pull Request revisado
 
 ### **Comandos de Verificação:**
+
 ```bash
 # Frontend
 cd apcpro-web
@@ -124,17 +133,20 @@ npm run lint
 ## 🎯 Nomenclatura de Branches
 
 ### **Features:**
+
 - `feature/sistema-relatorios`
 - `feature/notificacoes-push`
 - `feature/dashboard-analytics`
 - `feature/exportacao-dados`
 
 ### **Hotfixes:**
+
 - `hotfix/auth-login-bug`
 - `hotfix/calculo-imc-erro`
 - `hotfix/performance-query`
 
 ### **Improvements:**
+
 - `improvement/ui-responsiva`
 - `improvement/performance-api`
 - `improvement/ux-navigation`
@@ -142,12 +154,14 @@ npm run lint
 ## 🔧 Configuração do Projeto
 
 ### **Pré-requisitos:**
+
 - Node.js 18+
 - npm ou yarn
 - PostgreSQL (para desenvolvimento local)
 - Git configurado
 
 ### **Setup Inicial:**
+
 ```bash
 # Clone do repositório
 git clone https://github.com/alexsrs/apc-fit-pro.git
