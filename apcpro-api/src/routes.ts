@@ -112,7 +112,9 @@ router.get("/debug/token", (req: Request, res: Response): void => {
         "2. Copie o header Authorization de qualquer requisição para API",
         "3. Envie novamente com o header correto",
       ],
+
       headers: req.headers,
+
     });
     return;
   }
