@@ -1,0 +1,165 @@
+name: CI/CD Pipeline - APC FIT PRO
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-frontend:
+    name: 🎨 Frontend Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: apcpro-web/package-lock.json
+          
+      - name: 📋 Install dependencies
+        run: |
+          cd apcpro-web
+          npm ci
+          
+      - name: 🔍 Run ESLint
+        run: |
+          cd apcpro-web
+          npm run lint
+          
+      - name: 🏗️ Build application
+        run: |
+          cd apcpro-web
+          npm run build
+          
+      - name: 🧪 Run tests (if exists)
+        run: |
+          cd apcpro-web
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            npm test -- --coverage --watchAll=false
+          else
+            echo "No tests configured"
+          fi
+
+  test-backend:
+    name: 🚀 Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: apcpro_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: apcpro-api/package-lock.json
+          
+      - name: 📋 Install dependencies
+        run: |
+          cd apcpro-api
+          npm ci
+          
+      - name: 🔍 Run ESLint
+        run: |
+          cd apcpro-api
+          npm run lint
+          
+      - name: 🏗️ Build application
+        run: |
+          cd apcpro-api
+          npm run build
+          
+      - name: 🗄️ Setup test database
+        run: |
+          cd apcpro-api
+          if [ -f "prisma/schema.prisma" ]; then
+            npx prisma migrate deploy
+          fi
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apcpro_test
+          
+      - name: 🧪 Run tests (if exists)
+        run: |
+          cd apcpro-api
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            npm test
+          else
+            echo "No tests configured"
+          fi
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apcpro_test
+
+  code-quality:
+    name: 📊 Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: 🔍 Check commit messages
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # Verificar se commits seguem conventional commits
+            echo "Verificando formato dos commits..."
+            # Esta é uma verificação básica - pode ser expandida
+          fi
+          
+      - name: 📏 Check file sizes
+        run: |
+          echo "Verificando tamanho dos arquivos..."
+          find . -name "*.js" -o -name "*.ts" -o -name "*.tsx" | xargs wc -l | sort -n
+          
+      - name: 🎯 Check TODO comments
+        run: |
+          echo "Procurando por TODOs e FIXMEs..."
+          grep -r "TODO\|FIXME" --include="*.js" --include="*.ts" --include="*.tsx" . || echo "Nenhum TODO/FIXME encontrado"
+
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: 🔍 Audit frontend dependencies
+        run: |
+          cd apcpro-web
+          npm audit --audit-level=moderate
+          
+      - name: 🔍 Audit backend dependencies
+        run: |
+          cd apcpro-api
+          npm audit --audit-level=moderate

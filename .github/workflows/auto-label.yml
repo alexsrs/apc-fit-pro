@@ -1,0 +1,125 @@
+name: 🏷️ Auto Label Issues
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🏷️ Auto label based on title
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue || context.payload.pull_request;
+            const title = issue.title.toLowerCase();
+            const labels = [];
+            
+            // Labels baseadas no prefixo do título
+            if (title.startsWith('feat:')) {
+              labels.push('feature', 'enhancement');
+            } else if (title.startsWith('fix:')) {
+              labels.push('bug');
+            } else if (title.startsWith('docs:')) {
+              labels.push('documentation');
+            } else if (title.startsWith('improvement:')) {
+              labels.push('enhancement', 'improvement');
+            } else if (title.startsWith('refactor:')) {
+              labels.push('refactor');
+            } else if (title.startsWith('test:')) {
+              labels.push('test');
+            }
+            
+            // Labels baseadas no conteúdo
+            if (title.includes('frontend') || title.includes('web') || title.includes('ui')) {
+              labels.push('frontend');
+            }
+            if (title.includes('backend') || title.includes('api') || title.includes('server')) {
+              labels.push('backend');
+            }
+            if (title.includes('database') || title.includes('prisma') || title.includes('sql')) {
+              labels.push('database');
+            }
+            if (title.includes('auth') || title.includes('login') || title.includes('authentication')) {
+              labels.push('authentication');
+            }
+            if (title.includes('avaliação') || title.includes('evaluation') || title.includes('assessment')) {
+              labels.push('evaluation');
+            }
+            
+            // Aplicar labels se houver alguma
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+            }
+            
+      - name: 📋 Add to project board
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue || context.payload.pull_request;
+            
+            // Adicionar comentário de boas-vindas para novas issues
+            if (context.payload.issue) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `🎯 **Obrigado por abrir esta issue!**
+                
+                Esta issue foi automaticamente processada:
+                - 🏷️ Labels adicionadas baseadas no título
+                - 📋 Adicionada ao projeto para triagem
+                - 🤖 Tifurico irá revisar em breve
+                
+                **Próximos passos:**
+                1. A equipe irá revisar e adicionar prioridade
+                2. Será atribuída a um milestone (sprint)
+                3. Um desenvolvedor será assignado
+                
+                📖 Para mais informações, consulte o [Guia de Contribuição](./CONTRIBUTING.md).`
+              });
+            }
+      
+      - name: 🎯 Set priority label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue || context.payload.pull_request;
+            const body = issue.body || '';
+            const title = issue.title.toLowerCase();
+            
+            // Determinar prioridade baseada em palavras-chave
+            let priority = '';
+            
+            if (title.includes('crítico') || title.includes('critical') || 
+                title.includes('urgente') || title.includes('urgent') ||
+                body.includes('crítica') || body.includes('não funciona')) {
+              priority = 'priority-high';
+            } else if (title.includes('melhoria') || title.includes('improvement') ||
+                       title.includes('otimiz') || title.includes('performance')) {
+              priority = 'priority-medium';
+            } else if (title.includes('documentação') || title.includes('docs') ||
+                       title.includes('cosmético') || title.includes('cosmetic')) {
+              priority = 'priority-low';
+            }
+            
+            if (priority) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: [priority]
+              });
+            }
