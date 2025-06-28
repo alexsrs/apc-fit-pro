@@ -13,7 +13,8 @@ function createApp() {
   console.log(`🌐 Configurando CORS - NODE_ENV: ${process.env.NODE_ENV}`);
 
   const allowedOrigins = [
-    "https://apc-fit-pro.vercel.app", // Frontend produção
+    "https://apc-fit-pro.vercel.app", // produção
+    "http://localhost:3333", // API local para Swagger
   ];
 
   // Em desenvolvimento, adiciona localhost
@@ -55,10 +56,8 @@ function createApp() {
   );
 
   app.use(express.json());
-
   // 📚 Configurar Swagger (documentação da API)
   setupSwagger(app);
-
   // 🛣️ Configurar rotas da API
   app.use("/api", router);
 
