@@ -26,16 +26,22 @@ function createApp() {
   app.use(
     cors({
       origin: function (origin, callback) {
-        // Permite requisições sem origin (Postman, curl, etc.)
+        // Permite requisições sem origin (Postman, curl, Swagger UI, etc.)
         if (!origin) {
           console.log(
-            `🌐 CORS: Permitindo requisição sem origin (Postman/curl)`
+            `🌐 CORS: Permitindo requisição sem origin (Postman/curl/Swagger)`
           );
           return callback(null, true);
         }
 
-        // Em produção, bloqueia localhost por segurança
-        if (isProduction && origin.includes("localhost")) {
+        // Em desenvolvimento, permite qualquer localhost
+        if (isDevelopment && origin.includes("localhost")) {
+          console.log(`✅ CORS: Permitindo localhost em desenvolvimento: ${origin}`);
+          return callback(null, true);
+        }
+
+        // Em produção, permite apenas origens específicas (mas não localhost externo)
+        if (isProduction && origin.includes("localhost") && !allowedOrigins.includes(origin)) {
           console.log(`🚫 CORS: Bloqueando localhost em produção: ${origin}`);
           return callback(
             new Error("Localhost não permitido em produção"),
@@ -44,7 +50,7 @@ function createApp() {
         }
 
         if (allowedOrigins.includes(origin)) {
-          console.log(`✅ CORS: Permitindo origem: ${origin}`);
+          console.log(`✅ CORS: Permitindo origem permitida: ${origin}`);
           callback(null, true);
         } else {
           console.log(`❌ CORS: Negando origem: ${origin}`);

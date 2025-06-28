@@ -204,7 +204,12 @@ const swaggerOptions: swaggerJsdoc.Options = {
       },
     ],
   },
-  apis: ["./src/routes.ts", "./src/controllers/*.ts"], // Caminhos para arquivos com anotações JSDoc
+  apis: [
+    "./src/routes.ts", 
+    "./src/controllers/*.ts",
+    "./dist/routes.js", // Adiciona suporte para arquivos compilados
+    "./dist/controllers/*.js"
+  ], // Caminhos para arquivos com anotações JSDoc
 };
 
 const specs = swaggerJsdoc(swaggerOptions);
