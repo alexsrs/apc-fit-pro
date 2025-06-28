@@ -3,18 +3,21 @@
 ## 📋 Visão Geral dos Ambientes
 
 ### **🌐 Frontend (Vercel)**
+
 - **Status**: ✅ Automático
 - **Branch**: `main` → Produção | `develop` → Preview
 - **URL Produção**: https://apc-fit-pro.vercel.app
 - **Configuração**: Automática via GitHub integration
 
 ### **🗄️ Database (Manual)**
+
 - **Status**: 🔄 Manual
 - **Provider**: PostgreSQL
 - **Ambiente**: Produção/Desenvolvimento separados
 - **Migrations**: Manual via Prisma
 
 ### **⚙️ API (Azure App Service)**
+
 - **Status**: 🚀 CI/CD Configurado
 - **Produção**: `apcpro-api` (branch main)
 - **Desenvolvimento**: `apcpro-api-dev` (branch develop)
@@ -27,6 +30,7 @@
 ### **1. Deploy Automático (Recomendado)**
 
 #### **Via Azure DevOps Pipeline:**
+
 ```bash
 # O pipeline é executado automaticamente em:
 # - Push para main (produção)
@@ -35,6 +39,7 @@
 ```
 
 #### **Via GitHub Actions:**
+
 ```bash
 # Workflow executado em:
 # - Push para main/develop
@@ -44,6 +49,7 @@
 ### **2. Deploy Manual (Backup)**
 
 #### **Preparar para deploy:**
+
 ```bash
 cd apcpro-api
 
@@ -61,6 +67,7 @@ npm start
 ```
 
 #### **Deploy direto para Azure:**
+
 ```bash
 # Usando Azure CLI
 az webapp deployment source config-zip \
@@ -76,6 +83,7 @@ az webapp deployment source config-zip \
 ### **🔧 Variáveis de Ambiente Necessárias**
 
 #### **Azure App Service - Produção:**
+
 ```bash
 NODE_ENV=production
 PORT=8080
@@ -86,6 +94,7 @@ JWT_SECRET=...
 ```
 
 #### **Azure App Service - Desenvolvimento:**
+
 ```bash
 NODE_ENV=development
 PORT=8080
@@ -96,12 +105,14 @@ JWT_SECRET=...
 ```
 
 ### **🔐 Secrets no GitHub (para GitHub Actions):**
+
 ```bash
 AZURE_WEBAPP_PUBLISH_PROFILE_PROD=<perfil_publicacao_prod>
 AZURE_WEBAPP_PUBLISH_PROFILE_DEV=<perfil_publicacao_dev>
 ```
 
 ### **🔐 Secrets no Azure DevOps:**
+
 ```bash
 azureSubscription=<service_connection_id>
 ```
@@ -111,15 +122,18 @@ azureSubscription=<service_connection_id>
 ## 📊 Monitoramento e Logs
 
 ### **🩺 Health Checks:**
+
 - **Produção**: https://apcpro-api.azurewebsites.net/health
 - **Desenvolvimento**: https://apcpro-api-dev.azurewebsites.net/health
 
 ### **📊 Métricas:**
+
 - **Endpoint**: `/metrics` (requer autenticação)
 - **Azure Monitor**: Integrado automaticamente
 - **Application Insights**: Configurado no Azure
 
 ### **📋 Logs:**
+
 ```bash
 # Visualizar logs no Azure
 az webapp log tail --name apcpro-api --resource-group apcpro-rg
@@ -133,6 +147,7 @@ az webapp log deployment list --name apcpro-api --resource-group apcpro-rg
 ## 🔄 Processo de Release
 
 ### **1. Desenvolvimento → Produção:**
+
 ```bash
 # 1. Desenvolver em feature branch
 git checkout -b feature/nova-funcionalidade
@@ -153,6 +168,7 @@ git push origin feature/nova-funcionalidade
 ```
 
 ### **2. Hotfix (Correção Urgente):**
+
 ```bash
 # 1. Branch a partir de main
 git checkout main
@@ -176,6 +192,7 @@ git push origin hotfix/correcao-critica
 ## 🐳 Deploy com Docker (Opcional)
 
 ### **Build da imagem:**
+
 ```bash
 cd apcpro-api
 
@@ -190,6 +207,7 @@ docker run -p 8080:8080 \
 ```
 
 ### **Deploy para Azure Container Instances:**
+
 ```bash
 # Push para Azure Container Registry
 az acr build --registry apcpro --image apcpro-api:latest .
@@ -208,18 +226,21 @@ az container create \
 ## 🔍 Troubleshooting
 
 ### **❌ Deploy Falha:**
+
 1. **Verificar logs do pipeline**
 2. **Checar variáveis de ambiente**
 3. **Validar build local**
 4. **Verificar conexão com banco**
 
 ### **⚠️ Aplicação não responde:**
+
 1. **Verificar health check**: `/health`
 2. **Checar logs da aplicação**
 3. **Validar variáveis de ambiente**
 4. **Reiniciar App Service**
 
 ### **🐛 Problemas de Banco:**
+
 1. **Verificar connection string**
 2. **Validar migrations aplicadas**
 3. **Checar permissões de usuário**

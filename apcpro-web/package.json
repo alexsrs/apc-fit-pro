@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "npm install -g npm@11.3.0",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
