@@ -9,7 +9,8 @@ export default async function handler(
     return res.status(405).json({ error: "Método não permitido" });
   }
   try {
-    await sendAlertaHelloWorld();
+    const { mensagem, userId } = req.body || {};
+    await sendAlertaHelloWorld(userId, mensagem);
     return res.status(200).json({ ok: true });
   } catch (error) {
     return res.status(500).json({ error: (error as Error).message });
