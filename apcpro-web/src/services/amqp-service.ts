@@ -2,7 +2,10 @@ import amqp from "amqplib";
 
 const amqpUrl = process.env.CLOUDAMQP_URL as string;
 
-export async function sendAlertaHelloWorld(userId?: string) {
+export async function sendAlertaHelloWorld(
+  userId?: string,
+  mensagemCustom?: string
+) {
   if (!amqpUrl) throw new Error("CLOUDAMQP_URL não configurada");
   const queue = "alertas_inteligentes";
   const conn = await amqp.connect(amqpUrl);
@@ -10,8 +13,11 @@ export async function sendAlertaHelloWorld(userId?: string) {
   await channel.assertQueue(queue, { durable: true });
   // Inclui o prefixo do usuário se fornecido
   const mensagem = userId
-    ? `[user:${userId}] Não esqueça seua treinos hoje`
-    : "Hello World";
+    ? `[user:${userId}] ${
+        mensagemCustom ||
+        "Novo aluno realizou uma avaliação. Clique para analisar."
+      }`
+    : mensagemCustom || "Hello World";
   channel.sendToQueue(queue, Buffer.from(mensagem), {
     persistent: true,
   });

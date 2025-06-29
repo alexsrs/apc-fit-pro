@@ -300,10 +300,48 @@ export class UsersService {
         objetivoClassificado,
       };
 
-      return await this.userRepository.cadastrarAvaliacaoAluno(
+      // Salva avaliação no banco
+      const avaliacao = await this.userRepository.cadastrarAvaliacaoAluno(
         userPerfilId,
         avaliacaoParaSalvar
       );
+
+      // Publica mensagem na fila do RabbitMQ (CloudAMQP)
+      try {
+        console.log("[DEBUG] Iniciando publicação de alerta na fila RabbitMQ");
+        // Busca o perfil do aluno e do professor para compor a mensagem
+        const alunoPerfil = await this.userRepository.getUserProfileById(
+          userPerfilId
+        );
+        console.log("[DEBUG] Perfil do aluno:", alunoPerfil);
+        const professorId = alunoPerfil?.professorId;
+        if (professorId) {
+          // Importação dinâmica para evitar dependência circular
+          const { publishToQueue } = await import("../utils/messaging");
+          const alerta = {
+            mensagem: `[user:${professorId}] Novo aluno realizou uma avaliação. Clique para analisar.`,
+            avaliacaoId: avaliacao.id,
+          };
+          console.log("[DEBUG] Alerta a ser enviado:", alerta);
+          // Publica na fila correta consumida pelo frontend
+          await publishToQueue("alertas_inteligentes", alerta);
+          console.log(
+            "[DEBUG] Mensagem publicada com sucesso na fila alertas_inteligentes"
+          );
+        } else {
+          console.warn(
+            "[DEBUG] professorId não encontrado no perfil do aluno. Alerta não enviado."
+          );
+        }
+      } catch (err) {
+        // Loga erro, mas não impede o fluxo principal
+        console.error(
+          "[DEBUG] Erro ao publicar mensagem na fila RabbitMQ:",
+          err
+        );
+      }
+
+      return avaliacao;
     } catch (error) {
       handleServiceError(error, "Erro ao cadastrar avaliação do aluno.");
     }
@@ -507,6 +545,7 @@ function isSexo(value: any): value is Sexo {
   );
 }
 import { Genero, isGenero } from "../models/genero-model";
+import { NovaAvaliacaoMessage } from "../utils/messaging";
 
 /**
  * Converte o valor de sexo para o tipo Genero.

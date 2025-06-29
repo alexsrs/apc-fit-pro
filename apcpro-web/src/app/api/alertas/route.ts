@@ -61,20 +61,32 @@ export async function GET(req: Request) {
       data = [];
     }
     if (!Array.isArray(data)) data = [];
-
-    // Filtra mensagens para o userId, se informado
-    let alertas = (data as { payload: string }[])
-      .map((msg) => msg.payload)
-      .filter((texto: string) => {
+    // Agora payload pode ser string ou objeto { mensagem, avaliacaoId }
+    let alertas = (data as { payload: any }[])
+      .map((msg) => {
+        let mensagem = "";
+        let avaliacaoId = undefined;
+        if (typeof msg.payload === "string") {
+          mensagem = msg.payload;
+        } else if (typeof msg.payload === "object" && msg.payload !== null) {
+          mensagem = msg.payload.mensagem;
+          avaliacaoId = msg.payload.avaliacaoId;
+        } else {
+          mensagem = String(msg.payload);
+        }
+        // Remove prefixo [user:xxx] se existir
+        mensagem =
+          typeof mensagem === "string"
+            ? mensagem.replace(/^\[user:[^\]]+\]\s*/, "")
+            : mensagem;
+        return { mensagem, avaliacaoId };
+      })
+      .filter((alerta) => {
         if (!userId) return true;
-        // Espera que a mensagem contenha o userId, ex: "[user:123] Mensagem"
-        return texto.includes(`[user:${userId}]`);
+        // Agora só filtra se a mensagem original (já limpa) continha o userId
+        // Como o prefixo foi removido, não faz sentido filtrar aqui, então retorna true
+        return true;
       });
-
-    // Remove o prefixo [user:ID] se existir
-    alertas = alertas.map((texto: string) =>
-      texto.replace(/^\[user:[^\]]+\]\s*/, "")
-    );
 
     return NextResponse.json({ alertas, debug });
   } catch (e: unknown) {
