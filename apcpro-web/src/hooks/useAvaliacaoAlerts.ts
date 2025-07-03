@@ -37,7 +37,7 @@ export function useAvaliacaoAlerts(professorId: string) {
         login: RABBITMQ_USER,
         passcode: RABBITMQ_PASS,
       },
-      debug: (str) => {}, // Descomente para debug: console.log(str)
+      debug: () => {}, // Descomente para debug: console.log(str)
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -50,7 +50,7 @@ export function useAvaliacaoAlerts(professorId: string) {
           if (data.professorId === professorId) {
             setAlertas((prev) => [data, ...prev]);
           }
-        } catch (err) {
+        } catch {
           // Ignora mensagens inválidas
         }
       });

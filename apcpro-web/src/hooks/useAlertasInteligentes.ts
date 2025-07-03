@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 /**
  * Hook para buscar alertas inteligentes do backend (que consome a fila RabbitMQ).
@@ -19,7 +19,7 @@ export function useAlertasInteligentes(userId: string) {
   /**
    * Função para buscar alertas manualmente (pode ser usada para refresh externo)
    */
-  const fetchAlertas = async (signal?: AbortSignal) => {
+  const fetchAlertas = useCallback(async (signal?: AbortSignal) => {
     if (!userId) return;
     setLoading(true);
     try {
@@ -27,7 +27,7 @@ export function useAlertasInteligentes(userId: string) {
       const data = await res.json();
       if (Array.isArray(data.alertas)) {
         setAlertas(
-          data.alertas.filter((a: any) => typeof a.mensagem === "string")
+          data.alertas.filter((a: { mensagem: unknown; avaliacaoId?: string }) => typeof a.mensagem === "string")
         );
       }
     } catch (err) {
@@ -37,23 +37,23 @@ export function useAlertasInteligentes(userId: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
     const controller = new AbortController();
-    let interval: NodeJS.Timeout;
+    let intervalId: NodeJS.Timeout;
 
     // Busca inicial
     fetchAlertas(controller.signal);
     // Polling
-    interval = setInterval(() => fetchAlertas(controller.signal), 5000);
+    intervalId = setInterval(() => fetchAlertas(controller.signal), 5000);
 
     return () => {
       controller.abort();
-      clearInterval(interval);
+      clearInterval(intervalId);
     };
-  }, [userId]);
+  }, [userId, fetchAlertas]);
 
   return { alertas, loading, refresh: fetchAlertas };
 }

@@ -62,7 +62,7 @@ export async function GET(req: Request) {
     }
     if (!Array.isArray(data)) data = [];
     // Agora payload pode ser string ou objeto { mensagem, avaliacaoId }
-    let alertas = (data as { payload: any }[])
+    const alertas = (data as { payload: string | { mensagem: string; avaliacaoId?: string } }[])
       .map((msg) => {
         let mensagem = "";
         let avaliacaoId = undefined;
@@ -81,7 +81,7 @@ export async function GET(req: Request) {
             : mensagem;
         return { mensagem, avaliacaoId };
       })
-      .filter((alerta) => {
+      .filter(() => {
         if (!userId) return true;
         // Agora só filtra se a mensagem original (já limpa) continha o userId
         // Como o prefixo foi removido, não faz sentido filtrar aqui, então retorna true

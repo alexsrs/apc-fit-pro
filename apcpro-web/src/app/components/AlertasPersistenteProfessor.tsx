@@ -14,16 +14,27 @@ const ALERTA_KEY = "alerta_professor_ativo";
 const ALERTA_EXP_KEY = "alerta_professor_expira";
 
 export type Alerta = {
-  mensagem: any;
+  mensagem: string | object;
   texto: string;
   tipo: string;
   avaliacaoId?: string;
 };
 
 // Função utilitária para formatar a mensagem do alerta
-function formatarMensagem(texto: string | undefined | null): React.ReactNode {
-  if (!texto || typeof texto !== "string") return "";
-  // Se vier JSON, tenta parsear e exibir de forma amigável
+function formatarMensagem(texto: string | object | undefined | null): React.ReactNode {
+  if (!texto) return "";
+  
+  // Se for um objeto, tenta extrair mensagem
+  if (typeof texto === "object" && texto !== null) {
+    const obj = texto as Record<string, unknown>;
+    if (obj.mensagem && typeof obj.mensagem === "string") return obj.mensagem;
+    if (obj.texto && typeof obj.texto === "string") return obj.texto;
+    return JSON.stringify(texto);
+  }
+  
+  if (typeof texto !== "string") return "";
+  
+  // Se vier JSON como string, tenta parsear e exibir de forma amigável
   try {
     const obj = JSON.parse(texto);
     if (typeof obj === "object" && obj !== null) {
@@ -36,7 +47,15 @@ function formatarMensagem(texto: string | undefined | null): React.ReactNode {
   return texto.replace(/^\[user:[^\]]+\]\s*/, "");
 }
 
-type AvaliacaoResultado = any; // Tipagem dinâmica para resultado da API
+type AvaliacaoResultado = {
+  peso?: number;
+  altura?: number;
+  imc?: number;
+  gorduraCorporal?: number;
+  massaMuscular?: number;
+  observacoes?: string;
+  [key: string]: unknown;
+} | null; // Tipagem mais específica para resultado da API
 
 export type AlertasPersistenteProfessorHandle = {
   atualizar: () => void;
@@ -167,7 +186,7 @@ export const AlertasPersistenteProfessor = forwardRef<
       setAvaliacaoResultado(res.data?.resultado || res.data);
       setAvaliacaoTipo(res.data?.tipo);
       setAvaliacaoObjetivo(res.data?.objetivoClassificado);
-    } catch (e) {
+    } catch {
       setAvaliacaoResultado(null);
     } finally {
       setLoadingAvaliacao(false);
