@@ -42,12 +42,11 @@ export function useAlertasInteligentes(userId: string) {
   useEffect(() => {
     if (!userId) return;
     const controller = new AbortController();
-    let intervalId: NodeJS.Timeout;
 
     // Busca inicial
     fetchAlertas(controller.signal);
     // Polling
-    intervalId = setInterval(() => fetchAlertas(controller.signal), 5000);
+    const intervalId = setInterval(() => fetchAlertas(controller.signal), 5000);
 
     return () => {
       controller.abort();
