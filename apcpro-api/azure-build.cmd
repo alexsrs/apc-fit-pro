@@ -1,27 +1,28 @@
 @echo off
-REM Script para corrigir problema do Rollup no Azure App Service
-REM Usado para contornar bug: https://github.com/npm/cli/issues/4828
+REM Script otimizado para deploy no Azure App Service
+echo 🔧 Iniciando build Azure otimizado...
 
-echo 🔧 Iniciando build Azure com correção Rollup...
+REM Verificar se node_modules existe
+if exist node_modules (
+    echo 📂 node_modules encontrado, removendo...
+    rmdir /s /q node_modules
+)
 
-REM Limpar dependências problemáticas
-echo 🧹 Removendo node_modules e package-lock.json...
-if exist node_modules rmdir /s /q node_modules
-if exist package-lock.json del package-lock.json
+REM Verificar se package-lock.json existe
+if exist package-lock.json (
+    echo 📂 package-lock.json encontrado, removendo...
+    del package-lock.json
+)
 
-REM Instalar dependências principais (sem opcionais)
-echo 📦 Instalando dependências principais...
-npm install --no-optional --production=false
+REM Instalar dependências com timeout maior
+echo � Instalando dependências...
+npm ci --production=false --timeout=300000
 
-REM Instalar dependências opcionais separadamente
-echo 🔧 Instalando dependências opcionais do Rollup...
-npm install --optional
-
-REM Gerar Prisma
+REM Gerar Prisma Client
 echo 🎯 Gerando cliente Prisma...
-npm run prisma:generate
+npx prisma generate
 
-REM Build final
+REM Build da aplicação
 echo 🚀 Executando build...
 npm run build
 
