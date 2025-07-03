@@ -5,11 +5,12 @@ import React, {
   forwardRef,
   useCallback,
 } from "react";
+import type { AlertaInteligente } from "../../hooks/useAlertasInteligentes";
 
 const ALERTA_KEY = "alerta_ativo";
 const ALERTA_EXP_KEY = "alerta_expira";
 
-export type Alerta = { texto: string; tipo: string };
+export type Alerta = { texto: string; tipo: string; avaliacaoId?: string };
 
 export type AlertasPersistenteHandle = {
   atualizar: () => void;
@@ -27,13 +28,14 @@ export const AlertasPersistente = forwardRef<
     const data = await res.json();
     let novosAlertas: Alerta[] = [];
     if (data.alertas && data.alertas.length > 0) {
-      novosAlertas = data.alertas.map((texto: string) => ({
-        texto,
-        tipo: texto.toLowerCase().includes("erro")
+      novosAlertas = data.alertas.map((alerta: AlertaInteligente) => ({
+        texto: alerta.mensagem,
+        tipo: alerta.mensagem.toLowerCase().includes("erro")
           ? "erro"
-          : texto.toLowerCase().includes("parabéns")
+          : alerta.mensagem.toLowerCase().includes("parabéns")
           ? "sucesso"
           : "aviso",
+        avaliacaoId: alerta.avaliacaoId,
       }));
     }
     // Carrega alertas antigos do localStorage
@@ -102,7 +104,18 @@ export const AlertasPersistente = forwardRef<
               : "text-yellow-600"
           }
         >
-          {a.texto}
+          {a.avaliacaoId ? (
+            <a
+              href={`/dashboard/professores/avaliacoes/${a.avaliacaoId}`}
+              className="underline text-blue-600 hover:text-blue-800"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {a.texto}
+            </a>
+          ) : (
+            a.texto
+          )}
         </li>
       ))}
     </ul>

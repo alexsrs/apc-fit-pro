@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Modal from "@/components/ui/modal";
+import { ListaAvaliacoes } from "@/components/ListaAvaliacoes";
+
+import {
+  AlertasPersistenteProfessor,
+  AlertasPersistenteProfessorHandle,
+} from "@/app/components/AlertasPersistenteProfessor";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import Loading from "@/components/ui/Loading";
@@ -37,6 +44,9 @@ type Aluno = {
 };
 
 export default function ProfessoresDashboard() {
+  // Estado para modal de avaliações do aluno
+  const [modalAvaliacoesOpen, setModalAvaliacoesOpen] = useState(false);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const { profile } = useUserProfile();
   const router = useRouter();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
@@ -44,6 +54,9 @@ export default function ProfessoresDashboard() {
   const [tab, setTab] = useState<string>("ativos");
   const [busca, setBusca] = useState("");
   const [modalConviteOpen, setModalConviteOpen] = useState(false);
+
+  // Consome alertas inteligentes do backend (REST, sem polling excessivo)
+  const alertasRef = useRef<AlertasPersistenteProfessorHandle>(null);
 
   useEffect(() => {
     if (
@@ -132,7 +145,7 @@ export default function ProfessoresDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
-        {/* Seção de alertas inteligentes */}
+        {/* Seção de alertas inteligentes (mensageria via backend REST/polling) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -141,11 +154,10 @@ export default function ProfessoresDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="list-disc pl-6 space-y-2 text-sm">
-              <li>João Silva não registra treinos há 10 dias.</li>
-              <li>Maria Souza estagnada há 30 dias - sugerir reavaliação.</li>
-              <li>Pedro Rocha com frequência inferior a 1x/semana.</li>
-            </ul>
+            <AlertasPersistenteProfessor
+              ref={alertasRef}
+              userId={profile?.userId ?? ""}
+            />
           </CardContent>
         </Card>
 
@@ -279,10 +291,27 @@ export default function ProfessoresDashboard() {
                     <Button
                       variant="outline"
                       className="mt-2 w-full"
-                      onClick={() => alert("Funcionalidade em breve!")}
+                      onClick={() => {
+                        setAlunoSelecionado(aluno);
+                        setModalAvaliacoesOpen(true);
+                      }}
                     >
                       Ver detalhes
                     </Button>
+                    {/* Modal para exibir avaliações do aluno selecionado */}
+                    <Modal
+                      isOpen={modalAvaliacoesOpen}
+                      onClose={() => setModalAvaliacoesOpen(false)}
+                    >
+                      <div className="p-2 min-w-[320px] max-w-[90vw] w-[500px]">
+                        <h2 className="text-lg font-bold mb-2 text-center">
+                          Avaliações de {alunoSelecionado?.name}
+                        </h2>
+                        {alunoSelecionado && (
+                          <ListaAvaliacoes userPerfilId={alunoSelecionado.id} />
+                        )}
+                      </div>
+                    </Modal>
                   </CardContent>
                 </Card>
               ))}
