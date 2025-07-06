@@ -281,6 +281,17 @@ export class UserRepositoryClass {
     });
   }
 
+  async atualizarAvaliacaoAluno(avaliacaoId: string, dados: any) {
+    return prisma.avaliacao.update({
+      where: { id: avaliacaoId },
+      data: {
+        status: dados.status,
+        validadeAte: dados.validadeAte ? new Date(dados.validadeAte) : undefined,
+        resultado: dados.resultado,
+      },
+    });
+  }
+
   // Busca professor por ID
   async getProfessorById(id: string) {
     // Busca apenas se for professor
@@ -312,6 +323,12 @@ export class UserRepositoryClass {
         status: true,
         resultado: true, // Aqui ficam as medidas detalhadas se for JSON
       },
+    });
+  }
+
+  async buscarAvaliacaoPorId(avaliacaoId: string) {
+    return prisma.avaliacao.findUnique({
+      where: { id: avaliacaoId },
     });
   }
 }

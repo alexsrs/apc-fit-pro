@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import Loading from "@/components/ui/Loading";
 import { useAvaliacaoValida } from "@/hooks/useAvaliacaoValida";
-import { ModalTriagem } from "@/components/ModalTriagem";
-import { ModalAnamnese } from "@/components/ModalAnamnese";
-import { ModalMedidasCorporais } from "@/components/ModalMedidasCorporais";
+import { ModalAvaliacaoAluno } from "@/components/ModalAvaliacaoAluno";
+import { ModalPadrao } from "@/components/ui/ModalPadrao";
 import {
   CalendarCheck,
   Dumbbell,
@@ -20,6 +19,12 @@ import {
   MessageCircle,
   ArrowDown,
   ArrowUpRight,
+  FileText,
+  Activity,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Target,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,12 +34,6 @@ import {
   ListaAvaliacoes,
   ListaAvaliacoesHandle,
 } from "@/components/ListaAvaliacoes";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useProximaAvaliacao } from "@/hooks/useProximaAvaliacao";
 import { useEvolucaoFisica } from "@/hooks/useEvolucaoFisica";
 import {
@@ -47,20 +46,6 @@ import {
 } from "@/components/ResultadoAvaliacao";
 import { normalizarGenero } from "@/utils/normalizar-genero";
 
-// Função utilitária para calcular idade
-function calcularIdade(dataNascimento?: string): number | undefined {
-  if (!dataNascimento) return undefined;
-  const nascimento = new Date(dataNascimento);
-  if (isNaN(nascimento.getTime())) return undefined;
-  const hoje = new Date();
-  let idade = hoje.getFullYear() - nascimento.getFullYear();
-  const m = hoje.getMonth() - nascimento.getMonth();
-  if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
-    idade--;
-  }
-  return idade >= 0 ? idade : undefined;
-}
-
 export default function AlunosDashboard() {
   const { profile } = useUserProfile();
   const { proxima, loading } = useProximaAvaliacao(profile?.id ?? ""); // Sempre chamado!
@@ -69,10 +54,7 @@ export default function AlunosDashboard() {
   );
 
   const router = useRouter();
-  const [showAnamnese, setShowAnamnese] = useState(false);
-  const [showMedidas, setShowMedidas] = useState(false);
-  const [, setLastTriagemObj] = useState<string | null>(null);
-  const [showTriagem, setShowTriagem] = useState(false);
+  const [showAvaliacaoCompleta, setShowAvaliacaoCompleta] = useState(false);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] =
     useState<Avaliacao | null>(null);
   const listaRef = useRef<ListaAvaliacoesHandle>(null);
@@ -88,13 +70,12 @@ export default function AlunosDashboard() {
 
   useEffect(() => {
     // Abre o modal se não houver avaliação válida (inclui 404, vencida ou inválida)
-    if (avaliacaoValida === false) setShowTriagem(true);
+    if (avaliacaoValida === false) setShowAvaliacaoCompleta(true);
   }, [avaliacaoValida]);
 
   useEffect(() => {
     function handleOpenTriagemModal() {
-      setShowAnamnese(false);
-      setShowTriagem(true);
+      setShowAvaliacaoCompleta(true);
     }
     window.addEventListener("open-triagem-modal", handleOpenTriagemModal);
     return () => {
@@ -104,8 +85,7 @@ export default function AlunosDashboard() {
 
   useEffect(() => {
     function handleOpenAnamneseModal() {
-      setShowAnamnese(false);
-      setTimeout(() => setShowAnamnese(true), 50);
+      setShowAvaliacaoCompleta(true);
     }
     window.addEventListener("open-anamnese-modal", handleOpenAnamneseModal);
     return () => {
@@ -118,8 +98,7 @@ export default function AlunosDashboard() {
 
   useEffect(() => {
     function handleOpenMedidasModal() {
-      setShowMedidas(false);
-      setTimeout(() => setShowMedidas(true), 50);
+      setShowAvaliacaoCompleta(true);
     }
     window.addEventListener("open-medidas-modal", handleOpenMedidasModal);
     return () => {
@@ -127,30 +106,11 @@ export default function AlunosDashboard() {
     };
   }, []);
 
-  // Função para lidar com o sucesso da triagem
-  // e decidir se deve abrir a anamnese ou recarregar a página
-  function handleTriagemSuccess(objetivo?: string) {
-    setShowTriagem(false);
-    if (objetivo && objetivo !== "Alto rendimento esportivo") {
-      setShowAnamnese(true);
-      setLastTriagemObj(objetivo);
-    } else {
-      window.location.reload();
-    }
-  }
-
-  const idade =
-    profile && profile.dataNascimento
-      ? calcularIdade(
-          typeof profile.dataNascimento === "string"
-            ? profile.dataNascimento
-            : profile.dataNascimento.toISOString()
-        )
-      : undefined;
-
-  function handleMedidasSuccess() {
+  // Função para lidar com o sucesso da avaliação completa
+  function handleAvaliacaoSuccess() {
+    setShowAvaliacaoCompleta(false);
     listaRef.current?.refetch();
-    setShowMedidas(false);
+    window.location.reload();
   }
 
   if (!profile) return <Loading />;
@@ -424,8 +384,7 @@ export default function AlunosDashboard() {
             aria-label={a.label}
             onClick={() => {
               if (a.label === "Anamnese") {
-                setShowAnamnese(false); // Garante reset
-                setTimeout(() => setShowAnamnese(true), 50); // Força abrir
+                setShowAvaliacaoCompleta(true);
               }
             }}
           >
@@ -434,65 +393,89 @@ export default function AlunosDashboard() {
           </Button>
         ))}
       </div>
-      {/* Modal de triagem */}
-      <ModalTriagem
-        open={showTriagem}
-        onClose={() => setShowTriagem(false)}
-        userPerfilId={profile.id ?? ""}
-        onSuccess={(objetivo) => handleTriagemSuccess(objetivo)}
+      {/* Modal de avaliação completa para alunos */}
+      <ModalAvaliacaoAluno
+        open={showAvaliacaoCompleta}
+        onClose={() => setShowAvaliacaoCompleta(false)}
+        onSuccess={handleAvaliacaoSuccess}
       />
-      <ModalAnamnese
-        open={showAnamnese}
-        onClose={() => setShowAnamnese(false)}
-        userPerfilId={profile.id ?? ""}
-        onSuccess={() => window.location.reload()}
-      />
-      <ModalMedidasCorporais
-        open={showMedidas}
-        onClose={() => setShowMedidas(false)}
-        userPerfilId={profile.id ?? ""}
-        onSuccess={handleMedidasSuccess}
-        dataNascimento={
-          profile.dataNascimento ? String(profile.dataNascimento) : ""
-        }
-        idade={idade ?? 0} // Passe a idade calculada aqui!
-      />
-      {/* Modal de detalhes */}
-      <Dialog
+      {/* Modal de detalhes da avaliação */}
+      <ModalPadrao
         open={!!avaliacaoSelecionada}
-        onOpenChange={() => setAvaliacaoSelecionada(null)}
+        onClose={() => setAvaliacaoSelecionada(null)}
+        title="Detalhes da Avaliação"
+        description={avaliacaoSelecionada ? `Avaliação de ${avaliacaoSelecionada.tipo} realizada em ${new Date(avaliacaoSelecionada.data).toLocaleDateString('pt-BR')}` : ""}
+        maxWidth="xl"
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Detalhes da Avaliação</DialogTitle>
-          </DialogHeader>
-          {avaliacaoSelecionada && (
-            <div className="space-y-2">
-              <p>
-                <b>Tipo:</b> {avaliacaoSelecionada.tipo}
-              </p>
-              <p>
-                <b>Data:</b>{" "}
-                {new Date(avaliacaoSelecionada.data).toLocaleDateString(
-                  "pt-BR"
-                )}
-              </p>
-              <p>
-                <b>Status:</b> {avaliacaoSelecionada.status}
-              </p>
-              {avaliacaoSelecionada.objetivo && (
-                <p>
-                  <b>Objetivo:</b> {avaliacaoSelecionada.objetivo}
-                </p>
-              )}
-              {/* Exibe resultado detalhado se existir */}
-              {avaliacaoSelecionada.resultado &&
-                typeof avaliacaoSelecionada.resultado === "object" &&
-                !Array.isArray(avaliacaoSelecionada.resultado) && (
-                  <>
-                    <h4 className="font-semibold mt-4 mb-2 text-sm text-zinc-700">
-                      Conteúdo da avaliação:
-                    </h4>
+        {avaliacaoSelecionada && (
+          <>
+            {/* Card com informações gerais */}
+            <Card className="border-gray-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  Informações Gerais
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Activity className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Tipo</p>
+                      <p className="text-sm text-gray-600 capitalize">{avaliacaoSelecionada.tipo}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Data</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(avaliacaoSelecionada.data).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    {avaliacaoSelecionada.status === 'concluido' ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : avaliacaoSelecionada.status === 'pendente' ? (
+                      <Clock className="h-4 w-4 text-yellow-500" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Status</p>
+                      <p className="text-sm text-gray-600 capitalize">{avaliacaoSelecionada.status}</p>
+                    </div>
+                  </div>
+                  
+                  {avaliacaoSelecionada.objetivo && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Target className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Objetivo</p>
+                        <p className="text-sm text-gray-600">{avaliacaoSelecionada.objetivo}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Card com resultado detalhado */}
+            {avaliacaoSelecionada.resultado &&
+              typeof avaliacaoSelecionada.resultado === "object" &&
+              !Array.isArray(avaliacaoSelecionada.resultado) && (
+                <Card className="border-gray-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <BarChart2 className="h-5 w-5 text-blue-600" />
+                      Conteúdo da Avaliação
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
                     <ResultadoAvaliacao
                       resultado={
                         typeof avaliacaoSelecionada.resultado === "string"
@@ -508,12 +491,12 @@ export default function AlunosDashboard() {
                         avaliacaoSelecionada.objetivoClassificado
                       }
                     />
-                  </>
-                )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+                  </CardContent>
+                </Card>
+              )}
+          </>
+        )}
+      </ModalPadrao>
     </div>
   );
 }

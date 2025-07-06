@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import Modal from "@/components/ui/modal";
-import { ListaAvaliacoes } from "@/components/ListaAvaliacoes";
+// import { ListaAvaliacoes } from "@/components/ListaAvaliacoes";
 
 import {
   AlertasPersistenteProfessor,
@@ -21,7 +20,6 @@ import {
   Bell,
   Search,
   Users,
-  ListTodo,
   CalendarCheck,
   AlertCircle,
 } from "lucide-react";
@@ -31,6 +29,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/MetricCard";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { ConviteAlunoModal } from "@/components/ConviteAlunoModal";
+import { ModalAvaliacaoCompleta } from "@/components/ModalAvaliacaoCompleta";
+import { ModalDetalhesAluno } from "@/components/ModalDetalhesAluno";
+import { AvaliacoesPendentes } from "@/components/AvaliacoesPendentes";
 import apiClient from "@/lib/api-client";
 
 type Aluno = {
@@ -44,9 +45,14 @@ type Aluno = {
 };
 
 export default function ProfessoresDashboard() {
-  // Estado para modal de avaliações do aluno
-  const [modalAvaliacoesOpen, setModalAvaliacoesOpen] = useState(false);
+  // Estado para modal de detalhes do aluno
+  const [modalDetalhesOpen, setModalDetalhesOpen] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  
+  // Estado para modal de nova avaliação
+  const [modalNovaAvaliacaoOpen, setModalNovaAvaliacaoOpen] = useState(false);
+  const [alunoParaAvaliar, setAlunoParaAvaliar] = useState<Aluno | null>(null);
+  
   const { profile } = useUserProfile();
   const router = useRouter();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
@@ -161,17 +167,10 @@ export default function ProfessoresDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ListTodo className="h-5 w-5" /> Reavaliações Pendentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">12</p>
-            <p className="text-sm text-yellow-600">Agir em breve</p>
-          </CardContent>
-        </Card>
+        {/* Seção de avaliações pendentes */}
+        <AvaliacoesPendentes 
+          professorId={profile?.userId ?? ""} 
+        />
       </div>
       {/* Header com busca e notificações */}
       {/* Filtros e lista de alunos */}
@@ -288,30 +287,28 @@ export default function ProfessoresDashboard() {
                         )
                       </p>
                     )}
-                    <Button
-                      variant="outline"
-                      className="mt-2 w-full"
-                      onClick={() => {
-                        setAlunoSelecionado(aluno);
-                        setModalAvaliacoesOpen(true);
-                      }}
-                    >
-                      Ver detalhes
-                    </Button>
-                    {/* Modal para exibir avaliações do aluno selecionado */}
-                    <Modal
-                      isOpen={modalAvaliacoesOpen}
-                      onClose={() => setModalAvaliacoesOpen(false)}
-                    >
-                      <div className="p-2 min-w-[320px] max-w-[90vw] w-[500px]">
-                        <h2 className="text-lg font-bold mb-2 text-center">
-                          Avaliações de {alunoSelecionado?.name}
-                        </h2>
-                        {alunoSelecionado && (
-                          <ListaAvaliacoes userPerfilId={alunoSelecionado.id} />
-                        )}
-                      </div>
-                    </Modal>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setAlunoSelecionado(aluno);
+                          setModalDetalhesOpen(true);
+                        }}
+                      >
+                        Ver detalhes
+                      </Button>
+                      <Button
+                        variant="default"
+                        className="flex-1"
+                        onClick={() => {
+                          setAlunoParaAvaliar(aluno);
+                          setModalNovaAvaliacaoOpen(true);
+                        }}
+                      >
+                        Nova Avaliação
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -329,6 +326,34 @@ export default function ProfessoresDashboard() {
           </p>
         </TabsContent>
       </Tabs>
+
+      {/* Modal para exibir detalhes do aluno selecionado */}
+      <ModalDetalhesAluno
+        open={modalDetalhesOpen}
+        onClose={() => {
+          setModalDetalhesOpen(false);
+          setAlunoSelecionado(null);
+        }}
+        aluno={alunoSelecionado}
+      />
+
+      {/* Modal para nova avaliação do aluno selecionado */}
+      {alunoParaAvaliar && (
+        <ModalAvaliacaoCompleta
+          open={modalNovaAvaliacaoOpen}
+          onClose={() => {
+            setModalNovaAvaliacaoOpen(false);
+            setAlunoParaAvaliar(null);
+          }}
+          userPerfilId={alunoParaAvaliar.id}
+          onSuccess={() => {
+            setModalNovaAvaliacaoOpen(false);
+            setAlunoParaAvaliar(null);
+            // Aqui você pode adicionar lógica para atualizar a lista de avaliações
+          }}
+          nomeAluno={alunoParaAvaliar.name}
+        />
+      )}
     </div>
   );
 }

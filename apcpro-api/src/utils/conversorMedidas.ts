@@ -1,12 +1,12 @@
 import type { MedidasInput } from "./avaliacaoMedidas";
-
-type Sexo = 0 | 1 | "masculino" | "feminino";
+import { Genero } from "../models/genero-model";
+import { converterSexoParaGenero, SexoInput } from "./genero-converter";
 
 interface MedidasJson {
   peso: string | number;
   altura: string | number;
   idade: string | number;
-  sexo: Sexo;
+  sexo: SexoInput;
   tronco: {
     cintura: string | number;
     quadril: string | number;
@@ -22,7 +22,7 @@ export function converterMedidasJson(json: MedidasJson): MedidasInput {
     peso: Number(json.peso),
     altura: Number(json.altura),
     idade: Number(json.idade),
-    sexo: json.sexo,
+    genero: converterSexoParaGenero(json.sexo),
     cintura: Number(json.tronco.cintura),
     quadril: Number(json.tronco.quadril),
     pescoco:

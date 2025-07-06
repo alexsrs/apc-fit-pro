@@ -14,7 +14,8 @@ export const calcularMedidasController = (
   next: NextFunction
 ) => {
   try {
-    const resultado = avaliacaoService.calcularIndices(req.body);
+    // Usar calcularIndicesDirecto para payload já formatado
+    const resultado = avaliacaoService.calcularIndicesDirecto(req.body);
     return res.status(200).json(resultado);
   } catch (error) {
     next(error);

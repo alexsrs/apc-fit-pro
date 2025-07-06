@@ -8,8 +8,9 @@ import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 import { classificarObjetivoAnamnese } from "../utils/avaliacaoProcessor";
 import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
-// Adicione a importação ou declaração do tipo Sexo
-type Sexo = "masculino" | "feminino" | 1 | 0;
+import { Genero, isGenero } from "../models/genero-model";
+import { NovaAvaliacaoMessage } from "../utils/messaging";
+import { converterSexoParaGenero, isSexoValido, SexoInput } from "../utils/genero-converter";
 
 function handleServiceError(error: unknown, message: string): never {
   console.error(message, error);
@@ -294,10 +295,20 @@ export class UsersService {
         objetivoClassificado = "alto_rendimento";
       }
 
+      // Calcular validade se for professor e especificou dias de validade
+      let validadeAte = null;
+      if (dados.diasValidade && typeof dados.diasValidade === 'number' && dados.diasValidade > 0) {
+        validadeAte = new Date();
+        validadeAte.setDate(validadeAte.getDate() + dados.diasValidade);
+      }
+
       const avaliacaoParaSalvar = {
         ...dados,
         resultado,
         objetivoClassificado,
+        validadeAte,
+        // Se professor especificou validade, status é 'aprovada', senão 'pendente'
+        status: validadeAte ? 'aprovada' : (dados.status || 'pendente')
       };
 
       // Salva avaliação no banco
@@ -444,8 +455,8 @@ export class UsersService {
 
       // Ajuste aqui: verifique se a propriedade correta é 'genero' ou similar
       const genero = perfil.genero;
-      const sexo: Sexo = isSexo(genero) ? genero : "feminino"; // valor padrão seguro
-      const sexoNum = sexoToNumber(sexo);
+      const sexo: SexoInput = isSexoValido(genero) ? genero : "feminino"; // valor padrão seguro
+      const sexoNum = converterSexoParaGenero(sexo);
 
       if (!maisRecente || !anterior) {
         console.error("Avaliações insuficientes para cálculo.");
@@ -536,25 +547,45 @@ export class UsersService {
     }
     return null;
   }
-}
 
-// Função utilitária para validar o tipo Sexo
-function isSexo(value: any): value is Sexo {
-  return (
-    value === "masculino" || value === "feminino" || value === 1 || value === 0
-  );
-}
-import { Genero, isGenero } from "../models/genero-model";
-import { NovaAvaliacaoMessage } from "../utils/messaging";
+  async aprovarAvaliacao(avaliacaoId: string, validadeDias: number) {
+    try {
+      const validadeAte = new Date();
+      validadeAte.setDate(validadeAte.getDate() + validadeDias);
 
-/**
- * Converte o valor de sexo para o tipo Genero.
- * @param sexo "masculino" | "feminino" | 1 | 0
- * @returns Genero.Masculino ou Genero.Feminino
- */
-function sexoToNumber(sexo: string | number): Genero {
-  if (sexo === "masculino" || sexo === 1) return Genero.Masculino;
-  if (sexo === "feminino" || sexo === 0) return Genero.Feminino;
-  // Valor padrão seguro
-  return Genero.Feminino;
+      const avaliacao = await this.userRepository.atualizarAvaliacaoAluno(
+        avaliacaoId,
+        {
+          status: 'aprovada',
+          validadeAte
+        }
+      );
+
+      return avaliacao;
+    } catch (error) {
+      handleServiceError(error, "Erro ao aprovar avaliação do aluno.");
+    }
+  }
+
+  async reprovarAvaliacao(avaliacaoId: string, motivo?: string) {
+    try {
+      // Buscar a avaliação atual primeiro
+      const avaliacaoAtual = await this.userRepository.buscarAvaliacaoPorId(avaliacaoId);
+      
+      const avaliacao = await this.userRepository.atualizarAvaliacaoAluno(
+        avaliacaoId,
+        {
+          status: 'reprovada',
+          resultado: motivo ? { 
+            ...(typeof avaliacaoAtual?.resultado === "object" && avaliacaoAtual?.resultado !== null ? avaliacaoAtual.resultado : {}), 
+            motivoReprovacao: motivo 
+          } : avaliacaoAtual?.resultado
+        }
+      );
+
+      return avaliacao;
+    } catch (error) {
+      handleServiceError(error, "Erro ao reprovar avaliação do aluno.");
+    }
+  }
 }

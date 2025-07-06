@@ -93,13 +93,6 @@ export function ResultadoAvaliacao({
 
   if (!resultado || typeof resultado !== "object") return null;
 
-  // Debug: Log completo dos props recebidos
-  console.log("📥 ResultadoAvaliacao - Props recebidos:");
-  console.log("   - tipo:", tipo);
-  console.log("   - inModal:", inModal);
-  console.log("   - objetivoClassificado:", objetivoClassificado);
-  console.log("   - resultado:", resultado);
-
   // Renderiza as informações gerais apenas quando não está em modal
   const renderInfoGeral = () => {
     if (inModal) return null;
@@ -159,21 +152,6 @@ export function ResultadoAvaliacao({
   }
 
   // Verifica se é uma avaliação de anamnese
-  console.log("🔍 ResultadoAvaliacao - Tipo:", tipo);
-  console.log("🔍 ResultadoAvaliacao - Resultado completo:", resultado);
-  console.log("🔍 ResultadoAvaliacao - Verificando anamnese...");
-  console.log("   - tipo === 'anamnese':", tipo === "anamnese");
-  console.log("   - resultado.historicoTreino:", !!resultado.historicoTreino);
-  console.log(
-    "   - resultado.preferenciasIndividuais:",
-    !!resultado.preferenciasIndividuais
-  );
-  console.log("   - resultado.lesoesLimitacoes:", !!resultado.lesoesLimitacoes);
-  console.log(
-    "   - resultado.estiloVidaRecuperacao:",
-    !!resultado.estiloVidaRecuperacao
-  );
-
   if (
     tipo === "anamnese" ||
     resultado.historicoTreino ||
@@ -181,9 +159,6 @@ export function ResultadoAvaliacao({
     resultado.lesoesLimitacoes ||
     resultado.estiloVidaRecuperacao
   ) {
-    console.log(
-      "✅ ResultadoAvaliacao - Detectada como anamnese, renderizando AnamneseInfo"
-    );
     return (
       <div>
         {renderInfoGeral()}
@@ -227,19 +202,7 @@ export function ResultadoAvaliacao({
   return (
     <div className={`space-y-4 ${inModal ? "modal-class" : ""}`}>
       {/* Exibe informações gerais apenas quando não está em modal */}
-      {!inModal && (
-        <InfoGeralAvaliacao
-          criadoEm={resultado.criadoEm || new Date().toISOString()}
-          atualizadoEm={resultado.atualizadoEm}
-          usuario={resultado.usuario}
-          professor={resultado.professor}
-          status={resultado.status || "concluída"}
-          tipo={tipo || "medidas"}
-          objetivoClassificado={objetivoClassificado}
-          validade={resultado.validade}
-          observacoes={resultado.observacoes}
-        />
-      )}
+      {renderInfoGeral()}
 
       {/* Exibe IMC usando ImcInfo */}
       {imc && classificacaoImc && (

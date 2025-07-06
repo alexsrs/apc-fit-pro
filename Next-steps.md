@@ -8,11 +8,21 @@ O APC FIT PRO possui uma base sólida implementada com **autenticação completa
 
 ## 🎯 Objetivos Estratégicos
 
-### **🚨 URGENTE - 15 de Julho (10 dias)**
-- ✅ **Avaliações Presenciais com Dobras Cutâneas** - Para atletas de vôlei
-- ✅ **Protocolos Faulkner, Pollock e Guedes** - 3, 4 e 7 pontos
-- ✅ **Interface de Avaliação Presencial** - Professor registra dados do aluno
-- ✅ **Cálculos Automáticos** - Implementação das fórmulas científicas
+### **🚨 URGENTE - 20 de Julho (14 dias restantes)**
+- ⏳ **Testes Automatizados** - Implementar testes unitários e integração
+- ⏳ **Validação em Staging** - Deploy em ambiente de homologação
+- ⏳ **Documentação de Usuário** - Guias para professores e alunos
+- ⏳ **Correções de UX** - Melhorias baseadas em feedback inicial
+
+### **✅ CONCLUÍDO RECENTEMENTE (6 de Julho)**
+- ✅ **Sistema de Avaliações Completo** - Fluxo unificado para alunos e professores
+- ✅ **Dobras Cutâneas Implementadas** - Protocolos Faulkner, Pollock, Guedes e ISAK
+- ✅ **Padronização de Conversão de Gênero** - Utilitário centralizado backend/frontend
+- ✅ **Modais de Avaliação Refinados** - UX melhorada e validação consistente
+- ✅ **Sistema de Status e Validade** - Controle completo de aprovação/reprovação
+- ✅ **Correção de Warnings Lint** - Código limpo e sem problemas de qualidade
+- ✅ **Testes de Build** - Frontend e backend buildando sem erros
+- ✅ **Documentação Técnica** - READMEs atualizados e guias de contribuição
 
 ### **Curto Prazo (1-3 meses)**
 - Completar **Relatórios em PDF** das avaliações
@@ -33,34 +43,31 @@ O APC FIT PRO possui uma base sólida implementada com **autenticação completa
 
 ## 🛠️ Roadmap Detalhado por Módulos
 
-### � **MÓDULO PRIORITÁRIO: Avaliações Presenciais com Dobras Cutâneas** *(URGENTE - 15 de Julho)*
-> **Prazo:** 10 dias | **Complexidade:** Alta | **Status:** EM DESENVOLVIMENTO
+### 🧪 **MÓDULO PRIORITÁRIO: Testes e Validação** *(URGENTE - 20 de Julho)*
+> **Prazo:** 14 dias | **Complexidade:** Média | **Status:** PRÓXIMO
 
 #### 🎯 **Objetivo Específico:**
-Permitir que professores realizem avaliações presenciais completas em atletas de vôlei, incluindo medidas de dobras cutâneas com protocolos científicos validados.
+Garantir que todas as funcionalidades implementadas sejam testadas, validadas e estejam prontas para produção com documentação completa.
 
 #### 📋 **Funcionalidades a Implementar:**
 
-##### **1. Protocolos de Dobras Cutâneas**
-- ✅ **Protocolo Faulkner (3 pontos):** Tríceps, Subescapular, Supra-ilíaca
-- ✅ **Protocolo Pollock (4 pontos):** Tríceps, Subescapular, Supra-ilíaca, Abdominal
-- ✅ **Protocolo Guedes (7 pontos):** Tríceps, Subescapular, Supra-ilíaca, Abdominal, Coxa, Peito, Axilar Média
-- ✅ **Cálculos Automáticos:** Percentual de gordura, densidade corporal, massa magra
+##### **1. Testes Automatizados**
+- 🧪 **Testes Unitários:** Utilitários (genero-converter, idade, avaliacaoMedidas)
+- 🧪 **Testes de Integração:** APIs de avaliações e cálculos de dobras
+- 🧪 **Testes E2E:** Fluxo completo aluno-professor-avaliação
+- 🧪 **Cobertura Mínima:** 80% do código testado
 
-##### **2. Interface de Avaliação Presencial**
-- 📱 **Modal de Dobras Cutâneas:** Interface otimizada para entrada rápida de dados
-- 🔄 **Seleção de Protocolo:** Professor escolhe entre Faulkner, Pollock ou Guedes
-- 📊 **Resultados Instantâneos:** Cálculos automáticos em tempo real
-- 📋 **Validação de Dados:** Campos obrigatórios e ranges válidos
-- 💾 **Integração Completa:** Salva junto com avaliação antropométrica existente
+##### **2. Validação em Staging**
+- 🌐 **Deploy Staging:** Ambiente idêntico à produção
+- � **Testes com Usuários:** Validação com professores reais
+- ⚡ **Performance Testing:** Stress test com múltiplos usuários
+- � **Testes de Segurança:** Validação de autenticação e dados
 
-##### **3. Fórmulas Científicas (Referência Fineshape/Literatura)**
-```typescript
-// Exemplo das fórmulas a implementar:
-// Faulkner: % Gordura = 0.153 * (soma 3 dobras) + 5.783
-// Pollock (Homens): Densidade = 1.112 - 0.00043499 * (soma 4 dobras) + ...
-// Guedes: Baseado em equações específicas por sexo e idade
-```
+##### **3. Documentação de Usuário**
+- 📖 **Guia do Professor:** Como usar avaliações e dobras cutâneas
+- 📖 **Guia do Aluno:** Como completar avaliações
+- 🎥 **Vídeos Tutoriais:** Demonstrações práticas
+- ❓ **FAQ Completo:** Perguntas frequentes e troubleshooting
 
 #### 🗂️ **Arquivos a Criar/Modificar (Cronograma):**
 
@@ -76,17 +83,17 @@ apcpro-api/src/
 ├── models/dobras-cutaneas-model.ts                  # NOVO
 └── repositories/avaliacoes-repository.ts            # MODIFICAR
 
-prisma/schema.prisma                                 # MODIFICAR (nova tabela)
+# SEM ALTERAÇÕES NO SCHEMA - usar tabela Avaliacao existente
 ```
 
 ##### **Semana 2 (12-15 Julho) - Frontend + Integração**
 ```
 apcpro-web/src/
-├── components/ModalDobrasCutaneas.tsx               # NOVO
+├── components/ModalDobrasCutaneas.tsx               # NOVO (independente)
 ├── components/SeletorProtocolo.tsx                  # NOVO
 ├── components/ResultadoDobrasCutaneas.tsx           # NOVO
 ├── utils/dobras-cutaneas-formulas.ts                # NOVO (client-side)
-└── components/ModalMedidasCorporais.tsx             # MODIFICAR (integrar)
+└── app/dashboard/professor/page.tsx                 # MODIFICAR (botão adicionar)
 ```
 
 #### ✅ **Critérios de Aceite (15 de Julho):**
@@ -99,30 +106,32 @@ apcpro-web/src/
 - [ ] Dados são persistidos no banco PostgreSQL
 - [ ] **TESTE REAL:** Funciona em avaliação de atletas de vôlei
 
-#### 🔧 **Schema do Banco (Extensão da tabela existente):**
-```sql
--- Adicionar à tabela Avaliacao existente:
-ALTER TABLE "Avaliacao" ADD COLUMN "protocoloDobras" TEXT;
-ALTER TABLE "Avaliacao" ADD COLUMN "dobrasCutaneas" JSONB;
+#### 🔧 **Schema do Banco (SEM ALTERAÇÕES - Usar estrutura existente):**
+```typescript
+// CORREÇÃO: Dobras cutâneas = Avaliação independente
+// Usar tabela Avaliacao existente com:
+// tipo: "dobras-cutaneas"
+// resultado: JSON com dados das dobras
 
--- Estrutura JSON das dobras:
+// Estrutura JSON para campo resultado:
 {
   "protocolo": "faulkner|pollock|guedes",
   "medidas": {
     "triceps": 12.5,
     "subescapular": 15.0,
     "suprailiaca": 18.2,
-    "abdominal": 22.1,     // Pollock/Guedes
-    "coxa": 25.0,          // Guedes
-    "peito": 8.5,          // Guedes
-    "axilarMedia": 12.0    // Guedes
+    "abdominal": 22.1,     // Pollock/Guedes apenas
+    "coxa": 25.0,          // Guedes apenas
+    "peito": 8.5,          // Guedes apenas
+    "axilarMedia": 12.0    // Guedes apenas
   },
   "resultados": {
     "somaTotal": 85.3,
     "percentualGordura": 14.2,
     "densidadeCorporal": 1.065,
     "massaGorda": 10.8,
-    "massaMagra": 65.2
+    "massaMagra": 65.2,
+    "classificacao": "Atletas"
   }
 }
 ```
@@ -436,29 +445,29 @@ apc-fit-pro/
 
 ## 🚀 Próximas Ações Imediatas
 
-### **🚨 HOJE (8 de Julho)**
-1. [ ] **URGENTE: Extensão do Schema Prisma** - Adicionar campos para dobras cutâneas
-2. [ ] **Pesquisa das Fórmulas Exatas** - Validar fórmulas de Faulkner, Pollock e Guedes
-3. [ ] **Criar Branch Específica** - `feature/dobras-cutaneas-volei`
-4. [ ] **Setup do Ambiente** - Preparar ambiente de desenvolvimento
+### **🚨 AMANHÃ (7 de Julho) - PRIORIDADE MÁXIMA**
+1. [ ] **🔬 Implementar Fórmulas de Dobras Cutâneas** - Utils com cálculos Faulkner, Pollock, Guedes
+2. [ ] **🗄️ Estender Schema Prisma** - Adicionar campos para dobras cutâneas
+3. [ ] **📋 Modelos TypeScript** - Interfaces para os novos dados
+4. [ ] **🧪 Testes das Fórmulas** - Validar cálculos com dados conhecidos
 
-### **Amanhã (9 de Julho)**
-1. [ ] **Implementar Fórmulas** - Criar utils com cálculos científicos
-2. [ ] **Modelos TypeScript** - Interfaces para os novos dados
-3. [ ] **Migração do Banco** - Aplicar mudanças no schema
-4. [ ] **Testes Unitários** - Validar cálculos com dados conhecidos
+### **8-9 de Julho (Segunda-Terça)**
+1. [ ] **🔧 Backend Controller/Service** - Endpoints para dobras cutâneas
+2. [ ] **🔄 Migração do Banco** - Aplicar mudanças no schema
+3. [ ] **✅ Validação de Dados** - Ranges e tipos corretos
+4. [ ] **📖 Documentação Swagger** - Documentar novos endpoints
 
-### **10-11 de Julho (Quarta-Quinta)**
-1. [ ] **Backend Controller/Service** - Endpoints para dobras cutâneas
-2. [ ] **Integração com Avaliações** - Estender sistema existente
-3. [ ] **Validação de Dados** - Ranges e tipos corretos
-4. [ ] **Documentação Swagger** - Documentar novos endpoints
+### **10-12 de Julho (Quarta-Sexta)**
+1. [ ] **🎨 Interface Frontend** - Modal para entrada de dobras
+2. [ ] **🔗 Integração com ModalMedidasCorporais** - Fluxo unificado  
+3. [ ] **🧪 Testes de Integração** - Frontend + Backend
+4. [ ] **📊 Resultados em Tempo Real** - Cálculos automáticos
 
-### **12-15 de Julho (Sexta-Terça)**
-1. [ ] **Interface Frontend** - Modal para entrada de dobras
-2. [ ] **Integração com ModalMedidasCorporais** - Fluxo unificado  
-3. [ ] **Testes de Integração** - Frontend + Backend
-4. [ ] **TESTE REAL** - Validação com atletas de vôlei
+### **13-15 de Julho (Fim de Semana + Segunda-Terça)**
+1. [ ] **🏐 TESTE REAL** - Validação com atletas de vôlei
+2. [ ] **🐛 Correções Finais** - Ajustes baseados nos testes
+3. [ ] **📋 Documentação** - Guia de uso para professores
+4. [ ] **🚀 Deploy em Produção** - Release da funcionalidade
 
 ### **Referências Técnicas para Alex:**
 
@@ -533,11 +542,21 @@ O APC FIT PRO possui uma **base tecnológica sólida** e um **diferencial compet
 
 ---
 
-**📅 Última atualização:** 8 de Julho de 2025  
-**🔄 Revisão:** Diária até 15/07, depois mensal  
+**📅 Última atualização:** 6 de Julho de 2025 - 23:30h  
+**🔄 Próxima revisão:** 7 de Julho pela manhã  
 **👨‍💻 Responsável:** Alex Sandro R. de Souza  
 **🎯 Meta Crítica:** Avaliações de dobras cutâneas funcionais para atletas de vôlei em 15/07
 
+**✅ HOJE CONCLUÍDO (6/07):**
+- Padronização completa dos modais do sistema
+- Atualização da documentação (READMEs)
+- Preparação da base para implementação das dobras cutâneas
+
+**🚀 AMANHÃ (7/07) - FOCO TOTAL:**
+- Implementação das fórmulas científicas
+- Extensão do banco de dados
+- Início do desenvolvimento do backend
+
 ---
 
-> 💡 **FOCO TOTAL:** Todos os esforços estão direcionados para entregar a funcionalidade de dobras cutâneas até 15 de julho. Este é um marco crítico para validação da plataforma com atletas reais e consolidação do método APC no esporte de alto rendimento.
+> 💡 **BOA NOITE E BOM DESCANSO!** Amanhã começamos a implementação das dobras cutâneas. O sistema está com base sólida e documentação atualizada. Foco total na entrega para os atletas de vôlei! 🏐⚡

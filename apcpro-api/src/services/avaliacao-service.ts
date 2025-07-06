@@ -3,6 +3,7 @@ import {
   processarMedidas,
   MedidasInput,
   classificarCA,
+  calcularIndicesMedidas,
 } from "../utils/avaliacaoMedidas";
 import {
   CircunferenciaAbdominalInput,
@@ -19,5 +20,13 @@ export class AvaliacaoService {
    */
   calcularIndices(input: MedidasInput) {
     return processarMedidas(input);
+  }
+
+  /**
+   * Processa medidas já formatadas diretamente sem conversão JSON.
+   * @param input MedidasInput já formatado
+   */
+  calcularIndicesDirecto(input: MedidasInput) {
+    return calcularIndicesMedidas(input);
   }
 }

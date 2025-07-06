@@ -21,11 +21,22 @@ import {
   getProfessorById,
   getProximaAvaliacaoAluno,
   getEvolucaoFisica,
+  aprovarAvaliacaoAluno,
+  reprovarAvaliacaoAluno,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 import { authenticateUser } from "./middlewares/auth-middleware";
 
 import { avaliarCAController } from "./controllers/avaliarCA-controller";
+import { calcularMedidasController } from "./controllers/avaliacao-controller";
+import {
+  criarAvaliacaoDobrasCutaneas,
+  calcularDobrasCutaneas,
+  buscarAvaliacoesPorUsuario,
+  buscarAvaliacaoPorId,
+  listarProtocolos,
+  validarDadosDobrasCutaneas
+} from "./controllers/dobras-cutaneas-controller";
 
 const router = Router();
 
@@ -1048,6 +1059,18 @@ router.get(
   getEvolucaoFisica
 );
 
+// Rotas para aprovação/reprovação de avaliações
+router.patch(
+  "/avaliacoes/:avaliacaoId/aprovar",
+  authenticateUser,
+  aprovarAvaliacaoAluno
+);
+router.patch(
+  "/avaliacoes/:avaliacaoId/reprovar",
+  authenticateUser,
+  reprovarAvaliacaoAluno
+);
+
 // Rota para autenticação
 router.post("/auth/sessions", persistSession as any);
 // Certifique-se de importar ou definir o authMiddleware corretamenteAjuste o caminho conforme necessário
@@ -1057,6 +1080,71 @@ router.post("/auth/sessions", persistSession as any);
 router.post("/avaliar-ca", authenticateUser, async (req, res, next) => {
   try {
     await avaliarCAController(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Endpoint para calcular medidas corporais (inclui dobras cutâneas)
+router.post("/calcular-medidas", async (req, res, next) => {
+  try {
+    await calcularMedidasController(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// === ROTAS PARA DOBRAS CUTÂNEAS ===
+
+// Listar protocolos disponíveis
+router.get("/dobras-cutaneas/protocolos", async (req, res, next) => {
+  try {
+    await listarProtocolos(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Calcular dobras cutâneas sem salvar
+router.post("/dobras-cutaneas/calcular", async (req, res, next) => {
+  try {
+    await calcularDobrasCutaneas(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Validar dados antes do cálculo
+router.post("/dobras-cutaneas/validar", async (req, res, next) => {
+  try {
+    await validarDadosDobrasCutaneas(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Criar nova avaliação de dobras cutâneas
+router.post("/dobras-cutaneas", authenticateUser, async (req, res, next) => {
+  try {
+    await criarAvaliacaoDobrasCutaneas(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Buscar avaliação específica por ID
+router.get("/dobras-cutaneas/:id", authenticateUser, async (req, res, next) => {
+  try {
+    await buscarAvaliacaoPorId(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Buscar avaliações por usuário
+router.get("/dobras-cutaneas/usuario/:userPerfilId", authenticateUser, async (req, res, next) => {
+  try {
+    await buscarAvaliacoesPorUsuario(req, res, next);
   } catch (error) {
     next(error);
   }

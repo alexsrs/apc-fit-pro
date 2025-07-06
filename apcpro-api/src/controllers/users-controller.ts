@@ -279,11 +279,47 @@ export async function cadastrarAvaliacaoAluno(
   try {
     const userPerfilId = req.params.userPerfilId;
     const dados = req.body;
+    
+    // Se for um professor salvando, pode incluir validade
     const avaliacao = await usersService.cadastrarAvaliacaoAluno(
       userPerfilId,
       dados
     );
     const response = created(avaliacao);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function aprovarAvaliacaoAluno(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const avaliacaoId = req.params.id;
+    const { diasValidade = 90 } = req.body; // 90 dias por padrão se não especificado
+    
+    const avaliacao = await usersService.aprovarAvaliacao(avaliacaoId, diasValidade);
+    const response = ok(avaliacao);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function reprovarAvaliacaoAluno(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const avaliacaoId = req.params.id;
+    const { motivo } = req.body; // Motivo da reprovação (opcional)
+    
+    const avaliacao = await usersService.reprovarAvaliacao(avaliacaoId, motivo);
+    const response = ok(avaliacao);
     res.status(response.statusCode).json(response.body);
   } catch (error) {
     next(error);
