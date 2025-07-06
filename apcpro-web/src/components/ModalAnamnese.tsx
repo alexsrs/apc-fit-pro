@@ -1,10 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { ModalPadrao } from "@/components/ui/ModalPadrao";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm, Controller } from "react-hook-form";
 import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import apiClient from "@/lib/api-client";
 
 type FormData = {
@@ -98,32 +91,28 @@ export function ModalAnamnese({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md p-0">
-        <ScrollArea className="max-h-[80vh] rounded-lg px-6 py-6">
-          <DialogHeader>
-            <DialogTitle>Anamnese</DialogTitle>
-            <DialogDescription>
-              Responda as perguntas para entendermos melhor seu histórico,
-              preferências e limitações. Isso nos ajuda a personalizar seu
-              acompanhamento.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6 py-8 px-4"
-          >
-            {/* Bloco 1: Histórico de Treino */}
-            <div className="space-y-2">
-              <Label htmlFor="anamnese_experienciaAnterior">
-                Experiência anterior com treino físico:
-              </Label>
-              <Input
-                id="anamnese_experienciaAnterior"
-                placeholder="Descreva sua experiência"
-                {...register("anamnese_experienciaAnterior")}
-              />
-            </div>
+    <ModalPadrao
+      open={open}
+      onClose={onClose}
+      title="Anamnese"
+      description="Responda as perguntas para entendermos melhor seu histórico, preferências e limitações. Isso nos ajuda a personalizar seu acompanhamento."
+      maxWidth="md"
+    >
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-6"
+      >
+        {/* Bloco 1: Histórico de Treino */}
+        <div className="space-y-2">
+          <Label htmlFor="anamnese_experienciaAnterior">
+            Experiência anterior com treino físico:
+          </Label>
+          <Input
+            id="anamnese_experienciaAnterior"
+            placeholder="Descreva sua experiência"
+            {...register("anamnese_experienciaAnterior")}
+          />
+        </div>
             <div className="space-y-2">
               <Label htmlFor="anamnese_preferenciasAtividades">
                 Preferências de atividades:
@@ -271,16 +260,14 @@ export function ModalAnamnese({
                 {...register("anamnese_recuperacaoPosTreino")}
               />
             </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 mt-4"
-            >
-              {loading ? "Enviando..." : "Enviar"}
-            </Button>
-          </form>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full h-11 mt-4"
+        >
+          {loading ? "Enviando..." : "Enviar"}
+        </Button>
+      </form>
+    </ModalPadrao>
   );
 }

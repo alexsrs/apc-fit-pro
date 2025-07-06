@@ -1,10 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { ModalPadrao } from "@/components/ui/ModalPadrao";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +12,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm, Controller } from "react-hook-form";
 import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import apiClient from "@/lib/api-client";
 
 type FormData = {
@@ -184,20 +177,16 @@ export function ModalTriagem({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md p-0">
-        <ScrollArea className="max-h-[80vh] rounded-lg px-6 py-6">
-          <DialogHeader>
-            <DialogTitle>Triagem inteligente</DialogTitle>
-            <DialogDescription>
-              Preencha as informações para realizar a triagem inicial do aluno.
-              Todos os dados são confidenciais e ajudam na personalização do
-              acompanhamento.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6 py-8 px-4"
+    <ModalPadrao
+      open={open}
+      onClose={onClose}
+      title="Triagem inteligente"
+      description="Preencha as informações para realizar a triagem inicial do aluno. Todos os dados são confidenciais e ajudam na personalização do acompanhamento."
+      maxWidth="md"
+    >
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-6"
           >
             {/* Objetivo */}
             <div className="space-y-2">
@@ -745,16 +734,14 @@ export function ModalTriagem({
               </>
             )}
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 mt-4"
-            >
-              {loading ? "Enviando..." : "Enviar"}
-            </Button>
-          </form>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full h-11 mt-4"
+        >
+          {loading ? "Enviando..." : "Enviar"}
+        </Button>
+      </form>
+    </ModalPadrao>
   );
 }

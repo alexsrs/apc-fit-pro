@@ -1,10 +1,5 @@
 import React, { useRef, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ModalPadrao } from "@/components/ui/ModalPadrao";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Check } from "lucide-react";
@@ -54,39 +49,40 @@ Bora treinar do jeito certo?`
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Convide um novo aluno</DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col items-center gap-4">
-          <div ref={qrRef}>
-            <QRCodeSVG value={conviteUrl} size={180} />
-          </div>
-          <button
-            type="button"
-            onClick={copiarQRCode}
-            className="flex flex-col items-center gap-1 text-gray-600 hover:text-blue-600 focus:outline-none"
-            aria-label="Copiar QRCode para área de transferência"
-          >
-            {copiado ? (
-              <Check className="w-6 h-6 text-green-600" aria-hidden="true" />
-            ) : (
-              <Copy className="w-6 h-6" aria-hidden="true" />
-            )}
-            <span className="text-xs">Copiar QRCode</span>
-          </button>
-          {/* 
-          xibe a URL do convite para fácil cópia manual 
-          <p className="text-sm break-all text-center">{conviteUrl}</p> 
-          */}
-          <Button asChild variant="outline" className="w-full">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              Enviar convite pelo WhatsApp
-            </a>
-          </Button>
+    <ModalPadrao
+      open={open}
+      onClose={onClose}
+      title="Convide um novo aluno"
+      maxWidth="md"
+      showScrollArea={false}
+    >
+      <div className="flex flex-col items-center gap-4">
+        <div ref={qrRef}>
+          <QRCodeSVG value={conviteUrl} size={180} />
         </div>
-      </DialogContent>
-    </Dialog>
+        <button
+          type="button"
+          onClick={copiarQRCode}
+          className="flex flex-col items-center gap-1 text-gray-600 hover:text-blue-600 focus:outline-none"
+          aria-label="Copiar QRCode para área de transferência"
+        >
+          {copiado ? (
+            <Check className="w-6 h-6 text-green-600" aria-hidden="true" />
+          ) : (
+            <Copy className="w-6 h-6" aria-hidden="true" />
+          )}
+          <span className="text-xs">Copiar QRCode</span>
+        </button>
+        {/* 
+        xibe a URL do convite para fácil cópia manual 
+        <p className="text-sm break-all text-center">{conviteUrl}</p> 
+        */}
+        <Button asChild variant="outline" className="w-full">
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+            Enviar convite pelo WhatsApp
+          </a>
+        </Button>
+      </div>
+    </ModalPadrao>
   );
 }
