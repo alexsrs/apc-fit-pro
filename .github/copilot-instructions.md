@@ -1,11 +1,21 @@
 # Instruções para o tifurico (Copilot)
 
-## Sobre o Projeto
+## Contexto do Projeto
 
 - O APC FIT PRO é uma plataforma para avaliação, prescrição e controle de treinos físicos, baseada no método APC.
 - O sistema é dividido em dois grandes módulos:
   - **Frontend (`apcpro-web`)**: Next.js, Shadcn, Tailwind, NextAuth, TypeScript.
   - **Backend (`apcpro-api`)**: Node.js, Express, Prisma, TypeScript.
+
+## Stack Tecnológica
+- **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS
+- **Banco de Dados:** PostgreSQL com Prisma ORM
+- **Autenticação:** NextAuth.js (Google OAuth + email/senha)
+- **IA:** OpenAI GPT-4 via Vercel AI SDK
+- **PDF:** Puppeteer + HTML/CSS Templates
+- **Pagamentos:** Stripe
+- **Deploy:** Vercel
+- **Componentes:** Shadcn UI, Tailwind CSS
 
 ## Padrões Gerais
 
@@ -97,6 +107,15 @@ export class UsersService {
 - Use middlewares para validação e autenticação.
 - Escreva testes automatizados sempre que possível.
 
+## Observações Importantes
+- Mantenha as chaves de API seguras no .env.local
+- Use TypeScript strict mode
+- Implemente error boundaries
+- Teste em diferentes dispositivos
+- Monitore performance com Core Web Vitals
+- Documente novas funcionalidades no README
+
+
 ## Documentação
 
 - Consulte sempre os arquivos `README.md` do projeto para detalhes de arquitetura, scripts e fluxos.
@@ -111,4 +130,163 @@ export class UsersService {
 
 ---
 
+## Estrutura do Projeto
+```
+apc-fit-pro/
+├── apcpro-web/                # Frontend (Next.js)
+│   ├── app/                   # Páginas e rotas Next.js (App Router)
+│   ├── components/            # Componentes reutilizáveis (React + Shadcn + Tailwind)
+│   ├── lib/                   # Funções utilitárias (helpers, hooks, etc)
+│   ├── services/              # Comunicação com API/backend
+│   ├── public/                # Arquivos estáticos (imagens, favicon, etc)
+│   ├── styles/                # Arquivos globais de estilo (Tailwind config)
+│   ├── tests/                 # Testes automatizados do frontend
+│   ├── .env.local             # Variáveis de ambiente (NUNCA versionar)
+│   ├── next.config.js         # Configuração Next.js
+│   └── tailwind.config.js     # Configuração Tailwind CSS
+│
+├── apcpro-api/                # Backend (Node.js + Express + Prisma)
+│   ├── controllers/           # Recebem requisições HTTP
+│   ├── services/              # Lógica de negócio
+│   ├── repositories/          # Prisma ORM (acesso ao banco)
+│   ├── middlewares/           # Autenticação, validação, etc
+│   ├── models/                # Tipos/interfaces TypeScript
+│   ├── utils/                 # Funções auxiliares
+│   ├── routes.ts              # Endpoints da API
+│   ├── prisma/                # Schema e migrations do banco
+│   │   ├── schema.prisma
+│   │   └── migrations/
+│   ├── tests/                 # Testes automatizados do backend
+│   ├── .env                   # Variáveis de ambiente backend
+│   └── server.ts              # Entry point do servidor Express
+│
+├── .github/                   # Workflows, templates e instruções do Copilot
+│   └── copilot-instructions.md
+│
+├── README.md                  # Documentação principal do projeto
+├── package.json               # Dependências e scripts do monorepo (caso use)
+└── .gitignore                 # Arquivos/dirs ignorados pelo git
+```
+
+## Convenções de Código
+
+### Nomenclatura
+- **Componentes:** PascalCase (ex: `CurriculumEditor`)
+- **Arquivos:** kebab-case (ex: `curriculum-editor.tsx`)
+- **Variáveis/Funções:** camelCase (ex: `generateResume`)
+- **Constantes:** SNAKE_CASE (ex: `MAX_FREE_DOWNLOADS`)
+
+### Componentes React
+- Use TypeScript para todos os componentes
+- Prefira Server Components quando possível
+- Use 'use client' apenas quando necessário
+- Implemente interfaces para props
+
+### Estilização
+- Use Tailwind CSS como padrão
+- Mantenha classes organizadas (responsive-first)
+- Use CSS Modules apenas para casos específicos
+- Evite inline styles
+
+### Banco de Dados
+- Use Prisma como ORM
+- Nomeie tabelas no singular em português (ex: `usuario`, `treino`)
+- Use camelCase para campos
+- Implemente relacionamentos adequados
+
+## Funcionalidades
+
+#### 1. Autenticação e Cadastro
+- Login via Google OAuth e email/senha (NextAuth.js)
+- Recuperação de senha por email
+- Cadastro de novos usuários (personal e aluno)
+- Perfis distintos: Personal Trainer e Aluno
+
+#### 2. Gestão de Usuários
+- Visualização e edição de perfil
+- Upload de foto de perfil
+- Gerenciamento de dados pessoais e contato
+
+#### 3. Avaliação Física
+- Cadastro de avaliações físicas (peso, altura, IMC, circunferências, dobras, etc)
+- Histórico de avaliações por usuário
+- Geração automática de gráficos de evolução
+
+#### 4. Prescrição de Treinos
+- Criação, edição e exclusão de treinos personalizados
+- Biblioteca de exercícios com imagens e instruções
+- Organização dos treinos por dias da semana e grupos musculares
+- Atribuição de treinos para alunos
+
+#### 5. Controle de Treinos
+- Registro de treinos realizados pelo aluno
+- Feedback do aluno sobre o treino (dificuldade, observações)
+- Visualização do histórico de treinos
+
+#### 6. Relatórios e PDF
+- Geração de relatórios de avaliação física em PDF
+- Exportação de treinos em PDF para impressão ou compartilhamento
+
+#### 7. Pagamentos (Personal)
+- Integração com Stripe para cobrança de planos
+- Gestão de assinaturas e pagamentos recorrentes
+
+#### 8. Notificações
+- Notificações por email para eventos importantes (novo treino, avaliação, renovação de plano)
+
+#### 9. Dashboard
+- Painel com visão geral para personal e aluno (treinos ativos, avaliações recentes, progresso)
+
+#### 10. Acessibilidade e Segurança
+- Interface responsiva e acessível
+- Validação de dados no frontend e backend
+- Proteção de rotas e dados sensíveis
+
+---
+
+## Regras de Desenvolvimento
+
+### Performance
+- Use Next.js Image para imagens
+- Implemente loading states
+- Use Suspense boundaries
+- Otimize bundle size
+
+### SEO
+- Meta tags dinâmicas
+- Schema markup
+- Sitemap automático
+- URLs amigáveis
+
+### Acessibilidade
+- Suporte a screen readers
+- Navegação por teclado
+- Contraste adequado
+- Labels descritivos
+
+### Segurança
+- Validação no frontend e backend
+- Rate limiting para APIs
+- Sanitização de dados
+- HTTPS obrigatório
+
+## Comandos Úteis
+```bash
+# Desenvolvimento
+npm run dev
+
+# Build
+npm run build
+
+# Prisma
+npx prisma migrate dev
+npx prisma studio
+
+# Testes
+npm run test
+```
+
+
 Dessa forma, tifurico sempre irá me ajudar de acordo com as regras, arquitetura e tecnologias do seu projeto!
+
+
