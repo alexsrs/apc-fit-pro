@@ -326,12 +326,15 @@ export class DobrasCutaneasService {
       avaliacaoCompleta.metadata.calculadoPor = calculadoPor;
     }
 
+    // Dobras cutâneas só podem ser feitas por professores, então sempre são 'aprovada'
+    const status = 'aprovada';
+
     // Salvar no banco
     const avaliacaoSalva = await prisma.avaliacao.create({
       data: {
         userPerfilId: input.userPerfilId,
         tipo: 'dobras-cutaneas',
-        status: 'CONCLUIDA',
+        status: status,
         resultado: avaliacaoCompleta as any // JSON
       }
     });

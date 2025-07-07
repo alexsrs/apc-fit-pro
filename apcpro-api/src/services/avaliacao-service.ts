@@ -16,9 +16,9 @@ import {
 export class AvaliacaoService {
   /**
    * Processa as medidas recebidas e retorna todos os índices e classificações.
-   * @param input MedidasInput
+   * @param input JSON com dados das medidas (vem do frontend)
    */
-  calcularIndices(input: MedidasInput) {
+  calcularIndices(input: any) {
     return processarMedidas(input);
   }
 

@@ -7,7 +7,7 @@ import { ProtocoloDisponivel } from '../utils/protocolos-dobras';
 
 // Tipos base
 export type GeneroType = 'M' | 'F';
-export type StatusAvaliacao = 'PENDENTE' | 'CONCLUIDA' | 'CANCELADA';
+export type StatusAvaliacao = 'pendente' | 'aprovada' | 'reprovada' | 'cancelada';
 
 // Interface para dados de entrada
 export interface DobrasCutaneasInput {

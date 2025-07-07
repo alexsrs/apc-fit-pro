@@ -19,6 +19,8 @@ import { TriagemInfo } from "./TriagemInfo";
 import { AltoRendimentoInfo } from "./AltoRendimentoInfo";
 import { InfoGeralAvaliacao } from "./InfoGeralAvaliacao";
 import { AnamneseInfo } from "./AnamneseInfo";
+import { DobrasCutaneasInfo } from "./DobrasCutaneasInfo";
+import { MedidasCorporaisInfo } from "./MedidasCorporaisInfo";
 
 // Tipagem para os índices de avaliação
 interface IndicesAvaliacao {
@@ -58,6 +60,20 @@ export interface ResultadoAvaliacaoProps {
     preferenciasIndividuais?: Record<string, unknown>;
     lesoesLimitacoes?: Record<string, unknown>;
     estiloVidaRecuperacao?: Record<string, unknown>;
+    // Campos específicos para dobras cutâneas
+    protocolo?: string;
+    medidas?: Record<string, number>;
+    resultados?: {
+      percentualGordura?: number;
+      massaGorda?: number;
+      massaMagra?: number;
+      classificacao?: string;
+    };
+    // Campos específicos para medidas corporais
+    peso?: number;
+    altura?: number;
+    circunferencias?: Record<string, number>;
+    diametros?: Record<string, number>;
     // Campos comuns para informações gerais
     criadoEm?: string;
     atualizadoEm?: string;
@@ -173,8 +189,51 @@ export function ResultadoAvaliacao({
     );
   }
 
-  // Continua com a lógica existente para avaliações de medidas
+  // Verifica se é uma avaliação de dobras cutâneas
+  if (
+    tipo === "dobras-cutaneas" ||
+    tipo === "dobras_cutaneas" ||
+    (resultado.protocolo && resultado.medidas)
+  ) {
+    return (
+      <div>
+        {renderInfoGeral()}
+        <DobrasCutaneasInfo
+          resultado={
+            resultado as unknown as Parameters<
+              typeof DobrasCutaneasInfo
+            >[0]["resultado"]
+          }
+        />
+      </div>
+    );
+  }
+
+  // Declaração antecipada de indices para evitar erro de uso antes da atribuição
   const indices: IndicesAvaliacao = resultado.indices ?? {};
+
+  // Verifica se é uma avaliação de medidas corporais SEM índices (apenas medidas básicas)
+  if (
+    (tipo === "medidas" || tipo === "medidas-corporais") &&
+    !resultado.indices &&
+    !indices.imc &&
+    !indices.ca &&
+    !indices.rcq &&
+    (resultado.circunferencias || resultado.diametros || (resultado.peso && resultado.altura))
+  ) {
+    return (
+      <div>
+        {renderInfoGeral()}
+        <MedidasCorporaisInfo
+          resultado={
+            resultado as unknown as Parameters<
+              typeof MedidasCorporaisInfo
+            >[0]["resultado"]
+          }
+        />
+      </div>
+    );
+  }
 
   const imc = indices.imc ?? resultado.indices?.imc;
   const classificacaoImc =
@@ -199,11 +258,40 @@ export function ResultadoAvaliacao({
   const percentualGC_Marinha = indices.percentualGC_Marinha;
   const classificacaoGC_Marinha = indices.classificacaoGC_Marinha;
 
+  // Se tem índices calculados, usa o componente MedidasCorporaisInfo completo
+  if (imc || ca || rcq || percentualGC_Marinha) {
+    return (
+      <div className={`space-y-4 ${inModal ? "modal-class" : ""}`}>
+        {renderInfoGeral()}
+        <MedidasCorporaisInfo
+          resultado={{
+            ...resultado,
+            indices: {
+              imc,
+              classificacaoIMC: classificacaoImc,
+              ca,
+              classificacaoCA: classificacaoCa,
+              rcq,
+              classificacaoRCQ: classificacaoRcq,
+              percentualGC_Marinha,
+              classificacaoGC_Marinha,
+              riscoCA: indices.riscoCA,
+              referenciaCA: indices.referenciaCA,
+              referenciaRCQ: indices.referenciaRCQ,
+              referenciaGC_Marinha: indices.referenciaGC_Marinha,
+            },
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`space-y-4 ${inModal ? "modal-class" : ""}`}>
       {/* Exibe informações gerais apenas quando não está em modal */}
       {renderInfoGeral()}
 
+      {/* Fallback: Exibe componentes individuais se não conseguiu processar com outros componentes */}
       {/* Exibe IMC usando ImcInfo */}
       {imc && classificacaoImc && (
         <ImcInfo imc={imc} classificacao={classificacaoImc} />

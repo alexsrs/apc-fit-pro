@@ -110,18 +110,33 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
     1.2 * imc + 0.23 * dados.idade - 10.8 * sexoNum - 5.4;
 
   // %GC Marinha
-  const percentualGC_Marinha = calcularPercentualGorduraMarinha({
-    cintura: dados.cintura,
-    pescoco: dados.pescoco!,
-    quadril: dados.quadril,
-    altura: dados.altura,
-    sexo: generoParaString(dados.genero),
-  });
+  let percentualGC_Marinha: number | null = null;
+  let classificacaoGC_Marinha: string | null = null;
 
-  const classificacaoGC_Marinha = classificarPercentualGordura(
-    percentualGC_Marinha,
-    generoParaString(dados.genero)
-  );
+  if (dados.pescoco && dados.cintura && dados.altura) {
+    try {
+      percentualGC_Marinha = calcularPercentualGorduraMarinha({
+        cintura: dados.cintura,
+        pescoco: dados.pescoco,
+        quadril: dados.quadril,
+        altura: dados.altura,
+        sexo: generoParaString(dados.genero),
+      });
+
+      // Verifica se o resultado é válido
+      if (isNaN(percentualGC_Marinha) || !isFinite(percentualGC_Marinha)) {
+        percentualGC_Marinha = null;
+      } else {
+        classificacaoGC_Marinha = classificarPercentualGordura(
+          percentualGC_Marinha,
+          generoParaString(dados.genero)
+        );
+      }
+    } catch (error) {
+      percentualGC_Marinha = null;
+      classificacaoGC_Marinha = null;
+    }
+  }
 
   // Relação Cintura-Quadril (RCQ)
   let rcqResultado: RCQResultado | null = null;
@@ -187,7 +202,7 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
 // https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight
 function classificarIMC(imc: number): string {
   if (imc < 18.5) return "Abaixo do peso";
-  if (imc < 25) return "Peso normal";
+  if (imc < 25) return "Normal";
   if (imc < 30) return "Pré-obesidade";
   if (imc < 35) return "Obesidade I";
   if (imc < 40) return "Obesidade II";

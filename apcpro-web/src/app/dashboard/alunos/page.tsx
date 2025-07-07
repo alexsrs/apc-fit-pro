@@ -19,12 +19,8 @@ import {
   MessageCircle,
   ArrowDown,
   ArrowUpRight,
-  FileText,
-  Activity,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Target,
+  UserCheck,
+  Play,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +40,7 @@ import {
   ResultadoAvaliacao,
   type ResultadoAvaliacaoProps,
 } from "@/components/ResultadoAvaliacao";
+import { ModalDetalhesAvaliacao } from "@/components/ModalDetalhesAvaliacao";
 import { normalizarGenero } from "@/utils/normalizar-genero";
 
 export default function AlunosDashboard() {
@@ -270,7 +267,11 @@ export default function AlunosDashboard() {
   ];
 
   const acoesRapidas = [
-    { icon: <ClipboardList className="w-6 h-6" />, label: "Minhas Avaliações" },
+    { 
+      icon: <UserCheck className="w-6 h-6" />, 
+      label: "Realizar Avaliação",
+      acao: () => setShowAvaliacaoCompleta(true)
+    },
     { icon: <Brain className="w-6 h-6" />, label: "Anamnese" },
     { icon: <Dumbbell className="w-6 h-6" />, label: "Meu Treino Atual" },
     { icon: <BarChart2 className="w-6 h-6" />, label: "Minha Evolução" },
@@ -359,12 +360,22 @@ export default function AlunosDashboard() {
         </Card>
       </div>
       {/* Card Minhas Avaliações em destaque abaixo (único) */}
-      <div className="mt-4 flex md:justify-start justify-center">
+      <div className="mt-4 flex md:justify-start justify-center" data-section="avaliacoes">
         <div className="w-full md:w-1/3">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 w-full">
-                <ClipboardList className="h-5 w-5" /> Minhas Avaliações
+              <CardTitle className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5" /> Minhas Avaliações
+                </div>
+                <Button 
+                  onClick={() => setShowAvaliacaoCompleta(true)}
+                  size="sm"
+                  className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
+                >
+                  <Play className="h-4 w-4" />
+                  Iniciar Avaliação
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -383,7 +394,9 @@ export default function AlunosDashboard() {
             className="flex flex-col items-center gap-1 py-6"
             aria-label={a.label}
             onClick={() => {
-              if (a.label === "Anamnese") {
+              if (a.acao) {
+                a.acao();
+              } else if (a.label === "Anamnese") {
                 setShowAvaliacaoCompleta(true);
               }
             }}
@@ -400,103 +413,16 @@ export default function AlunosDashboard() {
         onSuccess={handleAvaliacaoSuccess}
       />
       {/* Modal de detalhes da avaliação */}
-      <ModalPadrao
-        open={!!avaliacaoSelecionada}
-        onClose={() => setAvaliacaoSelecionada(null)}
-        title="Detalhes da Avaliação"
-        description={avaliacaoSelecionada ? `Avaliação de ${avaliacaoSelecionada.tipo} realizada em ${new Date(avaliacaoSelecionada.data).toLocaleDateString('pt-BR')}` : ""}
-        maxWidth="xl"
-      >
-        {avaliacaoSelecionada && (
-          <>
-            {/* Card com informações gerais */}
-            <Card className="border-gray-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  Informações Gerais
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Activity className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Tipo</p>
-                      <p className="text-sm text-gray-600 capitalize">{avaliacaoSelecionada.tipo}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Data</p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(avaliacaoSelecionada.data).toLocaleDateString('pt-BR')}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    {avaliacaoSelecionada.status === 'concluido' ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : avaliacaoSelecionada.status === 'pendente' ? (
-                      <Clock className="h-4 w-4 text-yellow-500" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
-                    )}
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Status</p>
-                      <p className="text-sm text-gray-600 capitalize">{avaliacaoSelecionada.status}</p>
-                    </div>
-                  </div>
-                  
-                  {avaliacaoSelecionada.objetivo && (
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <Target className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Objetivo</p>
-                        <p className="text-sm text-gray-600">{avaliacaoSelecionada.objetivo}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Card com resultado detalhado */}
-            {avaliacaoSelecionada.resultado &&
-              typeof avaliacaoSelecionada.resultado === "object" &&
-              !Array.isArray(avaliacaoSelecionada.resultado) && (
-                <Card className="border-gray-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <BarChart2 className="h-5 w-5 text-blue-600" />
-                      Conteúdo da Avaliação
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <ResultadoAvaliacao
-                      resultado={
-                        typeof avaliacaoSelecionada.resultado === "string"
-                          ? (JSON.parse(
-                              avaliacaoSelecionada.resultado
-                            ) as ResultadoAvaliacaoProps["resultado"])
-                          : (avaliacaoSelecionada.resultado as ResultadoAvaliacaoProps["resultado"])
-                      }
-                      inModal={true}
-                      generoUsuario={normalizarGenero(profile?.genero)}
-                      tipo={avaliacaoSelecionada.tipo}
-                      objetivoClassificado={
-                        avaliacaoSelecionada.objetivoClassificado
-                      }
-                    />
-                  </CardContent>
-                </Card>
-              )}
-          </>
-        )}
-      </ModalPadrao>
+      {avaliacaoSelecionada && avaliacaoSelecionada.resultado && (
+        <ModalDetalhesAvaliacao
+          open={!!avaliacaoSelecionada}
+          onClose={() => setAvaliacaoSelecionada(null)}
+          avaliacao={{
+            ...avaliacaoSelecionada,
+            resultado: avaliacaoSelecionada.resultado
+          }}
+        />
+      )}
     </div>
   );
 }

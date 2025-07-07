@@ -10,8 +10,13 @@ import {
 } from "../utils/http-helper";
 
 const usersService = new UsersService();
+
 // Usuários
-export async function getUser(req: Request, res: Response, next: NextFunction) {
+export async function getAllUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const users = await usersService.getAllUsers();
     const response = ok(users);
@@ -298,10 +303,19 @@ export async function aprovarAvaliacaoAluno(
   next: NextFunction
 ) {
   try {
-    const avaliacaoId = req.params.id;
-    const { diasValidade = 90 } = req.body; // 90 dias por padrão se não especificado
+    // Busca o avaliacaoId tanto em params.avaliacaoId quanto em params.id
+    const avaliacaoId = req.params.avaliacaoId || req.params.id;
+    const { diasValidade = 90, validadeDias = 90 } = req.body; // aceita ambos os nomes
     
-    const avaliacao = await usersService.aprovarAvaliacao(avaliacaoId, diasValidade);
+    if (!avaliacaoId) {
+      return res.status(400).json({
+        erro: "ID da avaliação não fornecido",
+        message: "avaliacaoId é obrigatório"
+      });
+    }
+    
+    const validadeFinal = diasValidade || validadeDias;
+    const avaliacao = await usersService.aprovarAvaliacao(avaliacaoId, validadeFinal);
     const response = ok(avaliacao);
     res.status(response.statusCode).json(response.body);
   } catch (error) {
@@ -315,8 +329,16 @@ export async function reprovarAvaliacaoAluno(
   next: NextFunction
 ) {
   try {
-    const avaliacaoId = req.params.id;
+    // Busca o avaliacaoId tanto em params.avaliacaoId quanto em params.id
+    const avaliacaoId = req.params.avaliacaoId || req.params.id;
     const { motivo } = req.body; // Motivo da reprovação (opcional)
+    
+    if (!avaliacaoId) {
+      return res.status(400).json({
+        erro: "ID da avaliação não fornecido", 
+        message: "avaliacaoId é obrigatório"
+      });
+    }
     
     const avaliacao = await usersService.reprovarAvaliacao(avaliacaoId, motivo);
     const response = ok(avaliacao);

@@ -2,7 +2,7 @@ import "dotenv/config";
 import { Router, Request, Response, NextFunction } from "express";
 
 import {
-  getUser,
+  getAllUsers,
   getUserById,
   getUserStudents,
   addStudentToUser,
@@ -25,7 +25,7 @@ import {
   reprovarAvaliacaoAluno,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
-import { authenticateUser } from "./middlewares/auth-middleware";
+import { authenticateUser, requireProfessor } from "./middlewares/auth-middleware";
 
 import { avaliarCAController } from "./controllers/avaliarCA-controller";
 import { calcularMedidasController } from "./controllers/avaliacao-controller";
@@ -352,7 +352,7 @@ router.get("/metrics", authenticateUser, (req: Request, res: Response) => {
 });
 
 // Outras rotas públicas
-router.get("/users", authenticateUser, getUser);
+router.get("/users", authenticateUser, getAllUsers);
 router.get("/users/:id", authenticateUser, getUserById);
 router.post("/:userId/profile", authenticateUser, postUserProfileByUserId);
 router.get("/:userId/profile", authenticateUser, getUserProfileByUserId);
@@ -1063,12 +1063,24 @@ router.get(
 router.patch(
   "/avaliacoes/:avaliacaoId/aprovar",
   authenticateUser,
-  aprovarAvaliacaoAluno
+  async (req, res, next) => {
+    try {
+      await aprovarAvaliacaoAluno(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 router.patch(
   "/avaliacoes/:avaliacaoId/reprovar",
   authenticateUser,
-  reprovarAvaliacaoAluno
+  async (req, res, next) => {
+    try {
+      await reprovarAvaliacaoAluno(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 // Rota para autenticação
@@ -1105,8 +1117,8 @@ router.get("/dobras-cutaneas/protocolos", async (req, res, next) => {
   }
 });
 
-// Calcular dobras cutâneas sem salvar
-router.post("/dobras-cutaneas/calcular", async (req, res, next) => {
+// Calcular dobras cutâneas sem salvar (APENAS PROFESSORES)
+router.post("/dobras-cutaneas/calcular", authenticateUser, requireProfessor, async (req, res, next) => {
   try {
     await calcularDobrasCutaneas(req, res, next);
   } catch (error) {
@@ -1114,8 +1126,8 @@ router.post("/dobras-cutaneas/calcular", async (req, res, next) => {
   }
 });
 
-// Validar dados antes do cálculo
-router.post("/dobras-cutaneas/validar", async (req, res, next) => {
+// Validar dados antes do cálculo (APENAS PROFESSORES)
+router.post("/dobras-cutaneas/validar", authenticateUser, requireProfessor, async (req, res, next) => {
   try {
     await validarDadosDobrasCutaneas(req, res, next);
   } catch (error) {
@@ -1123,8 +1135,8 @@ router.post("/dobras-cutaneas/validar", async (req, res, next) => {
   }
 });
 
-// Criar nova avaliação de dobras cutâneas
-router.post("/dobras-cutaneas", authenticateUser, async (req, res, next) => {
+// Criar nova avaliação de dobras cutâneas (APENAS PROFESSORES)
+router.post("/dobras-cutaneas", authenticateUser, requireProfessor, async (req, res, next) => {
   try {
     await criarAvaliacaoDobrasCutaneas(req, res, next);
   } catch (error) {
@@ -1149,5 +1161,65 @@ router.get("/dobras-cutaneas/usuario/:userPerfilId", authenticateUser, async (re
     next(error);
   }
 });
+
+// === ROTAS GENÉRICAS PARA AVALIAÇÕES (para compatibilidade com testes) ===
+
+// Criar nova avaliação
+router.post("/avaliacoes", authenticateUser, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // Para testes de integração, redireciona para a rota padrão com userPerfilId
+    const { userPerfilId, ...dadosAvaliacao } = req.body;
+    if (!userPerfilId) {
+      res.status(400).json({ 
+        erro: "userPerfilId é obrigatório",
+        message: "userPerfilId é obrigatório para criar avaliação" 
+      });
+      return;
+    }
+    
+    // Simula o comportamento de criação de avaliação
+    (req.params as any).userPerfilId = userPerfilId;
+    req.body = dadosAvaliacao;
+    
+    await cadastrarAvaliacaoAluno(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Listar avaliações por usuário
+router.get("/avaliacoes/:userPerfilId", authenticateUser, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    await listarAvaliacoesAluno(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Atualizar status da avaliação
+router.put("/avaliacoes/:id/status", authenticateUser, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { status, motivo, diasValidade } = req.body;
+    
+    if (status === 'aprovada') {
+      (req.params as any).avaliacaoId = req.params.id;
+      req.body = { diasValidade };
+      await aprovarAvaliacaoAluno(req, res, next);
+    } else if (status === 'reprovada') {
+      (req.params as any).avaliacaoId = req.params.id;
+      req.body = { motivo };
+      await reprovarAvaliacaoAluno(req, res, next);
+    } else {
+      res.status(400).json({ 
+        erro: "Status inválido",
+        message: "Status deve ser 'aprovada' ou 'reprovada'" 
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// === FIM DAS ROTAS GENÉRICAS PARA AVALIAÇÕES ===
 
 export default router;
