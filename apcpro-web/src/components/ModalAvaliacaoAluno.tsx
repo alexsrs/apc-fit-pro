@@ -65,11 +65,11 @@ export function ModalAvaliacaoAluno({
   const { profile } = useUserProfile();
   const [etapaAtual, setEtapaAtual] = useState(0);
   const [tipoAvaliacao, setTipoAvaliacao] = useState<TipoAvaliacao>('anamnese');
-  const [erro, setErro] = useState<string>('');
-  const [carregandoDados, setCarregandoDados] = useState(false);
+  const [erro] = useState<string>('');
+  const [, setCarregandoDados] = useState(false);
 
   // Dados coletados nas etapas anteriores para evitar repetição
-  const [dadosColetados, setDadosColetados] = useState<DadosColetados>({});
+  const [, setDadosColetados] = useState<DadosColetados>({});
 
   // Estados dos modais das etapas
   const [modalTriagemOpen, setModalTriagemOpen] = useState(false);

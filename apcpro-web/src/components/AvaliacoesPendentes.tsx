@@ -499,7 +499,7 @@ export function AvaliacoesPendentes({ professorId, onAtualizacao }: AvaliacoesPe
         avaliacao={modalDetalhes.avaliacao}
         titulo="Detalhes da Avaliação Pendente"
         mostrarAcoes={true}
-        onAprovar={(avaliacao) => {
+        onAprovar={() => {
           setModalDetalhes({ open: false, avaliacao: null });
           // Converter AvaliacaoDetalhes para AvaliacaoPendente
           const avaliacaoPendente = modalDetalhes.avaliacao;
@@ -507,7 +507,7 @@ export function AvaliacoesPendentes({ professorId, onAtualizacao }: AvaliacoesPe
             setModalAprovacao({ open: true, avaliacao: avaliacaoPendente });
           }
         }}
-        onReprovar={(avaliacao) => {
+        onReprovar={() => {
           setModalDetalhes({ open: false, avaliacao: null });
           // Converter AvaliacaoDetalhes para AvaliacaoPendente
           const avaliacaoPendente = modalDetalhes.avaliacao;

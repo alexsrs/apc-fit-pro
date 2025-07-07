@@ -12,6 +12,9 @@ import {
   createUserGroup,
   updateUserGroup,
   deleteUserGroup,
+  addStudentToGroup,
+  removeStudentFromGroup,
+  getGroupStudents,
   getUserProfileByUserId,
   postUserProfileByUserId,
   getProfessores,
@@ -634,6 +637,11 @@ router.post("/users/:id/grupos", authenticateUser, createUserGroup);
 router.put("/users/:id/grupos/:groupId", authenticateUser, updateUserGroup);
 router.delete("/users/:id/grupos/:groupId", authenticateUser, deleteUserGroup);
 
+// Rotas para gerenciar alunos nos grupos
+router.post("/users/:id/grupos/:groupId/alunos/:studentId", authenticateUser, addStudentToGroup);
+router.delete("/users/:id/grupos/:groupId/alunos/:studentId", authenticateUser, removeStudentFromGroup);
+router.get("/users/:id/grupos/:groupId/alunos", authenticateUser, getGroupStudents);
+
 /**
  * @swagger
  * /api/users/{id}/alunos:
@@ -1221,5 +1229,32 @@ router.put("/avaliacoes/:id/status", authenticateUser, async (req: Request, res:
 });
 
 // === FIM DAS ROTAS GENÉRICAS PARA AVALIAÇÕES ===
+
+// Endpoint temporário para debug de grupos
+router.get('/debug/grupos', async (req: Request, res: Response) => {
+  try {
+    const { DebugGrupos } = await import('./utils/debug-grupos');
+    
+    console.log('🔍 Iniciando debug de grupos...');
+    
+    // Verificar estado atual
+    const estado = await DebugGrupos.verificarEstadoAtual();
+    
+    // Criar dados de teste se necessário
+    await DebugGrupos.criarDadosTeste();
+    
+    res.json({
+      success: true,
+      message: 'Debug executado com sucesso. Verifique o console do servidor.',
+      estado
+    });
+  } catch (error) {
+    console.error('Erro no debug:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
 
 export default router;

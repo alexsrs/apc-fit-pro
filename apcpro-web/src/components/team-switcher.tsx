@@ -18,10 +18,15 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import apiClient from "@/lib/api-client";
 
 type Team = {
+  id?: string;
   name: string;
   logo: React.ForwardRefExoticComponent<
     Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
@@ -29,26 +34,103 @@ type Team = {
   plan: string;
 };
 
-export function TeamSwitcher({ teams }: { teams: Team[] }) {
+type Grupo = {
+  id: string;
+  nome: string;
+  descricao?: string;
+  criadoEm: string;
+};
+
+interface TeamSwitcherProps {
+  teams?: Team[];
+  onTeamChange?: (groupId: string | null) => void;
+}
+
+export function TeamSwitcher({ teams = [], onTeamChange }: TeamSwitcherProps) {
   const { isMobile } = useSidebar();
   const { profile } = useUserProfile();
-  const defaultTeam = {
+  
+  const defaultTeam: Team = {
+    id: "all",
     name: "Todos os alunos",
     logo: Users,
     plan: "Todos",
   };
-  const [activeTeam, setActiveTeam] = React.useState(defaultTeam);
+  
+  const [activeTeam, setActiveTeam] = React.useState<Team>(defaultTeam);
   const [showModal, setShowModal] = React.useState(false);
   const [newTeamName, setNewTeamName] = React.useState("");
-  const [teamsState, setTeamsState] = React.useState<typeof teams>(teams);
+  const [newTeamDescription, setNewTeamDescription] = React.useState("");
+  const [grupos, setGrupos] = React.useState<Grupo[]>([]);
+  const [loading, setLoading] = React.useState(false);
+
+  // Carregar grupos do backend
+  const carregarGrupos = React.useCallback(async () => {
+    if (!profile?.userId) return;
+    
+    try {
+      setLoading(true);
+      const response = await apiClient.get(`/api/users/${profile.userId}/grupos`);
+      setGrupos(response.data || []);
+    } catch (error) {
+      console.error("Erro ao carregar grupos:", error);
+      setGrupos([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [profile?.userId]);
 
   React.useEffect(() => {
-    setTeamsState(teams);
-  }, [teams]);
+    carregarGrupos();
+  }, [carregarGrupos]);
+
+  const handleTeamChange = (team: Team) => {
+    setActiveTeam(team);
+    // Notifica o componente pai sobre a mudança
+    if (onTeamChange) {
+      onTeamChange(team.id === "all" ? null : team.id || null);
+    }
+  };
+
+  const criarGrupo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newTeamName.trim()) {
+      alert("Digite um nome para o grupo");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await apiClient.post(
+        `/api/users/${profile?.userId}/grupos`,
+        { 
+          nome: newTeamName.trim(),
+          descricao: newTeamDescription.trim() || undefined
+        }
+      );
+      
+      if (response.status === 200 || response.status === 201) {
+        await carregarGrupos(); // Recarrega a lista de grupos
+        setShowModal(false);
+        setNewTeamName("");
+        setNewTeamDescription("");
+      } else {
+        const error = response.data || {};
+        alert(error.message || "Erro ao criar grupo");
+      }
+    } catch (error) {
+      console.error("Erro ao criar grupo:", error);
+      alert("Erro de conexão com a API");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!activeTeam) {
     return null;
   }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -61,13 +143,9 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                 <activeTeam.logo className="size-4" />
               </div>
-              {/* AQUI: Adiciona a classe condicional para esconder texto quando recolhido */}
               <div className="grid flex-1 text-left text-sm leading-tight group-[sidebar-wrapper-data-collapsible=icon]:sr-only">
                 <span className="truncate font-medium">
-                  {profile?.role
-                    ? profile.role.charAt(0).toUpperCase() +
-                      profile.role.slice(1)
-                    : ""}
+                  {activeTeam.name}
                 </span>
                 <span className="truncate text-xs">{activeTeam.plan}</span>
               </div>
@@ -83,114 +161,112 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
             <DropdownMenuLabel className="text-muted-foreground text-xs">
               Grupos / Equipes
             </DropdownMenuLabel>
+            
+            {/* Opção "Todos os alunos" */}
             <DropdownMenuItem
-              key="all-students"
-              onClick={() =>
-                setActiveTeam({
-                  name: "Todos os alunos",
-                  logo: Users,
-                  plan: "Todos",
-                })
-              }
+              onClick={() => handleTeamChange(defaultTeam)}
               className="gap-2 p-2"
             >
               <div className="flex size-6 items-center justify-center rounded-md border">
-                <Plus className="size-3.5 shrink-0" />
+                <Users className="size-3.5 shrink-0" />
               </div>
               Todos os alunos
               <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
             </DropdownMenuItem>
-            {teamsState.map((team, index) => (
+            
+            {/* Grupos carregados do backend */}
+            {grupos.map((grupo, index) => (
               <DropdownMenuItem
-                key={team.name + index}
-                onClick={() => setActiveTeam(team)}
+                key={grupo.id}
+                onClick={() => handleTeamChange({
+                  id: grupo.id,
+                  name: grupo.nome,
+                  logo: Users,
+                  plan: grupo.descricao || "Grupo personalizado"
+                })}
+                className="gap-2 p-2"
+              >
+                <div className="flex size-6 items-center justify-center rounded-md border">
+                  <Users className="size-3.5 shrink-0" />
+                </div>
+                {grupo.nome}
+                <DropdownMenuShortcut>⌘{index + 2}</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            ))}
+            
+            {/* Teams legados (se houver) */}
+            {teams.map((team, index) => (
+              <DropdownMenuItem
+                key={`legacy-${index}`}
+                onClick={() => handleTeamChange(team)}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-md border">
                   <team.logo className="size-3.5 shrink-0" />
                 </div>
-                {team.plan}
-                <DropdownMenuShortcut>⌘{index + 2}</DropdownMenuShortcut>
+                {team.name}
+                <DropdownMenuShortcut>⌘{grupos.length + index + 2}</DropdownMenuShortcut>
               </DropdownMenuItem>
             ))}
+            
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="gap-2 p-2 cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowModal(true);
-              }}
+              onClick={() => setShowModal(true)}
+              disabled={loading}
             >
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
               </div>
-              <div className="text-muted-foreground font-medium">Add team</div>
+              <div className="text-muted-foreground font-medium">
+                {loading ? "Carregando..." : "Criar grupo"}
+              </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {showModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            onClick={() => setShowModal(false)}
-          >
-            <div
-              className="bg-white rounded-lg p-6 w-full max-w-sm shadow-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-lg font-semibold mb-4">Novo Grupo</h2>
-              <form
-                onSubmit={async (e: React.FormEvent<HTMLFormElement>) => {
-                  e.preventDefault();
-                  if (!newTeamName.trim()) {
-                    alert("Digite um nome para o grupo");
-                    return;
-                  }
-                  try {
-                    const response = await apiClient.post(
-                      `/api/users/${profile?.id}/grupos`,
-                      { nome: newTeamName }
-                    );
-                    if (response.status === 200 || response.status === 201) {
-                      setShowModal(false);
-                      setNewTeamName("");
-                      // Opcional: recarregar a página ou atualizar a lista de grupos
-                    } else {
-                      const error = response.data || {};
-                      alert(error.message || "Erro ao criar grupo");
-                    }
-                  } catch {
-                    alert("Erro de conexão com a API");
-                  }
-                }}
-              >
-                <input
-                  type="text"
-                  className="w-full border rounded px-3 py-2 mb-4"
-                  placeholder="Nome do grupo"
+        
+        {/* Modal para criar novo grupo */}
+        <Dialog open={showModal} onOpenChange={setShowModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Criar Novo Grupo</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={criarGrupo} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome do grupo *</Label>
+                <Input
+                  id="nome"
+                  placeholder="Ex: Equipe de Vôlei"
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  autoFocus
                   required
                 />
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    className="px-3 py-2 rounded bg-gray-200 text-gray-700"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-3 py-2 rounded bg-primary text-white"
-                  >
-                    Criar
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="descricao">Descrição (opcional)</Label>
+                <Input
+                  id="descricao"
+                  placeholder="Descrição do grupo..."
+                  value={newTeamDescription}
+                  onChange={(e) => setNewTeamDescription(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowModal(false)}
+                  disabled={loading}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={loading || !newTeamName.trim()}>
+                  {loading ? "Criando..." : "Criar"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </SidebarMenuItem>
     </SidebarMenu>
   );

@@ -1,5 +1,4 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
 import {
   Ruler,
   Weight,
@@ -324,29 +323,4 @@ function formatarNomeLocal(nome: string): string {
   };
 
   return nomes[nome.toLowerCase()] || nome.charAt(0).toUpperCase() + nome.slice(1);
-}
-
-/**
- * Retorna a cor do badge baseada na classificação
- */
-function getClassificacaoColor(classificacao: string): string {
-  const classificacaoLower = classificacao.toLowerCase();
-
-  if (classificacaoLower.includes("normal") || classificacaoLower.includes("adequado")) {
-    return "bg-green-100 text-green-800 border-green-200";
-  }
-  if (classificacaoLower.includes("baixo") || classificacaoLower.includes("abaixo")) {
-    return "bg-blue-100 text-blue-800 border-blue-200";
-  }
-  if (classificacaoLower.includes("elevado") || classificacaoLower.includes("sobrepeso")) {
-    return "bg-yellow-100 text-yellow-800 border-yellow-200";
-  }
-  if (classificacaoLower.includes("alto") || classificacaoLower.includes("risco")) {
-    return "bg-orange-100 text-orange-800 border-orange-200";
-  }
-  if (classificacaoLower.includes("muito alto") || classificacaoLower.includes("obesidade")) {
-    return "bg-red-100 text-red-800 border-red-200";
-  }
-
-  return "bg-gray-100 text-gray-800 border-gray-200";
 }

@@ -229,7 +229,7 @@ export function ModalAvaliacaoCompleta({
     } finally {
       setCarregandoDados(false);
     }
-  }, [userPerfilId, profile?.role]);
+  }, [userPerfilId]);
 
   // Função para aprovar automaticamente a última avaliação criada
   const aprovarUltimaAvaliacao = async (tipoAvaliacao: string) => {
@@ -572,7 +572,6 @@ export function ModalAvaliacaoCompleta({
           <MedidasCorporaisInline 
             userPerfilId={userPerfilId}
             dadosColetados={dadosColetados}
-            onSuccess={handleMedidasSuccess}
             completed={!!dadosMedidas}
             onOpenMedidasModal={() => setModalMedidasCorporaisOpen(true)}
           />
@@ -864,7 +863,6 @@ export function ModalAvaliacaoCompleta({
 interface MedidasCorporaisInlineProps {
   userPerfilId: string;
   dadosColetados: DadosColetados;
-  onSuccess: () => void;
   completed: boolean;
   onOpenMedidasModal: () => void;
 }
@@ -872,7 +870,6 @@ interface MedidasCorporaisInlineProps {
 function MedidasCorporaisInline({
   userPerfilId,
   dadosColetados,
-  onSuccess,
   completed,
   onOpenMedidasModal
 }: MedidasCorporaisInlineProps) {

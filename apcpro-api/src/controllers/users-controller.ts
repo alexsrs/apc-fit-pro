@@ -389,3 +389,65 @@ export async function getEvolucaoFisica(
     next(error);
   }
 }
+
+// Controladores para gerenciar alunos nos grupos
+export async function addStudentToGroup(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    console.log('[Controller] addStudentToGroup - Parâmetros da URL:', req.params);
+    console.log('[Controller] addStudentToGroup - Headers:', {
+      authorization: req.headers.authorization ? 'Bearer token presente' : 'Token ausente',
+      contentType: req.headers['content-type']
+    });
+    
+    const { id: userId, groupId, studentId } = req.params;
+    
+    console.log('[Controller] addStudentToGroup - Parâmetros extraídos:', { userId, groupId, studentId });
+    
+    const resultado = await usersService.addStudentToGroup(userId, groupId, studentId);
+    console.log('[Controller] addStudentToGroup - Resultado do service:', resultado);
+    
+    const response = ok(resultado);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    console.error('[Controller] addStudentToGroup - Erro:', error);
+    next(error);
+  }
+}
+
+export async function removeStudentFromGroup(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id: userId, groupId, studentId } = req.params;
+    
+    await usersService.removeStudentFromGroup(userId, groupId, studentId);
+    
+    const response = noContent();
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getGroupStudents(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id: userId, groupId } = req.params;
+    
+    const alunos = await usersService.getGroupStudents(userId, groupId);
+    
+    const response = ok(alunos);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    next(error);
+  }
+}

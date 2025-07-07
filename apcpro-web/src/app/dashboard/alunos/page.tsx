@@ -6,7 +6,6 @@ import { useUserProfile } from "@/contexts/UserProfileContext";
 import Loading from "@/components/ui/Loading";
 import { useAvaliacaoValida } from "@/hooks/useAvaliacaoValida";
 import { ModalAvaliacaoAluno } from "@/components/ModalAvaliacaoAluno";
-import { ModalPadrao } from "@/components/ui/ModalPadrao";
 import {
   CalendarCheck,
   Dumbbell,
@@ -36,12 +35,7 @@ import {
   AlertasPersistente,
   AlertasPersistenteHandle,
 } from "@/app/components/AlertasPersistente";
-import {
-  ResultadoAvaliacao,
-  type ResultadoAvaliacaoProps,
-} from "@/components/ResultadoAvaliacao";
 import { ModalDetalhesAvaliacao } from "@/components/ModalDetalhesAvaliacao";
-import { normalizarGenero } from "@/utils/normalizar-genero";
 
 export default function AlunosDashboard() {
   const { profile } = useUserProfile();

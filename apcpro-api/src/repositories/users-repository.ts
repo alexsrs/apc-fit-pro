@@ -102,6 +102,12 @@ export class UserRepositoryClass {
     });
   }
 
+  async getUserProfileByUserId(userId: string): Promise<UserPerfil | null> {
+    return prisma.userPerfil.findFirst({
+      where: { userId: userId },
+    });
+  }
+
   // Buscar alunos relacionados a um usuário (professor)
   async getUserStudents(userId: string) {
     return prisma.userPerfil.findMany({
@@ -145,14 +151,24 @@ export class UserRepositoryClass {
 
   // Métodos para grupos
   async getUserGroups(userId: string): Promise<Grupo[]> {
+    // Primeiro buscar o UserPerfil.id baseado no User.id
+    const userPerfil = await prisma.userPerfil.findUnique({
+      where: { userId: userId },
+      select: { id: true }
+    });
+
+    if (!userPerfil) {
+      return []; // Retorna array vazio se não encontrar o perfil
+    }
+
     return prisma.grupo.findMany({
-      where: { criadoPorId: userId },
+      where: { criadoPorId: userPerfil.id },
       select: {
         id: true,
         nome: true,
         criadoPorId: true,
-        criadoEm: true, // Certifique-se de incluir criadoEm
-        atualizadoEm: true, // Certifique-se de incluir atualizadoEm
+        criadoEm: true,
+        atualizadoEm: true,
         membros: {
           select: {
             id: true,
@@ -166,20 +182,40 @@ export class UserRepositoryClass {
   }
 
   async createUserGroup(userId: string, groupData: any) {
+    // Primeiro buscar o UserPerfil.id baseado no User.id
+    const userPerfil = await prisma.userPerfil.findUnique({
+      where: { userId: userId },
+      select: { id: true }
+    });
+
+    if (!userPerfil) {
+      throw new Error(`UserPerfil não encontrado para userId: ${userId}`);
+    }
+
     return prisma.grupo.create({
       data: {
         ...groupData,
-        criadoPorId: userId,
+        criadoPorId: userPerfil.id,
       },
     });
   }
 
   async updateUserGroup(userId: string, groupId: string, groupData: any) {
+    // Primeiro buscar o UserPerfil.id baseado no User.id
+    const userPerfil = await prisma.userPerfil.findUnique({
+      where: { userId: userId },
+      select: { id: true }
+    });
+
+    if (!userPerfil) {
+      throw new Error(`UserPerfil não encontrado para userId: ${userId}`);
+    }
+
     return prisma.grupo.update({
       where: { id: groupId },
       data: {
         ...groupData,
-        criadoPorId: userId,
+        criadoPorId: userPerfil.id,
       },
     });
   }
@@ -330,6 +366,190 @@ export class UserRepositoryClass {
     return prisma.avaliacao.findUnique({
       where: { id: avaliacaoId },
     });
+  }
+
+  async getUserGroupById(userId: string, groupId: string) {
+    return prisma.grupo.findFirst({
+      where: {
+        id: groupId,
+        criadoPorId: userId,
+      },
+      include: {
+        membros: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+  }
+
+  async addStudentToGroup(groupId: string, studentId: string) {
+    console.log('[Repository] addStudentToGroup - Iniciando:', { groupId, studentId });
+    
+    try {
+      // Verificar se o grupo existe
+      const group = await prisma.grupo.findUnique({
+        where: { id: groupId },
+        include: { membros: true }
+      });
+      
+      if (!group) {
+        throw new Error(`Grupo não encontrado: ${groupId}`);
+      }
+      
+      // Verificar se o aluno existe
+      const student = await prisma.userPerfil.findUnique({
+        where: { id: studentId },
+        include: { user: true }
+      });
+      
+      if (!student) {
+        throw new Error(`Aluno não encontrado: ${studentId}`);
+      }
+      
+      console.log('[Repository] addStudentToGroup - Grupo encontrado:', group.nome);
+      console.log('[Repository] addStudentToGroup - Aluno encontrado:', student.user.name);
+      console.log('[Repository] addStudentToGroup - Membros atuais:', group.membros.length);
+      
+      // Verificar se já está no grupo
+      const jaEstaNoGrupo = group.membros.some(m => m.id === studentId);
+      if (jaEstaNoGrupo) {
+        console.log('[Repository] addStudentToGroup - Aluno já está no grupo');
+        return student;
+      }
+      
+      // Adicionar ao grupo usando o relacionamento many-to-many
+      const updatedGroup = await prisma.grupo.update({
+        where: { id: groupId },
+        data: {
+          membros: {
+            connect: { id: studentId }
+          }
+        },
+        include: {
+          membros: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      console.log('[Repository] addStudentToGroup - Sucesso! Novos membros:', updatedGroup.membros.length);
+      console.log('[Repository] addStudentToGroup - Membros:', updatedGroup.membros.map(m => m.user.name));
+      
+      // Retornar o aluno atualizado
+      const updatedStudent = await prisma.userPerfil.findUnique({
+        where: { id: studentId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          grupos: true
+        }
+      });
+      
+      return updatedStudent;
+      
+    } catch (error) {
+      console.error('[Repository] addStudentToGroup - Erro:', error);
+      throw error;
+    }
+  }
+
+  async removeStudentFromGroup(groupId: string, studentId: string) {
+    console.log('[Repository] removeStudentFromGroup - Iniciando:', { groupId, studentId });
+    
+    try {
+      // Remover do grupo usando o relacionamento many-to-many
+      const updatedGroup = await prisma.grupo.update({
+        where: { id: groupId },
+        data: {
+          membros: {
+            disconnect: { id: studentId }
+          }
+        },
+        include: {
+          membros: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      console.log('[Repository] removeStudentFromGroup - Sucesso! Membros restantes:', updatedGroup.membros.length);
+      
+      // Retornar o aluno atualizado
+      const updatedStudent = await prisma.userPerfil.findUnique({
+        where: { id: studentId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          grupos: true
+        }
+      });
+      
+      return updatedStudent;
+      
+    } catch (error) {
+      console.error('[Repository] removeStudentFromGroup - Erro:', error);
+      throw error;
+    }
+  }
+
+  async getGroupStudents(groupId: string) {
+    console.log('[Repository] getGroupStudents - Buscando membros do grupo:', groupId);
+    
+    // Buscar o grupo com seus membros usando o relacionamento many-to-many
+    const group = await prisma.grupo.findUnique({
+      where: { id: groupId },
+      include: {
+        membros: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    if (!group) {
+      console.log('[Repository] getGroupStudents - Grupo não encontrado');
+      return [];
+    }
+    
+    console.log('[Repository] getGroupStudents - Membros encontrados:', group.membros.length);
+    
+    return group.membros;
   }
 }
 
