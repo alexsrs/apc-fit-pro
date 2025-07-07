@@ -9,7 +9,7 @@ import {
 } from "@/app/components/AlertasPersistenteProfessor";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import Loading from "@/components/ui/Loading";
+import Loading, { LoadingSkeleton } from "@/components/ui/Loading";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,8 @@ export default function ProfessoresDashboard() {
   const router = useRouter();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loadingAlunos, setLoadingAlunos] = useState(true);
+  const [loadingMetricas, setLoadingMetricas] = useState(true);
+  const [loadingAlertas, setLoadingAlertas] = useState(true);
   const [tab, setTab] = useState<string>("ativos");
   const [busca, setBusca] = useState("");
   const [modalConviteOpen, setModalConviteOpen] = useState(false);
@@ -98,7 +100,11 @@ export default function ProfessoresDashboard() {
     }
     if (profile && profile.id) {
       setLoadingAlunos(true);
-      // Carregar alunos e grupos em paralelo
+      setLoadingMetricas(true);
+      setLoadingAlertas(true);
+      
+      // Simular carregamentos independentes para melhor UX
+      // Carregar alunos e grupos
       Promise.all([
         apiClient.get(`/api/users/${profile.userId}/alunos`),
         apiClient.get(`/api/users/${profile.userId}/grupos`)
@@ -113,6 +119,12 @@ export default function ProfessoresDashboard() {
           setGrupos([]);
         })
         .finally(() => setLoadingAlunos(false));
+
+      // Simular carregamento de métricas (mais rápido)
+      setTimeout(() => setLoadingMetricas(false), 800);
+      
+      // Simular carregamento de alertas (mais lento)
+      setTimeout(() => setLoadingAlertas(false), 1200);
     }
   }, [profile, router]);
 
@@ -182,58 +194,69 @@ export default function ProfessoresDashboard() {
     <div className="p-4 space-y-6">
       {/* Adicione aqui, logo após o carregamento do perfil */}
 
-      {/* Cards de métricas originais */}
+      {/* Cards de métricas com skeleton loading */}
       <div className="grid gap-4 md:grid-cols-4 mt-2">
-        <MetricCard
-          icon={<Users className="w-5 h-5" aria-hidden="true" />}
-          title="Total de Alunos"
-          value={alunos.length}
-          indicator={
-            <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
-          }
-          indicatorColor="text-green-600"
-          indicatorText="+5%"
-          subtitle="Crescimento mensal"
-          description="Total de alunos cadastrados"
-        />
-        <MetricCard
-          icon={<UserRoundPlus className="w-5 h-5" aria-hidden="true" />}
-          title="Novos Alunos"
-          value={3}
-          indicator={<ArrowDown className="w-5 h-5 text-red-600" />}
-          indicatorColor="text-red-600"
-          indicatorText="-10%"
-          subtitle="Este mês"
-          description="Novos cadastros no período"
-        />
-        <MetricCard
-          icon={<CalendarSync className="w-5 h-5" aria-hidden="true" />}
-          title="Alunos Ativos"
-          value={alunos.length}
-          indicator={
-            <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
-          }
-          indicatorColor="text-green-600"
-          indicatorText="+2%"
-          subtitle="Retenção alta"
-          description="Alunos com avaliações recentes"
-        />
-        <MetricCard
-          icon={<CalendarCheck className="w-5 h-5" aria-hidden="true" />}
-          title="Treinos concluídos"
-          value={139}
-          indicator={
-            <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
-          }
-          indicatorColor="text-green-600"
-          indicatorText="+4.5%"
-          subtitle="Desempenho estável"
-          description="Meta de crescimento atingida"
-        />
+        {loadingMetricas ? (
+          <>
+            <LoadingSkeleton variant="card" />
+            <LoadingSkeleton variant="card" />
+            <LoadingSkeleton variant="card" />
+            <LoadingSkeleton variant="card" />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              icon={<Users className="w-5 h-5" aria-hidden="true" />}
+              title="Total de Alunos"
+              value={alunos.length}
+              indicator={
+                <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
+              }
+              indicatorColor="text-green-600"
+              indicatorText="+5%"
+              subtitle="Crescimento mensal"
+              description="Total de alunos cadastrados"
+            />
+            <MetricCard
+              icon={<UserRoundPlus className="w-5 h-5" aria-hidden="true" />}
+              title="Novos Alunos"
+              value={3}
+              indicator={<ArrowDown className="w-5 h-5 text-red-600" />}
+              indicatorColor="text-red-600"
+              indicatorText="-10%"
+              subtitle="Este mês"
+              description="Novos cadastros no período"
+            />
+            <MetricCard
+              icon={<CalendarSync className="w-5 h-5" aria-hidden="true" />}
+              title="Alunos Ativos"
+              value={alunos.length}
+              indicator={
+                <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
+              }
+              indicatorColor="text-green-600"
+              indicatorText="+2%"
+              subtitle="Retenção alta"
+              description="Alunos com avaliações recentes"
+            />
+            <MetricCard
+              icon={<CalendarCheck className="w-5 h-5" aria-hidden="true" />}
+              title="Treinos concluídos"
+              value={139}
+              indicator={
+                <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
+              }
+              indicatorColor="text-green-600"
+              indicatorText="+4.5%"
+              subtitle="Desempenho estável"
+              description="Meta de crescimento atingida"
+            />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
-        {/* Seção de alertas inteligentes (mensageria via backend REST/polling) */}
+        {/* Seção de alertas inteligentes com skeleton */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -242,10 +265,18 @@ export default function ProfessoresDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <AlertasPersistenteProfessor
-              ref={alertasRef}
-              userId={profile?.userId ?? ""}
-            />
+            {loadingAlertas ? (
+              <div className="space-y-3">
+                <LoadingSkeleton variant="list" />
+                <LoadingSkeleton variant="list" />
+                <LoadingSkeleton variant="list" />
+              </div>
+            ) : (
+              <AlertasPersistenteProfessor
+                ref={alertasRef}
+                userId={profile?.userId ?? ""}
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -308,7 +339,14 @@ export default function ProfessoresDashboard() {
         </TabsList>
         <TabsContent value="ativos">
           {loadingAlunos ? (
-            <Loading />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+            </div>
           ) : alunosFiltrados.length === 0 ? (
             <div className="flex items-center justify-center h-32">
               <span className="text-lg text-gray-500">

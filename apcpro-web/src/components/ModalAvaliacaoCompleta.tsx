@@ -11,6 +11,7 @@ import { ModalPadrao } from '@/components/ui/ModalPadrao';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LoadingInline, LoadingSkeleton } from '@/components/ui/Loading';
 import { 
   CheckCircle, 
   ArrowRight, 
@@ -617,7 +618,7 @@ export function ModalAvaliacaoCompleta({
         {/* Loading de dados existentes */}
         {carregandoDados && (
           <div className="flex items-center gap-2 text-blue-600">
-            <RefreshCw className="h-4 w-4 animate-spin" />
+            <LoadingInline color="blue" />
             <span>Carregando avaliações existentes...</span>
           </div>
         )}

@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { ChevronsUpDown, Plus, Users, LucideProps } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LoadingInline, LoadingSkeleton } from "@/components/ui/Loading";
 
 import {
   DropdownMenu,
@@ -19,7 +21,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -218,8 +219,15 @@ export function TeamSwitcher({ teams = [], onTeamChange }: TeamSwitcherProps) {
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
               </div>
-              <div className="text-muted-foreground font-medium">
-                {loading ? "Carregando..." : "Criar grupo"}
+              <div className="text-muted-foreground font-medium flex items-center gap-2">
+                {loading ? (
+                  <>
+                    <LoadingInline size="sm" />
+                    <span>Carregando...</span>
+                  </>
+                ) : (
+                  "Criar grupo"
+                )}
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -261,7 +269,14 @@ export function TeamSwitcher({ teams = [], onTeamChange }: TeamSwitcherProps) {
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={loading || !newTeamName.trim()}>
-                  {loading ? "Criando..." : "Criar"}
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <LoadingInline size="sm" />
+                      <span>Criando...</span>
+                    </div>
+                  ) : (
+                    "Criar"
+                  )}
                 </Button>
               </div>
             </form>

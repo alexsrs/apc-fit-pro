@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { Input } from "../components/ui/input";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LoadingButton } from '@/components/ui/Loading';
 
 import {
   Tooltip,
@@ -7,9 +13,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../components/ui/tooltip";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
 import apiClient from "../lib/api-client";
 import "../styles/dobras-cutaneas.css";
 
@@ -537,7 +540,13 @@ export function DobrasCutaneas({ peso, idade, sexo, onResultados, className }: D
                     validarDobras() ? 'bg-green-600 hover:bg-green-700 animate-pulse' : ''
                   }`}
                 >
-                  {loading ? "Calculando..." : validarDobras() ? "✓ Calcular Protocolos" : "Calcular Protocolos"}
+                  {loading ? (
+                    <LoadingButton text="Calculando protocolos..." size="sm" />
+                  ) : validarDobras() ? (
+                    "✓ Calcular Protocolos"
+                  ) : (
+                    "Calcular Protocolos"
+                  )}
                 </Button>
               </div>
             </div>

@@ -472,17 +472,14 @@ export class UserRepositoryClass {
     });
   }
 
-  async getUserGroupById(userId: string, groupId: string) {
-    // Buscar o perfil do professor (userId é User.id, precisamos do UserPerfil.id)
-    const professorPerfil = await this.getUserProfileByUserId(userId);
-    if (!professorPerfil || professorPerfil.role !== 'professor') {
-      return null;
-    }
-
+  async getUserGroupById(perfilId: string, groupId: string) {
+    // Receber diretamente o perfilId (UserPerfil.id) para buscar grupos
+    console.log('[Repository] getUserGroupById - perfilId:', perfilId, 'groupId:', groupId);
+    
     return prisma.grupo.findFirst({
       where: {
         id: groupId,
-        criadoPorId: professorPerfil.id, // usar o ID do perfil, não do user
+        criadoPorId: perfilId, // usar o ID do perfil diretamente
       },
       include: {
         membros: {

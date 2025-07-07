@@ -32,7 +32,7 @@ export default function DashboardLayout({
   }, [session, status, router]);
 
   if (status === "loading") {
-    return <Loading />;
+    return <Loading mode="fullscreen" text="Inicializando sessão..." />;
   }
 
   return (

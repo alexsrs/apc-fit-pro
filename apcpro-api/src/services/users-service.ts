@@ -316,8 +316,14 @@ export class UsersService {
         })
         .parse(body);
 
+      // Buscar o perfil do professor
+      const professorPerfil = await this.userRepository.getUserProfileByUserId(userId);
+      if (!professorPerfil || professorPerfil.role !== 'professor') {
+        throw new Error("Professor não encontrado");
+      }
+
       // Verificar se o grupo pertence ao usuário
-      const grupoExistente = await this.userRepository.getUserGroupById(userId, groupId);
+      const grupoExistente = await this.userRepository.getUserGroupById(professorPerfil.id, groupId);
       if (!grupoExistente) {
         throw new Error("Grupo não encontrado ou não pertence ao usuário");
       }
@@ -333,8 +339,14 @@ export class UsersService {
 
   async deleteUserGroup(userId: string, groupId: string) {
     try {
+      // Buscar o perfil do professor
+      const professorPerfil = await this.userRepository.getUserProfileByUserId(userId);
+      if (!professorPerfil || professorPerfil.role !== 'professor') {
+        throw new Error("Professor não encontrado");
+      }
+
       // Verificar se o grupo pertence ao usuário
-      const grupoExistente = await this.userRepository.getUserGroupById(userId, groupId);
+      const grupoExistente = await this.userRepository.getUserGroupById(professorPerfil.id, groupId);
       if (!grupoExistente) {
         throw new Error("Grupo não encontrado ou não pertence ao usuário");
       }
@@ -432,6 +444,7 @@ export class UsersService {
       // Verificar se o grupo pertence ao professor
       const grupo = await this.userRepository.getUserGroupById(professorPerfil.id, groupId);
       console.log('[removeStudentFromGroup] Grupo encontrado:', grupo?.id, grupo?.nome);
+      console.log('[removeStudentFromGroup] Grupo criadoPorId:', grupo?.criadoPorId, 'esperado:', professorPerfil.id);
       
       if (!grupo) {
         throw new Error("Grupo não encontrado ou não pertence ao usuário");
