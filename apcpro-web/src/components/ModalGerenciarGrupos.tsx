@@ -28,15 +28,20 @@ import {
   X
 } from "lucide-react";
 import apiClient from "@/lib/api-client";
+import { getInitials, formatDisplayName, formatDisplayEmail } from "@/utils/name-utils";
 
 type Aluno = {
   id: string;
-  name: string;
-  email: string;
+  name?: string | null;
+  email?: string | null;
   image?: string | null;
   telefone?: string;
   genero?: string;
   dataNascimento?: string | null;
+  grupos?: Array<{
+    id: string;
+    nome: string;
+  }>;
 };
 
 type Grupo = {
@@ -199,21 +204,35 @@ export function ModalGerenciarGrupos({
     
     setLoading(true);
     try {
+      console.log(`🗑️ Excluindo grupo: ${grupoId}`);
       await apiClient.delete(`/api/users/${professorId}/grupos/${grupoId}`);
+      console.log(`✅ Grupo ${grupoId} excluído com sucesso`);
+      
       await carregarDados();
       
       if (onGrupoChange) onGrupoChange();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao excluir grupo:", error);
-      alert("Erro ao excluir grupo");
+      
+      // Tratar diferentes tipos de erro
+      if (error.response?.status === 404) {
+        console.log("⚠️ Grupo não encontrado - atualizando lista");
+        // Grupo já foi excluído ou não existe, apenas atualizar a lista
+        await carregarDados();
+        if (onGrupoChange) onGrupoChange();
+      } else if (error.response?.status === 403) {
+        alert("Você não tem permissão para excluir este grupo");
+      } else {
+        alert("Erro ao excluir grupo. Tente novamente.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const alunosFiltrados = alunos.filter(aluno =>
-    aluno.name.toLowerCase().includes(buscaAluno.toLowerCase()) ||
-    aluno.email.toLowerCase().includes(buscaAluno.toLowerCase())
+    (aluno.name?.toLowerCase().includes(buscaAluno.toLowerCase()) ?? false) ||
+    (aluno.email?.toLowerCase().includes(buscaAluno.toLowerCase()) ?? false)
   );
 
   // Alunos que não estão no grupo selecionado
@@ -221,15 +240,6 @@ export function ModalGerenciarGrupos({
     const grupo = grupos.find(g => g.id === grupoSelecionado);
     return !grupo?.membros?.some(membro => membro.id === aluno.id);
   });
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   return (
     <ModalPadrao
@@ -321,8 +331,8 @@ export function ModalGerenciarGrupos({
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{aluno.name}</p>
-                            <p className="text-xs text-gray-500 truncate">{aluno.email}</p>
+                            <p className="text-sm font-medium truncate">{formatDisplayName(aluno.name)}</p>
+                            <p className="text-xs text-gray-500 truncate">{formatDisplayEmail(aluno.email)}</p>
                           </div>
                         </div>
                       ))}
@@ -353,8 +363,8 @@ export function ModalGerenciarGrupos({
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{membro.name}</p>
-                              <p className="text-xs text-gray-500 truncate">{membro.email}</p>
+                              <p className="text-sm font-medium truncate">{formatDisplayName(membro.name)}</p>
+                              <p className="text-xs text-gray-500 truncate">{formatDisplayEmail(membro.email)}</p>
                             </div>
                           </div>
                           <Button

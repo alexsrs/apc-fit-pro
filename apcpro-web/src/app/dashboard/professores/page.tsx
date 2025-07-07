@@ -33,15 +33,20 @@ import { ModalAvaliacaoCompleta } from "@/components/ModalAvaliacaoCompleta";
 import { ModalDetalhesAluno } from "@/components/ModalDetalhesAluno";
 import { AvaliacoesPendentes } from "@/components/AvaliacoesPendentes";
 import apiClient from "@/lib/api-client";
+import { formatDisplayName, formatDisplayEmail } from "@/utils/name-utils";
 
 type Aluno = {
   id: string;
-  name: string;
-  email: string;
+  name?: string | null;
+  email?: string | null;
   image?: string | null;
   telefone?: string;
   genero?: string;
   dataNascimento?: string | null;
+  grupos?: Array<{
+    id: string;
+    nome: string;
+  }>;
 };
 
 export default function ProfessoresDashboard() {
@@ -130,9 +135,10 @@ export default function ProfessoresDashboard() {
   
   // Filtrar por grupo selecionado no TeamSwitcher
   if (grupoSelecionado && grupoSelecionado !== "all") {
-    // TODO: Implementar filtro por grupo quando tiver a relação aluno-grupo
-    // Por enquanto, mostra todos os alunos
-    alunosParaFiltrar = alunos;
+    // Filtrar alunos que pertencem ao grupo selecionado
+    alunosParaFiltrar = alunos.filter(aluno => 
+      aluno.grupos?.some(grupo => grupo.id === grupoSelecionado)
+    );
   }
 
   // Aplicar filtros avançados
@@ -140,8 +146,8 @@ export default function ProfessoresDashboard() {
     // Filtro de busca por nome/email/telefone
     if (busca) {
       const termoBusca = busca.toLowerCase();
-      const nomeMatch = aluno.name.toLowerCase().includes(termoBusca);
-      const emailMatch = aluno.email.toLowerCase().includes(termoBusca);
+      const nomeMatch = aluno.name?.toLowerCase().includes(termoBusca) ?? false;
+      const emailMatch = aluno.email?.toLowerCase().includes(termoBusca) ?? false;
       const telefoneMatch = aluno.telefone?.toLowerCase().includes(termoBusca);
       
       if (!nomeMatch && !emailMatch && !telefoneMatch) {
@@ -318,19 +324,19 @@ export default function ProfessoresDashboard() {
                       <Avatar className="w-16 h-16 mb-2">
                         <AvatarImage
                           src={aluno.image || "https://github.com/shadcn.png"}
-                          alt={aluno.name}
+                          alt={aluno.name || 'Aluno'}
                         />
                         <AvatarFallback className="text-2xl">
                           {aluno.name?.[0] ?? "A"}
                         </AvatarFallback>
                       </Avatar>
                       <CardTitle className="text-center w-full text-lg font-semibold">
-                        {aluno.name}
+                        {formatDisplayName(aluno.name)}
                       </CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm flex flex-col items-center">
-                    <p className="text-center">{aluno.email}</p>
+                    <p className="text-center">{formatDisplayEmail(aluno.email)}</p>
                     {(aluno.telefone || aluno.genero) && (
                       <div className="flex flex-row gap-2 justify-center w-full">
                         {aluno.telefone && (
@@ -360,6 +366,19 @@ export default function ProfessoresDashboard() {
                         )}{" "}
                         ({calcularIdade(aluno.dataNascimento)} anos)
                       </p>
+                    )}
+                    {aluno.grupos && aluno.grupos.length > 0 && (
+                      <div className="flex flex-wrap gap-1 justify-center w-full">
+                        {aluno.grupos.map((grupo) => (
+                          <Badge
+                            key={grupo.id}
+                            variant="outline"
+                            className="bg-blue-100 text-blue-700 text-xs"
+                          >
+                            {grupo.nome}
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                     <div className="flex gap-2 mt-2">
                       <Button
@@ -425,7 +444,7 @@ export default function ProfessoresDashboard() {
             setAlunoParaAvaliar(null);
             // Aqui você pode adicionar lógica para atualizar a lista de avaliações
           }}
-          nomeAluno={alunoParaAvaliar.name}
+          nomeAluno={formatDisplayName(alunoParaAvaliar.name)}
         />
       )}
 

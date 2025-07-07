@@ -181,6 +181,10 @@ export class UsersService {
         telefone: perfil.telefone ?? "",
         dataNascimento: perfil.dataNascimento ?? null,
         genero: perfil.genero ?? "",
+        grupos: perfil.grupos?.map((grupo: any) => ({
+          id: grupo.id,
+          nome: grupo.nome
+        })) || [], // Inclui os grupos do aluno formatados
       }));
     } catch (error) {
       handleServiceError(
@@ -774,16 +778,18 @@ export class UsersService {
     }
   }
 
-  private processGroup(group: Grupo): Grupo {
+  private processGroup(group: any): Grupo {
     return {
       ...grupoSchema.parse({
         ...group,
         criadoEm: group.criadoEm ?? new Date(),
         atualizadoEm: group.atualizadoEm ?? new Date(),
       }),
-      membros: (group.membros ?? []).map((membro) => ({
-        ...membro,
+      membros: (group.membros ?? []).map((membro: any) => ({
+        id: membro.id,
         professorId: membro.professorId ?? undefined,
+        grupoId: membro.grupoId !== null && membro.grupoId !== undefined ? membro.grupoId as string : undefined,
+        telefone: membro.telefone !== null && membro.telefone !== undefined ? membro.telefone : undefined,
       })),
     };
   }

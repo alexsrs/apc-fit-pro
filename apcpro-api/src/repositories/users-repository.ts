@@ -117,6 +117,12 @@ export class UserRepositoryClass {
       },
       include: {
         user: true, // inclui dados do usuário vinculado ao perfil
+        grupos: {
+          select: {
+            id: true,
+            nome: true,
+          }
+        }, // inclui grupos do aluno
       },
     });
   }
@@ -172,9 +178,15 @@ export class UserRepositoryClass {
         membros: {
           select: {
             id: true,
+            userId: true,
+            role: true,
             telefone: true,
+            dataNascimento: true,
+            genero: true,
             professorId: true,
             grupoId: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
       },
@@ -197,6 +209,27 @@ export class UserRepositoryClass {
         ...groupData,
         criadoPorId: userPerfil.id,
       },
+      select: {
+        id: true,
+        nome: true,
+        criadoPorId: true,
+        criadoEm: true,
+        atualizadoEm: true,
+        membros: {
+          select: {
+            id: true,
+            userId: true,
+            role: true,
+            telefone: true,
+            dataNascimento: true,
+            genero: true,
+            professorId: true,
+            grupoId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
     });
   }
 
@@ -217,13 +250,84 @@ export class UserRepositoryClass {
         ...groupData,
         criadoPorId: userPerfil.id,
       },
+      select: {
+        id: true,
+        nome: true,
+        criadoPorId: true,
+        criadoEm: true,
+        atualizadoEm: true,
+        membros: {
+          select: {
+            id: true,
+            userId: true,
+            role: true,
+            telefone: true,
+            dataNascimento: true,
+            genero: true,
+            professorId: true,
+            grupoId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
     });
   }
 
   async deleteUserGroup(userId: string, groupId: string) {
-    return prisma.grupo.delete({
-      where: { id: groupId },
-    });
+    try {
+      console.log(`[Repository] Iniciando exclusão do grupo ${groupId} para userId ${userId}`);
+      
+      // Buscar o perfil do professor (userId é User.id, precisamos do UserPerfil.id)
+      const professorPerfil = await this.getUserProfileByUserId(userId);
+      if (!professorPerfil || professorPerfil.role !== 'professor') {
+        throw new Error("Professor não encontrado");
+      }
+
+      // Verificar se o grupo existe e pertence ao professor
+      const grupo = await prisma.grupo.findFirst({
+        where: {
+          id: groupId,
+          criadoPorId: professorPerfil.id // usar o ID do perfil, não do user
+        },
+        include: {
+          membros: true
+        }
+      });
+
+      if (!grupo) {
+        throw new Error('Grupo não encontrado ou não pertence ao professor');
+      }
+
+      console.log(`[Repository] Grupo encontrado: ${grupo.nome} com ${grupo.membros.length} membros`);
+
+      // Usar transação para garantir consistência
+      return await prisma.$transaction(async (tx) => {
+        console.log(`[Repository] Removendo ${grupo.membros.length} membros do grupo`);
+        
+        // 1. Remover todos os membros do grupo (limpar relação many-to-many)
+        await tx.grupo.update({
+          where: { id: groupId },
+          data: {
+            membros: {
+              set: [] // Remove todos os relacionamentos
+            }
+          }
+        });
+
+        // 2. Deletar o grupo
+        const grupoExcluido = await tx.grupo.delete({
+          where: { id: groupId }
+        });
+
+        console.log(`[Repository] Grupo ${groupId} excluído com sucesso`);
+        return grupoExcluido;
+      });
+
+    } catch (error) {
+      console.error('[Repository] Erro ao excluir grupo:', error);
+      throw error;
+    }
   }
 
   async getUserWithAccounts(userId: string): Promise<User | null> {
@@ -369,10 +473,16 @@ export class UserRepositoryClass {
   }
 
   async getUserGroupById(userId: string, groupId: string) {
+    // Buscar o perfil do professor (userId é User.id, precisamos do UserPerfil.id)
+    const professorPerfil = await this.getUserProfileByUserId(userId);
+    if (!professorPerfil || professorPerfil.role !== 'professor') {
+      return null;
+    }
+
     return prisma.grupo.findFirst({
       where: {
         id: groupId,
-        criadoPorId: userId,
+        criadoPorId: professorPerfil.id, // usar o ID do perfil, não do user
       },
       include: {
         membros: {

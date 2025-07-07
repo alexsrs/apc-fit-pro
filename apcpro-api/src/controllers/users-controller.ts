@@ -207,10 +207,24 @@ export async function deleteUserGroup(
   try {
     const userId = req.params.id;
     const groupId = req.params.groupId;
-    await usersService.deleteUserGroup(userId, groupId);
-    const response = noContent();
+    
+    console.log(`[Controller] Tentando excluir grupo ${groupId} do usuário ${userId}`);
+    
+    const resultado = await usersService.deleteUserGroup(userId, groupId);
+    
+    console.log(`[Controller] Grupo excluído com sucesso:`, resultado);
+    const response = ok({ message: "Grupo excluído com sucesso" });
     res.status(response.statusCode).json(response.body);
   } catch (error) {
+    console.error('[Controller] Erro ao excluir grupo:', error);
+    
+    // Tratar erro específico de grupo não encontrado
+    if (error instanceof Error && (error.message?.includes("não encontrado") || error.message?.includes("não pertence"))) {
+      const response = notFound(error.message);
+      res.status(response.statusCode).json(response.body);
+      return;
+    }
+    
     next(error);
   }
 }

@@ -10,17 +10,23 @@ import {
   Phone, 
   Calendar, 
   UserCheck,
-  Activity
+  Activity,
+  Users
 } from "lucide-react";
+import { getInitials, formatDisplayName } from "@/utils/name-utils";
 
 type Aluno = {
   id: string;
-  name: string;
-  email: string;
+  name?: string | null;
+  email?: string | null;
   image?: string | null;
   telefone?: string;
   genero?: string;
   dataNascimento?: string | null;
+  grupos?: Array<{
+    id: string;
+    nome: string;
+  }>;
 };
 
 type ModalDetalhesAlunoProps = {
@@ -52,15 +58,6 @@ export function ModalDetalhesAluno({
     return new Date(data).toLocaleDateString('pt-BR');
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <ModalPadrao
       open={open}
@@ -68,12 +65,12 @@ export function ModalDetalhesAluno({
       title={
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={aluno.image || undefined} alt={aluno.name} />
+            <AvatarImage src={aluno.image || undefined} alt={aluno.name || 'Aluno'} />
             <AvatarFallback className="bg-blue-100 text-blue-600 text-sm font-semibold">
               {getInitials(aluno.name)}
             </AvatarFallback>
           </Avatar>
-          <span>{aluno.name}</span>
+          <span>{formatDisplayName(aluno.name)}</span>
         </div>
       }
       description="Informações detalhadas do aluno"
@@ -149,6 +146,31 @@ export function ModalDetalhesAluno({
           </div>
         </CardContent>
       </Card>
+
+      {/* Grupos do Aluno */}
+      {aluno.grupos && aluno.grupos.length > 0 && (
+        <Card className="border-gray-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              Grupos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex flex-wrap gap-2">
+              {aluno.grupos.map((grupo) => (
+                <Badge
+                  key={grupo.id}
+                  variant="outline"
+                  className="bg-blue-50 text-blue-700 border-blue-200"
+                >
+                  {grupo.nome}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Histórico de Avaliações */}
       <Card className="border-gray-200">
