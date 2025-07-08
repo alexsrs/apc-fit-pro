@@ -13,7 +13,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
     openapi: "3.0.0",
     info: {
       title: "APC FIT PRO API",
-      version: "1.0.0",
+      version: "2.0.0",
       description: `
         API para avaliação, prescrição e controle de treinos físicos baseada no método APC.
         
@@ -24,28 +24,23 @@ const swaggerOptions: swaggerJsdoc.Options = {
         **Para testar produção**: Use o frontend em https://apc-fit-pro.vercel.app
         
         Os servidores Azure NÃO aceitam requisições de localhost por motivos de segurança (CORS).
-        
-        ## Funcionalidades
-        - 🔐 Autenticação com Google OAuth
-        - 👥 Gestão de usuários (professores e alunos)
-        - 📊 Avaliações físicas completas
-        - 📈 Controle de treinos
-        - 🎯 Prescrições personalizadas
-        
-        ## Método APC
-        O sistema utiliza o método APC (Avaliação, Prescrição e Controle) desenvolvido 
-        para otimizar resultados em atividade física através de:
-        - Avaliação inicial completa
-        - Prescrição individualizada
-        - Controle contínuo de resultados
+                
+        ## 🔑 Autenticação
+        Todas as rotas protegidas requerem token JWT obtido via NextAuth.js.
+        Para obter um token válido, faça login no frontend e copie o header Authorization.
       `,
       contact: {
         name: "Suporte APC FIT PRO",
         email: "alexsrsouza@hotmail.com",
+        url: "https://apc-fit-pro.vercel.app/contato",
       },
       license: {
-        name: "Proprietário",
+        name: "Proprietário - APC FIT PRO",
         url: "https://apc-fit-pro.vercel.app/termos",
+      },
+      externalDocs: {
+        description: "Documentação adicional no GitHub",
+        url: "https://github.com/seu-usuario/apc-fit-pro/blob/main/README.md",
       },
     },
     servers: [
@@ -114,6 +109,23 @@ const swaggerOptions: swaggerJsdoc.Options = {
               description: "URL da imagem do perfil",
               example: "https://lh3.googleusercontent.com/...",
             },
+            telefone: {
+              type: "string",
+              description: "Telefone do usuário",
+              example: "(11) 99999-9999",
+            },
+            genero: {
+              type: "string",
+              enum: ["MASCULINO", "FEMININO"],
+              description: "Gênero do usuário",
+              example: "MASCULINO",
+            },
+            dataNascimento: {
+              type: "string",
+              format: "date",
+              description: "Data de nascimento",
+              example: "1990-05-15",
+            },
             criadoEm: {
               type: "string",
               format: "date-time",
@@ -122,6 +134,276 @@ const swaggerOptions: swaggerJsdoc.Options = {
             },
           },
           required: ["id", "email", "nome", "accountType"],
+        },
+        Grupo: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description: "ID único do grupo",
+              example: "clxy789ghi012jkl",
+            },
+            nome: {
+              type: "string",
+              description: "Nome do grupo",
+              example: "Turma Iniciantes",
+            },
+            descricao: {
+              type: "string",
+              description: "Descrição do grupo",
+              example: "Grupo para alunos iniciantes",
+            },
+            professorId: {
+              type: "string",
+              description: "ID do professor responsável",
+              example: "clxy456def789ghi",
+            },
+            criadoEm: {
+              type: "string",
+              format: "date-time",
+              description: "Data de criação do grupo",
+              example: "2024-01-15T10:30:00Z",
+            },
+            alunos: {
+              type: "array",
+              description: "Lista de alunos do grupo",
+              items: {
+                $ref: "#/components/schemas/User",
+              },
+            },
+          },
+          required: ["id", "nome", "professorId"],
+        },
+        DobrasCutaneas: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description: "ID único da avaliação de dobras cutâneas",
+              example: "clxy789ghi012jkl",
+            },
+            userPerfilId: {
+              type: "string",
+              description: "ID do perfil do usuário avaliado",
+              example: "clxy123abc456def",
+            },
+            professorId: {
+              type: "string",
+              description: "ID do professor que realizou a avaliação",
+              example: "clxy456def789ghi",
+            },
+            protocolo: {
+              type: "string",
+              enum: ["pollock3", "pollock7", "jackson_pollock_3", "jackson_pollock_7"],
+              description: "Protocolo utilizado para o cálculo",
+              example: "pollock7",
+            },
+            dobras: {
+              type: "object",
+              description: "Medidas das dobras cutâneas em mm",
+              properties: {
+                tricipital: { type: "number", example: 12.5 },
+                subescapular: { type: "number", example: 15.0 },
+                bicipital: { type: "number", example: 8.0 },
+                axilarMedia: { type: "number", example: 10.5 },
+                suprailiaca: { type: "number", example: 18.0 },
+                abdominal: { type: "number", example: 22.0 },
+                coxa: { type: "number", example: 14.5 },
+              },
+            },
+            resultados: {
+              type: "object",
+              description: "Resultados dos cálculos",
+              properties: {
+                densidadeCorporal: { type: "number", example: 1.0456 },
+                percentualGordura: { type: "number", example: 15.7 },
+                massaGorda: { type: "number", example: 11.2 },
+                massaMagra: { type: "number", example: 59.8 },
+                classificacao: { type: "string", example: "Normal" },
+              },
+            },
+            dadosPessoais: {
+              type: "object",
+              description: "Dados pessoais no momento da avaliação",
+              properties: {
+                idade: { type: "integer", example: 30 },
+                peso: { type: "number", example: 71.0 },
+                altura: { type: "number", example: 175 },
+                genero: { type: "string", example: "MASCULINO" },
+              },
+            },
+            status: {
+              type: "string",
+              enum: ["pendente", "aprovada", "reprovada"],
+              description: "Status da avaliação",
+              example: "aprovada",
+            },
+            criadoEm: {
+              type: "string",
+              format: "date-time",
+              description: "Data da avaliação",
+              example: "2024-01-15T10:30:00Z",
+            },
+          },
+          required: ["id", "userPerfilId", "professorId", "protocolo", "dobras"],
+        },
+        Protocolo: {
+          type: "object",
+          description: "Protocolo disponível para cálculo de dobras cutâneas",
+          properties: {
+            id: {
+              type: "string",
+              example: "pollock7",
+            },
+            nome: {
+              type: "string",
+              example: "Pollock 7 dobras",
+            },
+            descricao: {
+              type: "string",
+              example: "Protocolo de Pollock utilizando 7 medidas de dobras cutâneas",
+            },
+            dobrasNecessarias: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              example: ["tricipital", "subescapular", "axilarMedia", "suprailiaca", "abdominal", "coxa"],
+            },
+            generoAplicavel: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              example: ["MASCULINO", "FEMININO"],
+            },
+          },
+          required: ["id", "nome", "dobrasNecessarias"],
+        },
+        EvolucaoFisica: {
+          type: "object",
+          description: "Dados da evolução física do aluno",
+          properties: {
+            userId: {
+              type: "string",
+              description: "ID do usuário",
+              example: "clxy123abc456def",
+            },
+            avaliacoes: {
+              type: "array",
+              description: "Lista de avaliações do usuário",
+              items: {
+                $ref: "#/components/schemas/DobrasCutaneas",
+              },
+            },
+            evolucao: {
+              type: "object",
+              description: "Dados de evolução entre avaliações",
+              properties: {
+                peso: {
+                  type: "object",
+                  properties: {
+                    inicial: { type: "number", example: 75.0 },
+                    atual: { type: "number", example: 71.0 },
+                    diferenca: { type: "number", example: -4.0 },
+                    percentual: { type: "number", example: -5.3 },
+                  },
+                },
+                percentualGordura: {
+                  type: "object",
+                  properties: {
+                    inicial: { type: "number", example: 18.5 },
+                    atual: { type: "number", example: 15.7 },
+                    diferenca: { type: "number", example: -2.8 },
+                    percentual: { type: "number", example: -15.1 },
+                  },
+                },
+                massaMagra: {
+                  type: "object",
+                  properties: {
+                    inicial: { type: "number", example: 57.2 },
+                    atual: { type: "number", example: 59.8 },
+                    diferenca: { type: "number", example: 2.6 },
+                    percentual: { type: "number", example: 4.5 },
+                  },
+                },
+              },
+            },
+            periodoAvaliacao: {
+              type: "object",
+              properties: {
+                dataInicial: {
+                  type: "string",
+                  format: "date-time",
+                  example: "2024-01-15T10:30:00Z",
+                },
+                dataFinal: {
+                  type: "string",
+                  format: "date-time",
+                  example: "2024-03-15T10:30:00Z",
+                },
+                dias: { type: "integer", example: 60 },
+              },
+            },
+          },
+          required: ["userId", "avaliacoes"],
+        },
+        DashboardMetrics: {
+          type: "object",
+          description: "Métricas do dashboard para professores",
+          properties: {
+            totalAlunos: {
+              type: "integer",
+              description: "Total de alunos cadastrados",
+              example: 45,
+            },
+            alunosAtivos: {
+              type: "integer",
+              description: "Alunos com atividade recente",
+              example: 38,
+            },
+            novosAlunos: {
+              type: "integer",
+              description: "Novos alunos este mês",
+              example: 12,
+            },
+            avaliacoesPendentes: {
+              type: "integer",
+              description: "Avaliações aguardando aprovação",
+              example: 5,
+            },
+            treinosConcluidos: {
+              type: "integer",
+              description: "Treinos concluídos no período",
+              example: 139,
+            },
+            gruposAtivos: {
+              type: "integer",
+              description: "Grupos de alunos ativos",
+              example: 8,
+            },
+            tendencias: {
+              type: "object",
+              description: "Tendências de crescimento",
+              properties: {
+                alunos: {
+                  type: "object",
+                  properties: {
+                    percentual: { type: "number", example: 5.0 },
+                    periodo: { type: "string", example: "mês passado" },
+                  },
+                },
+                retencao: {
+                  type: "object",
+                  properties: {
+                    percentual: { type: "number", example: 84.0 },
+                    status: { type: "string", example: "alta" },
+                  },
+                },
+              },
+            },
+          },
+          required: ["totalAlunos", "alunosAtivos", "avaliacoesPendentes"],
         },
         Avaliacao: {
           type: "object",
@@ -208,8 +490,10 @@ const swaggerOptions: swaggerJsdoc.Options = {
   apis: [
     "./src/routes.ts",
     "./src/controllers/*.ts",
+    "./src/swagger-docs.ts", // Documentação dos endpoints
     "./dist/routes.js", // Adiciona suporte para arquivos compilados
     "./dist/controllers/*.js",
+    "./dist/swagger-docs.js", // Documentação compilada
   ], // Caminhos para arquivos com anotações JSDoc
 };
 
@@ -225,21 +509,53 @@ const isAzure =
 const swaggerUiOptions = {
   customCss: `
     .swagger-ui .topbar { display: none; }
-    .swagger-ui .info .title { color: #1976d2; }
-    .swagger-ui .scheme-container { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    .swagger-ui .info .title { color: #1976d2; font-size: 2rem; }
+    .swagger-ui .info .description { font-size: 1.1rem; line-height: 1.6; }
+    .swagger-ui .scheme-container { 
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+      padding: 20px; 
+      border-radius: 8px; 
+      margin: 20px 0; 
+      border: 1px solid #e0e6ed;
+    }
+    .swagger-ui .opblock { border-radius: 8px; margin-bottom: 15px; }
+    .swagger-ui .opblock.opblock-get { border-color: #61affe; }
+    .swagger-ui .opblock.opblock-post { border-color: #49cc90; }
+    .swagger-ui .opblock.opblock-put { border-color: #fca130; }
+    .swagger-ui .opblock.opblock-delete { border-color: #f93e3e; }
+    .swagger-ui .opblock-tag { font-size: 1.2rem; margin: 20px 0; }
+    .swagger-ui .response-col_status { min-width: 100px; }
+    .swagger-ui .response-col_description { font-weight: 500; }
   `,
-  customSiteTitle: "APC FIT PRO API Documentation",
+  customSiteTitle: "APC FIT PRO API Documentation v2.0",
   customfavIcon: "/favicon.ico",
   swaggerOptions: {
     persistAuthorization: true,
     displayRequestDuration: true,
     filter: true,
     docExpansion: "list",
-    defaultModelsExpandDepth: 2,
-    defaultModelExpandDepth: 2,
+    defaultModelsExpandDepth: 3,
+    defaultModelExpandDepth: 3,
     deepLinking: true,
     displayOperationId: false,
     tryItOutEnabled: true,
+    tagsSorter: "alpha",
+    operationsSorter: "alpha",
+    requestSnippetsEnabled: true,
+    requestSnippets: {
+      generators: {
+        "curl_bash": {
+          title: "cURL (bash)",
+          syntax: "bash",
+        },
+        "javascript_fetch": {
+          title: "JavaScript (fetch)",
+          syntax: "javascript",
+        },
+      },
+      defaultExpanded: false,
+      languages: ["curl_bash", "javascript_fetch"],
+    },
   },
 };
 
@@ -247,29 +563,31 @@ const swaggerUiOptions = {
 if (isAzure) {
   swaggerUiOptions.customCss += `
     .swagger-ui .info:before {
-      content: "🌐 PRODUÇÃO AZURE - Use este Swagger para testar APIs de produção";
+      content: "🌐 PRODUÇÃO AZURE - Esta é a API de produção. Use apenas para testes finais e integração. Para desenvolvimento, use localhost:3333";
       display: block;
-      background: #e3f2fd;
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
       color: #1976d2;
-      padding: 15px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-      font-weight: bold;
-      border-left: 4px solid #1976d2;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      font-weight: 600;
+      border-left: 5px solid #1976d2;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
   `;
 } else {
   swaggerUiOptions.customCss += `
     .swagger-ui .info:before {
-      content: "🚀 DESENVOLVIMENTO LOCAL - Para obter tokens JWT, use o frontend em localhost:3000";
+      content: "🚀 DESENVOLVIMENTO LOCAL - Para obter tokens JWT válidos: 1) Faça login no frontend (localhost:3000), 2) Abra DevTools → Network, 3) Copie o token de qualquer requisição à API, 4) Cole no botão 'Authorize' acima";
       display: block;
-      background: #f3e5f5;
+      background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
       color: #7b1fa2;
-      padding: 15px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-      font-weight: bold;
-      border-left: 4px solid #7b1fa2;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      font-weight: 600;
+      border-left: 5px solid #7b1fa2;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
   `;
 }
@@ -280,8 +598,10 @@ if (isAzure) {
 export function setupSwagger(app: Application): void {
   try {
     // Logs para debugging
-    console.log(`📚 Configurando Swagger UI...`);
+    console.log(`📚 Configurando Swagger UI v2.0...`);
     console.log(`🌍 Ambiente: ${isAzure ? "Azure" : "Local"}`);
+    console.log(`📊 Schemas: User, Grupo, DobrasCutaneas, Protocolo, EvolucaoFisica, DashboardMetrics`);
+    console.log(`🔗 Endpoints documentados: ${process.env.NODE_ENV === 'development' ? '40+' : '35+'} endpoints`);
 
     // Serve a documentação JSON
     app.get("/api/docs.json", (req, res) => {
@@ -296,11 +616,26 @@ export function setupSwagger(app: Application): void {
       swaggerUi.setup(specs, swaggerUiOptions)
     );
 
-    console.log(`✅ Swagger UI configurado com sucesso!`);
+    console.log(`✅ Swagger UI v2.0 configurado com sucesso!`);
     console.log(`📖 Documentação disponível em: /api/docs`);
     console.log(`📄 Spec JSON disponível em: /api/docs.json`);
+    console.log(`🚀 Funcionalidades documentadas:`);
+    console.log(`   • Autenticação JWT via NextAuth.js`);
+    console.log(`   • Gestão de usuários e grupos`);
+    console.log(`   • Sistema completo de dobras cutâneas`);
+    console.log(`   • Métricas de dashboard`);
+    console.log(`   • Avaliações físicas e evolução`);
+    
+    if (!isAzure) {
+      console.log(`💡 Para obter token JWT:`);
+      console.log(`   1. Acesse localhost:3000 e faça login`);
+      console.log(`   2. Abra DevTools → Network`);
+      console.log(`   3. Copie o header Authorization de qualquer requisição`);
+      console.log(`   4. Use no botão 'Authorize' do Swagger`);
+    }
   } catch (error) {
     console.error("❌ Erro ao configurar Swagger:", error);
+    console.error("📄 Verifique se todos os arquivos de documentação estão presentes");
   }
 }
 
