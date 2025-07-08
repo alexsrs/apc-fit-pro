@@ -10,8 +10,13 @@ import {
 } from "../utils/http-helper";
 
 const usersService = new UsersService();
+
 // Usuários
-export async function getUser(req: Request, res: Response, next: NextFunction) {
+export async function getAllUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const users = await usersService.getAllUsers();
     const response = ok(users);
@@ -202,10 +207,24 @@ export async function deleteUserGroup(
   try {
     const userId = req.params.id;
     const groupId = req.params.groupId;
-    await usersService.deleteUserGroup(userId, groupId);
-    const response = noContent();
+    
+    console.log(`[Controller] Tentando excluir grupo ${groupId} do usuário ${userId}`);
+    
+    const resultado = await usersService.deleteUserGroup(userId, groupId);
+    
+    console.log(`[Controller] Grupo excluído com sucesso:`, resultado);
+    const response = ok({ message: "Grupo excluído com sucesso" });
     res.status(response.statusCode).json(response.body);
   } catch (error) {
+    console.error('[Controller] Erro ao excluir grupo:', error);
+    
+    // Tratar erro específico de grupo não encontrado
+    if (error instanceof Error && (error.message?.includes("não encontrado") || error.message?.includes("não pertence"))) {
+      const response = notFound(error.message);
+      res.status(response.statusCode).json(response.body);
+      return;
+    }
+    
     next(error);
   }
 }
@@ -279,11 +298,64 @@ export async function cadastrarAvaliacaoAluno(
   try {
     const userPerfilId = req.params.userPerfilId;
     const dados = req.body;
+    
+    // Se for um professor salvando, pode incluir validade
     const avaliacao = await usersService.cadastrarAvaliacaoAluno(
       userPerfilId,
       dados
     );
     const response = created(avaliacao);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function aprovarAvaliacaoAluno(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    // Busca o avaliacaoId tanto em params.avaliacaoId quanto em params.id
+    const avaliacaoId = req.params.avaliacaoId || req.params.id;
+    const { diasValidade = 90, validadeDias = 90 } = req.body; // aceita ambos os nomes
+    
+    if (!avaliacaoId) {
+      return res.status(400).json({
+        erro: "ID da avaliação não fornecido",
+        message: "avaliacaoId é obrigatório"
+      });
+    }
+    
+    const validadeFinal = diasValidade || validadeDias;
+    const avaliacao = await usersService.aprovarAvaliacao(avaliacaoId, validadeFinal);
+    const response = ok(avaliacao);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function reprovarAvaliacaoAluno(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    // Busca o avaliacaoId tanto em params.avaliacaoId quanto em params.id
+    const avaliacaoId = req.params.avaliacaoId || req.params.id;
+    const { motivo } = req.body; // Motivo da reprovação (opcional)
+    
+    if (!avaliacaoId) {
+      return res.status(400).json({
+        erro: "ID da avaliação não fornecido", 
+        message: "avaliacaoId é obrigatório"
+      });
+    }
+    
+    const avaliacao = await usersService.reprovarAvaliacao(avaliacaoId, motivo);
+    const response = ok(avaliacao);
     res.status(response.statusCode).json(response.body);
   } catch (error) {
     next(error);
@@ -326,6 +398,68 @@ export async function getEvolucaoFisica(
       return;
     }
     const response = ok(evolucao);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Controladores para gerenciar alunos nos grupos
+export async function addStudentToGroup(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    console.log('[Controller] addStudentToGroup - Parâmetros da URL:', req.params);
+    console.log('[Controller] addStudentToGroup - Headers:', {
+      authorization: req.headers.authorization ? 'Bearer token presente' : 'Token ausente',
+      contentType: req.headers['content-type']
+    });
+    
+    const { id: userId, groupId, studentId } = req.params;
+    
+    console.log('[Controller] addStudentToGroup - Parâmetros extraídos:', { userId, groupId, studentId });
+    
+    const resultado = await usersService.addStudentToGroup(userId, groupId, studentId);
+    console.log('[Controller] addStudentToGroup - Resultado do service:', resultado);
+    
+    const response = ok(resultado);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    console.error('[Controller] addStudentToGroup - Erro:', error);
+    next(error);
+  }
+}
+
+export async function removeStudentFromGroup(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id: userId, groupId, studentId } = req.params;
+    
+    await usersService.removeStudentFromGroup(userId, groupId, studentId);
+    
+    const response = noContent();
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getGroupStudents(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id: userId, groupId } = req.params;
+    
+    const alunos = await usersService.getGroupStudents(userId, groupId);
+    
+    const response = ok(alunos);
     res.status(response.statusCode).json(response.body);
   } catch (error) {
     next(error);

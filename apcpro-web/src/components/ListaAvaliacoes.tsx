@@ -1,11 +1,7 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ModalPadrao } from "@/components/ui/ModalPadrao";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   forwardRef,
   useCallback,
@@ -15,7 +11,17 @@ import {
   useState,
 } from "react";
 import { ResultadoAvaliacao } from "./ResultadoAvaliacao";
+import { 
+  Calendar, 
+  Target, 
+  FileText, 
+  Activity,
+  CheckCircle,
+  Clock,
+  AlertCircle
+} from "lucide-react";
 import apiClient from "@/lib/api-client";
+import { isAvaliacaoVencida, formatarDataValidade } from "@/utils/idade";
 
 // Tipagem alinhada com o componente ResultadoAvaliacao
 export type IndicesAvaliacao = Record<string, number | string | undefined>;
@@ -35,6 +41,7 @@ export type Avaliacao = {
   tipo: string;
   status: string;
   data: string;
+  validadeAte?: string;
   objetivo?: string;
   objetivoClassificado?: string;
   resultado?: ResultadoAvaliacao | string | number | null;
@@ -99,21 +106,35 @@ export const ListaAvaliacoes = forwardRef<
     <>
       <ul className="divide-y divide-gray-200">
         {avaliacoesAgrupadas.map((a) => {
+          // Determinar status real (incluindo vencida)
+          let statusReal = a.status;
+          if (a.status === 'aprovada' && a.validadeAte && isAvaliacaoVencida(a.validadeAte)) {
+            statusReal = 'vencida';
+          }
+          
           let badgeClass = "";
           let badgeText = "";
-          if (a.status === "pendente") {
-            badgeClass =
-              "bg-orange-100 text-orange-700 border border-orange-200";
+          let badgeIcon = null;
+          
+          if (statusReal === "pendente") {
+            badgeClass = "bg-yellow-100 text-yellow-700 border border-yellow-200";
             badgeText = "Pendente";
-          } else if (a.status === "valida") {
+            badgeIcon = <Clock className="h-3 w-3" />;
+          } else if (statusReal === "aprovada") {
             badgeClass = "bg-green-100 text-green-700 border border-green-200";
-            badgeText = "Válida";
-          } else if (a.status === "vencida") {
+            badgeText = "Aprovada";
+            badgeIcon = <CheckCircle className="h-3 w-3" />;
+          } else if (statusReal === "reprovada") {
             badgeClass = "bg-red-100 text-red-700 border border-red-200";
+            badgeText = "Reprovada";
+            badgeIcon = <AlertCircle className="h-3 w-3" />;
+          } else if (statusReal === "vencida") {
+            badgeClass = "bg-gray-100 text-gray-700 border border-gray-200";
             badgeText = "Vencida";
+            badgeIcon = <AlertCircle className="h-3 w-3" />;
           } else {
             badgeClass = "bg-gray-100 text-gray-700 border border-gray-200";
-            badgeText = a.status;
+            badgeText = statusReal || "Indefinido";
           }
           return (
             <li
@@ -131,10 +152,20 @@ export const ListaAvaliacoes = forwardRef<
                 )}
               </div>
               <div className="flex items-center gap-2 min-w-fit md:justify-end md:text-right">
-                <span className="text-xs text-gray-500">
-                  {new Date(a.data).toLocaleDateString()}
-                </span>
-                <Badge className={badgeClass}>{badgeText}</Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-xs text-gray-500">
+                    {new Date(a.data).toLocaleDateString()}
+                  </span>
+                  {a.validadeAte && a.status !== 'pendente' && (
+                    <span className="text-xs text-gray-400">
+                      Validade: {formatarDataValidade(a.validadeAte)}
+                    </span>
+                  )}
+                </div>
+                <Badge className={`${badgeClass} flex items-center gap-1`}>
+                  {badgeIcon}
+                  {badgeText}
+                </Badge>
               </div>
               <Button
                 size="sm"
@@ -160,44 +191,97 @@ export const ListaAvaliacoes = forwardRef<
         </div>
       ) : null}
       {/* Modal de detalhes da avaliação */}
-      <Dialog
+      <ModalPadrao
         open={!!avaliacaoSelecionada}
-        onOpenChange={() => setAvaliacaoSelecionada(null)}
+        onClose={() => setAvaliacaoSelecionada(null)}
+        title="Detalhes da Avaliação"
+        description={avaliacaoSelecionada ? `Avaliação de ${avaliacaoSelecionada.tipo} realizada em ${new Date(avaliacaoSelecionada.data).toLocaleDateString('pt-BR')}` : ""}
+        maxWidth="xl"
       >
-        <DialogContent
-          style={{ maxWidth: "1200px", width: "50vw" }}
-          className="!max-w-none !w-[50vw] overflow-y-auto max-h-[80vh] p-4"
-        >
-          <DialogHeader>
-            <DialogTitle>Detalhes da Avaliação</DialogTitle>
-          </DialogHeader>
-          {avaliacaoSelecionada && (
-            <div className="space-y-2">
-              {/* Conteúdo do modal */}
-              {avaliacaoSelecionada.resultado && (
-                <>
-                  <h4 className="font-semibold mt-4 mb-2 text-sm text-zinc-700">
-                    Resultado:
-                  </h4>
+        {avaliacaoSelecionada && (
+          <>
+            {/* Card com informações gerais */}
+            <Card className="border-gray-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  Informações Gerais
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Activity className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Tipo</p>
+                      <p className="text-sm text-gray-600 capitalize">{avaliacaoSelecionada.tipo}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Data</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(avaliacaoSelecionada.data).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    {avaliacaoSelecionada.status === 'aprovada' || avaliacaoSelecionada.status === 'valida' ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : avaliacaoSelecionada.status === 'pendente' ? (
+                      <Clock className="h-4 w-4 text-yellow-500" />
+                    ) : avaliacaoSelecionada.status === 'reprovada' || avaliacaoSelecionada.status === 'vencida' ? (
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-gray-500" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Status</p>
+                      <p className="text-sm text-gray-600 capitalize">{avaliacaoSelecionada.status}</p>
+                    </div>
+                  </div>
+                  
+                  {avaliacaoSelecionada.objetivo && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Target className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Objetivo</p>
+                        <p className="text-sm text-gray-600">{avaliacaoSelecionada.objetivo}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {avaliacaoSelecionada.validadeAte && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Validade</p>
+                        <p className="text-sm text-gray-600">
+                          {formatarDataValidade(avaliacaoSelecionada.validadeAte)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Card com resultados */}
+            {avaliacaoSelecionada.resultado && (
+              <Card className="border-gray-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-blue-600" />
+                    Resultados da Avaliação
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
                   {typeof avaliacaoSelecionada.resultado === "object" &&
                   avaliacaoSelecionada.resultado !== null ? (
                     <>
-                      {console.log(
-                        "📤 ListaAvaliacoes - Dados enviados para ResultadoAvaliacao:"
-                      )}
-                      {console.log(
-                        "   - avaliacaoSelecionada:",
-                        avaliacaoSelecionada
-                      )}
-                      {console.log("   - tipo:", avaliacaoSelecionada.tipo)}
-                      {console.log(
-                        "   - resultado:",
-                        avaliacaoSelecionada.resultado
-                      )}
-                      {console.log(
-                        "   - objetivoClassificado:",
-                        avaliacaoSelecionada.objetivoClassificado
-                      )}
                       <ResultadoAvaliacao
                         resultado={
                           avaliacaoSelecionada.resultado as ResultadoAvaliacao
@@ -206,19 +290,23 @@ export const ListaAvaliacoes = forwardRef<
                         objetivoClassificado={
                           avaliacaoSelecionada.objetivoClassificado
                         }
+                        inModal={true}
                       />
                     </>
                   ) : (
-                    <span className="text-sm text-gray-500">
-                      Sem resultado detalhado.
-                    </span>
+                    <div className="text-center py-8">
+                      <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-sm text-gray-500">
+                        Sem resultado detalhado disponível para esta avaliação.
+                      </p>
+                    </div>
                   )}
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+      </ModalPadrao>
     </>
   );
 });

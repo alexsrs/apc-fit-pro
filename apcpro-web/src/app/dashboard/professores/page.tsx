@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import Modal from "@/components/ui/modal";
-import { ListaAvaliacoes } from "@/components/ListaAvaliacoes";
+// import { ListaAvaliacoes } from "@/components/ListaAvaliacoes";
 
 import {
   AlertasPersistenteProfessor,
@@ -10,7 +9,7 @@ import {
 } from "@/app/components/AlertasPersistenteProfessor";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import Loading from "@/components/ui/Loading";
+import Loading, { LoadingSkeleton } from "@/components/ui/Loading";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,41 +18,72 @@ import {
   UserRoundPlus,
   ArrowDown,
   Bell,
-  Search,
   Users,
-  ListTodo,
   CalendarCheck,
   AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/MetricCard";
+import { FiltrosAvancados } from "@/components/FiltrosAvancados";
 import { TeamSwitcher } from "@/components/team-switcher";
+import { ModalGerenciarGrupos } from "@/components/ModalGerenciarGrupos";
 import { ConviteAlunoModal } from "@/components/ConviteAlunoModal";
+import { ModalAvaliacaoCompleta } from "@/components/ModalAvaliacaoCompleta";
+import { ModalDetalhesAluno } from "@/components/ModalDetalhesAluno";
+import { AvaliacoesPendentes } from "@/components/AvaliacoesPendentes";
 import apiClient from "@/lib/api-client";
+import { formatDisplayName, formatDisplayEmail } from "@/utils/name-utils";
 
 type Aluno = {
   id: string;
-  name: string;
-  email: string;
+  name?: string | null;
+  email?: string | null;
   image?: string | null;
   telefone?: string;
   genero?: string;
   dataNascimento?: string | null;
+  grupos?: Array<{
+    id: string;
+    nome: string;
+  }>;
 };
 
 export default function ProfessoresDashboard() {
-  // Estado para modal de avaliações do aluno
-  const [modalAvaliacoesOpen, setModalAvaliacoesOpen] = useState(false);
+  // Estado para modal de detalhes do aluno
+  const [modalDetalhesOpen, setModalDetalhesOpen] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  
+  // Estado para modal de nova avaliação
+  const [modalNovaAvaliacaoOpen, setModalNovaAvaliacaoOpen] = useState(false);
+  const [alunoParaAvaliar, setAlunoParaAvaliar] = useState<Aluno | null>(null);
+  
+  // Estado para modal de gerenciar grupos
+  const [modalGerenciarGruposOpen, setModalGerenciarGruposOpen] = useState(false);
+  
   const { profile } = useUserProfile();
   const router = useRouter();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loadingAlunos, setLoadingAlunos] = useState(true);
+  const [loadingMetricas, setLoadingMetricas] = useState(true);
+  const [loadingAlertas, setLoadingAlertas] = useState(true);
   const [tab, setTab] = useState<string>("ativos");
   const [busca, setBusca] = useState("");
   const [modalConviteOpen, setModalConviteOpen] = useState(false);
+  
+  // Estado para filtros avançados
+  const [filtros, setFiltros] = useState({
+    status: "",
+    genero: "",
+    idadeMin: "",
+    idadeMax: "",
+    grupoId: "",
+    ultimaAvaliacao: "",
+  });
+  
+  // Estado para grupos (para o filtro)
+  const [grupos, setGrupos] = useState<Array<{ id: string; nome: string }>>([]);
+  const [grupoSelecionado, setGrupoSelecionado] = useState<string | null>(null);
 
   // Consome alertas inteligentes do backend (REST, sem polling excessivo)
   const alertasRef = useRef<AlertasPersistenteProfessorHandle>(null);
@@ -70,82 +100,163 @@ export default function ProfessoresDashboard() {
     }
     if (profile && profile.id) {
       setLoadingAlunos(true);
-      apiClient
-        .get(`/api/users/${profile.userId}/alunos`)
-        .then((res) => setAlunos(res.data))
-        .catch(() => setAlunos([]))
+      setLoadingMetricas(true);
+      setLoadingAlertas(true);
+      
+      // Simular carregamentos independentes para melhor UX
+      // Carregar alunos e grupos
+      Promise.all([
+        apiClient.get(`/api/users/${profile.userId}/alunos`),
+        apiClient.get(`/api/users/${profile.userId}/grupos`)
+      ])
+        .then(([alunosRes, gruposRes]) => {
+          setAlunos(alunosRes.data || []);
+          setGrupos(gruposRes.data || []);
+        })
+        .catch((error) => {
+          console.error("Erro ao carregar dados:", error);
+          setAlunos([]);
+          setGrupos([]);
+        })
         .finally(() => setLoadingAlunos(false));
+
+      // Simular carregamento de métricas (mais rápido)
+      setTimeout(() => setLoadingMetricas(false), 800);
+      
+      // Simular carregamento de alertas (mais lento)
+      setTimeout(() => setLoadingAlertas(false), 1200);
     }
   }, [profile, router]);
 
   if (!profile) return <Loading />;
 
-  // Filtros simulados para tabs (ajuste conforme regras reais)
-  const alunosAtivos = alunos; // TODO: filtrar por status real
-  //const alunosInativos: Aluno[] = [];
-  //const alunosPendentes: Aluno[] = [];
+  // Função para calcular idade
+  const calcularIdade = (dataNascimento: string): number => {
+    const nascimento = new Date(dataNascimento);
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const m = hoje.getMonth() - nascimento.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--;
+    }
+    return idade;
+  };
 
-  // Busca simples
-  const alunosFiltrados = alunosAtivos.filter((a) =>
-    a.name.toLowerCase().includes(busca.toLowerCase())
-  );
+  // Filtros simulados para tabs (ajuste conforme regras reais)
+  let alunosParaFiltrar = alunos;
+  
+  // Filtrar por grupo selecionado no TeamSwitcher
+  if (grupoSelecionado && grupoSelecionado !== "all") {
+    // Filtrar alunos que pertencem ao grupo selecionado
+    alunosParaFiltrar = alunos.filter(aluno => 
+      aluno.grupos?.some(grupo => grupo.id === grupoSelecionado)
+    );
+  }
+
+  // Aplicar filtros avançados
+  const alunosFiltrados = alunosParaFiltrar.filter((aluno) => {
+    // Filtro de busca por nome/email/telefone
+    if (busca) {
+      const termoBusca = busca.toLowerCase();
+      const nomeMatch = aluno.name?.toLowerCase().includes(termoBusca) ?? false;
+      const emailMatch = aluno.email?.toLowerCase().includes(termoBusca) ?? false;
+      const telefoneMatch = aluno.telefone?.toLowerCase().includes(termoBusca);
+      
+      if (!nomeMatch && !emailMatch && !telefoneMatch) {
+        return false;
+      }
+    }
+
+    // Filtro por gênero
+    if (filtros.genero && aluno.genero !== filtros.genero) {
+      return false;
+    }
+
+    // Filtro por idade
+    if (aluno.dataNascimento) {
+      const idade = calcularIdade(aluno.dataNascimento);
+      
+      if (filtros.idadeMin && idade < parseInt(filtros.idadeMin)) {
+        return false;
+      }
+      
+      if (filtros.idadeMax && idade > parseInt(filtros.idadeMax)) {
+        return false;
+      }
+    }
+
+    // TODO: Implementar outros filtros (status, última avaliação, grupo)
+
+    return true;
+  });
 
   return (
     <div className="p-4 space-y-6">
       {/* Adicione aqui, logo após o carregamento do perfil */}
 
-      {/* Cards de métricas originais */}
+      {/* Cards de métricas com skeleton loading */}
       <div className="grid gap-4 md:grid-cols-4 mt-2">
-        <MetricCard
-          icon={<Users className="w-5 h-5" aria-hidden="true" />}
-          title="Total de Alunos"
-          value={alunos.length}
-          indicator={
-            <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
-          }
-          indicatorColor="text-green-600"
-          indicatorText="+5%"
-          subtitle="Crescimento mensal"
-          description="Total de alunos cadastrados"
-        />
-        <MetricCard
-          icon={<UserRoundPlus className="w-5 h-5" aria-hidden="true" />}
-          title="Novos Alunos"
-          value={3}
-          indicator={<ArrowDown className="w-5 h-5 text-red-600" />}
-          indicatorColor="text-red-600"
-          indicatorText="-10%"
-          subtitle="Este mês"
-          description="Novos cadastros no período"
-        />
-        <MetricCard
-          icon={<CalendarSync className="w-5 h-5" aria-hidden="true" />}
-          title="Alunos Ativos"
-          value={alunos.length}
-          indicator={
-            <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
-          }
-          indicatorColor="text-green-600"
-          indicatorText="+2%"
-          subtitle="Retenção alta"
-          description="Alunos com avaliações recentes"
-        />
-        <MetricCard
-          icon={<CalendarCheck className="w-5 h-5" aria-hidden="true" />}
-          title="Treinos concluídos"
-          value={139}
-          indicator={
-            <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
-          }
-          indicatorColor="text-green-600"
-          indicatorText="+4.5%"
-          subtitle="Desempenho estável"
-          description="Meta de crescimento atingida"
-        />
+        {loadingMetricas ? (
+          <>
+            <LoadingSkeleton variant="card" />
+            <LoadingSkeleton variant="card" />
+            <LoadingSkeleton variant="card" />
+            <LoadingSkeleton variant="card" />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              icon={<Users className="w-5 h-5" aria-hidden="true" />}
+              title="Total de Alunos"
+              value={alunos.length}
+              indicator={
+                <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
+              }
+              indicatorColor="text-green-600"
+              indicatorText="+5%"
+              subtitle="Crescimento mensal"
+              description="Total de alunos cadastrados"
+            />
+            <MetricCard
+              icon={<UserRoundPlus className="w-5 h-5" aria-hidden="true" />}
+              title="Novos Alunos"
+              value={3}
+              indicator={<ArrowDown className="w-5 h-5 text-red-600" />}
+              indicatorColor="text-red-600"
+              indicatorText="-10%"
+              subtitle="Este mês"
+              description="Novos cadastros no período"
+            />
+            <MetricCard
+              icon={<CalendarSync className="w-5 h-5" aria-hidden="true" />}
+              title="Alunos Ativos"
+              value={alunos.length}
+              indicator={
+                <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
+              }
+              indicatorColor="text-green-600"
+              indicatorText="+2%"
+              subtitle="Retenção alta"
+              description="Alunos com avaliações recentes"
+            />
+            <MetricCard
+              icon={<CalendarCheck className="w-5 h-5" aria-hidden="true" />}
+              title="Treinos concluídos"
+              value={139}
+              indicator={
+                <ArrowDown className="w-5 h-5 rotate-180 text-green-600" />
+              }
+              indicatorColor="text-green-600"
+              indicatorText="+4.5%"
+              subtitle="Desempenho estável"
+              description="Meta de crescimento atingida"
+            />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
-        {/* Seção de alertas inteligentes (mensageria via backend REST/polling) */}
+        {/* Seção de alertas inteligentes com skeleton */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -154,52 +265,66 @@ export default function ProfessoresDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <AlertasPersistenteProfessor
-              ref={alertasRef}
-              userId={profile?.userId ?? ""}
-            />
+            {loadingAlertas ? (
+              <div className="space-y-3">
+                <LoadingSkeleton variant="list" />
+                <LoadingSkeleton variant="list" />
+                <LoadingSkeleton variant="list" />
+              </div>
+            ) : (
+              <AlertasPersistenteProfessor
+                ref={alertasRef}
+                userId={profile?.userId ?? ""}
+              />
+            )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ListTodo className="h-5 w-5" /> Reavaliações Pendentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">12</p>
-            <p className="text-sm text-yellow-600">Agir em breve</p>
-          </CardContent>
-        </Card>
-      </div>
-      {/* Header com busca e notificações */}
-      {/* Filtros e lista de alunos */}
-      <div className="flex flex-row items-center gap-3 justify-end mt-8 w-full">
-        <div className="max-w-xs w-full">
-          <TeamSwitcher teams={[]} />
-        </div>
-        <Input
-          placeholder="Buscar aluno..."
-          className="w-64"
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          aria-label="Buscar aluno"
+        {/* Seção de avaliações pendentes */}
+        <AvaliacoesPendentes 
+          professorId={profile?.userId ?? ""} 
         />
-        <Button variant="outline" size="icon" aria-label="Buscar">
-          <Search className="h-5 w-5" />
-        </Button>
-        <Button variant="outline" size="icon" aria-label="Notificações">
-          <Bell className="h-5 w-5" />
-        </Button>
-        <Button
-          variant="default"
-          className="md:w-auto"
-          onClick={() => setModalConviteOpen(true)}
-          aria-label="Adicionar novo aluno"
-        >
-          + Novo aluno
-        </Button>
+      </div>
+      {/* Header com filtros avançados */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-row items-center gap-3 justify-between">
+          <div className="flex items-center gap-3">
+            <div className="max-w-xs">
+              <TeamSwitcher 
+                teams={[]} 
+                onTeamChange={(groupId) => setGrupoSelecionado(groupId)}
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setModalGerenciarGruposOpen(true)}
+              aria-label="Gerenciar grupos"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Gerenciar Grupos
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => setModalConviteOpen(true)}
+              aria-label="Adicionar novo aluno"
+            >
+              + Novo aluno
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" aria-label="Notificações">
+              <Bell className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+        
+        <FiltrosAvancados
+          busca={busca}
+          onBuscaChange={setBusca}
+          filtros={filtros}
+          onFiltrosChange={setFiltros}
+          grupos={grupos}
+        />
       </div>
       <ConviteAlunoModal
         open={modalConviteOpen}
@@ -214,7 +339,14 @@ export default function ProfessoresDashboard() {
         </TabsList>
         <TabsContent value="ativos">
           {loadingAlunos ? (
-            <Loading />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+              <LoadingSkeleton variant="profile" showAvatar />
+            </div>
           ) : alunosFiltrados.length === 0 ? (
             <div className="flex items-center justify-center h-32">
               <span className="text-lg text-gray-500">
@@ -230,19 +362,19 @@ export default function ProfessoresDashboard() {
                       <Avatar className="w-16 h-16 mb-2">
                         <AvatarImage
                           src={aluno.image || "https://github.com/shadcn.png"}
-                          alt={aluno.name}
+                          alt={aluno.name || 'Aluno'}
                         />
                         <AvatarFallback className="text-2xl">
                           {aluno.name?.[0] ?? "A"}
                         </AvatarFallback>
                       </Avatar>
                       <CardTitle className="text-center w-full text-lg font-semibold">
-                        {aluno.name}
+                        {formatDisplayName(aluno.name)}
                       </CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm flex flex-col items-center">
-                    <p className="text-center">{aluno.email}</p>
+                    <p className="text-center">{formatDisplayEmail(aluno.email)}</p>
                     {(aluno.telefone || aluno.genero) && (
                       <div className="flex flex-row gap-2 justify-center w-full">
                         {aluno.telefone && (
@@ -270,48 +402,44 @@ export default function ProfessoresDashboard() {
                           "pt-BR",
                           { day: "2-digit", month: "2-digit", year: "numeric" }
                         )}{" "}
-                        (
-                        {(() => {
-                          const nascimento = new Date(aluno.dataNascimento!);
-                          const hoje = new Date();
-                          let idade =
-                            hoje.getFullYear() - nascimento.getFullYear();
-                          const m = hoje.getMonth() - nascimento.getMonth();
-                          if (
-                            m < 0 ||
-                            (m === 0 && hoje.getDate() < nascimento.getDate())
-                          ) {
-                            idade--;
-                          }
-                          return `${idade} anos`;
-                        })()}
-                        )
+                        ({calcularIdade(aluno.dataNascimento)} anos)
                       </p>
                     )}
-                    <Button
-                      variant="outline"
-                      className="mt-2 w-full"
-                      onClick={() => {
-                        setAlunoSelecionado(aluno);
-                        setModalAvaliacoesOpen(true);
-                      }}
-                    >
-                      Ver detalhes
-                    </Button>
-                    {/* Modal para exibir avaliações do aluno selecionado */}
-                    <Modal
-                      isOpen={modalAvaliacoesOpen}
-                      onClose={() => setModalAvaliacoesOpen(false)}
-                    >
-                      <div className="p-2 min-w-[320px] max-w-[90vw] w-[500px]">
-                        <h2 className="text-lg font-bold mb-2 text-center">
-                          Avaliações de {alunoSelecionado?.name}
-                        </h2>
-                        {alunoSelecionado && (
-                          <ListaAvaliacoes userPerfilId={alunoSelecionado.id} />
-                        )}
+                    {aluno.grupos && aluno.grupos.length > 0 && (
+                      <div className="flex flex-wrap gap-1 justify-center w-full">
+                        {aluno.grupos.map((grupo) => (
+                          <Badge
+                            key={grupo.id}
+                            variant="outline"
+                            className="bg-blue-100 text-blue-700 text-xs"
+                          >
+                            {grupo.nome}
+                          </Badge>
+                        ))}
                       </div>
-                    </Modal>
+                    )}
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setAlunoSelecionado(aluno);
+                          setModalDetalhesOpen(true);
+                        }}
+                      >
+                        Ver detalhes
+                      </Button>
+                      <Button
+                        variant="default"
+                        className="flex-1"
+                        onClick={() => {
+                          setAlunoParaAvaliar(aluno);
+                          setModalNovaAvaliacaoOpen(true);
+                        }}
+                      >
+                        Nova Avaliação
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -329,6 +457,45 @@ export default function ProfessoresDashboard() {
           </p>
         </TabsContent>
       </Tabs>
+
+      {/* Modal para exibir detalhes do aluno selecionado */}
+      <ModalDetalhesAluno
+        open={modalDetalhesOpen}
+        onClose={() => {
+          setModalDetalhesOpen(false);
+          setAlunoSelecionado(null);
+        }}
+        aluno={alunoSelecionado}
+      />
+
+      {/* Modal para nova avaliação do aluno selecionado */}
+      {alunoParaAvaliar && (
+        <ModalAvaliacaoCompleta
+          open={modalNovaAvaliacaoOpen}
+          onClose={() => {
+            setModalNovaAvaliacaoOpen(false);
+            setAlunoParaAvaliar(null);
+          }}
+          userPerfilId={alunoParaAvaliar.id}
+          onSuccess={() => {
+            setModalNovaAvaliacaoOpen(false);
+            setAlunoParaAvaliar(null);
+            // Aqui você pode adicionar lógica para atualizar a lista de avaliações
+          }}
+          nomeAluno={formatDisplayName(alunoParaAvaliar.name)}
+        />
+      )}
+
+      {/* Modal para gerenciar grupos */}
+      <ModalGerenciarGrupos
+        open={modalGerenciarGruposOpen}
+        onClose={() => setModalGerenciarGruposOpen(false)}
+        professorId={profile?.userId ?? ""}
+        onGrupoChange={() => {
+          // Força atualização dos grupos no TeamSwitcher
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

@@ -1,0 +1,202 @@
+{
+  "exemplos": {
+    "faulkner": {
+      "endpoint": "POST /api/dobras-cutaneas/calcular",
+      "payload": {
+        "userPerfilId": "user123",
+        "protocolo": "faulkner",
+        "dadosPessoais": {
+          "genero": "M",
+          "peso": 80
+        },
+        "medidas": {
+          "triceps": 12,
+          "subescapular": 15,
+          "suprailiaca": 18,
+          "bicipital": 8
+        },
+        "observacoes": "Avaliação de rotina"
+      }
+    },
+    "pollock3_homens": {
+      "endpoint": "POST /api/dobras-cutaneas/calcular",
+      "payload": {
+        "userPerfilId": "user456",
+        "protocolo": "pollock-3-homens",
+        "dadosPessoais": {
+          "genero": "M",
+          "idade": 28,
+          "peso": 75
+        },
+        "medidas": {
+          "peitoral": 10,
+          "abdominal": 16,
+          "coxa": 14
+        }
+      }
+    },
+    "pollock3_mulheres": {
+      "endpoint": "POST /api/dobras-cutaneas/calcular",
+      "payload": {
+        "userPerfilId": "user789",
+        "protocolo": "pollock-3-mulheres",
+        "dadosPessoais": {
+          "genero": "F",
+          "idade": 25,
+          "peso": 60
+        },
+        "medidas": {
+          "triceps": 14,
+          "suprailiaca": 16,
+          "coxa": 18
+        }
+      }
+    },
+    "pollock7": {
+      "endpoint": "POST /api/dobras-cutaneas/calcular",
+      "payload": {
+        "userPerfilId": "user101",
+        "protocolo": "pollock-7",
+        "dadosPessoais": {
+          "genero": "F",
+          "idade": 30,
+          "peso": 65
+        },
+        "medidas": {
+          "triceps": 14,
+          "subescapular": 10,
+          "suprailiaca": 16,
+          "abdominal": 12,
+          "peitoral": 8,
+          "axilarMedia": 11,
+          "coxa": 18
+        }
+      }
+    },
+    "pollock9_atletas": {
+      "endpoint": "POST /api/dobras-cutaneas/calcular",
+      "payload": {
+        "userPerfilId": "atleta001",
+        "protocolo": "pollock-9",
+        "dadosPessoais": {
+          "genero": "M",
+          "idade": 24,
+          "peso": 80
+        },
+        "medidas": {
+          "triceps": 8,
+          "subescapular": 9,
+          "suprailiaca": 10,
+          "abdominal": 8,
+          "peitoral": 6,
+          "axilarMedia": 7,
+          "coxa": 12,
+          "biceps": 5,
+          "panturrilha": 7
+        },
+        "observacoes": "Atleta de alto rendimento"
+      }
+    },
+    "guedes": {
+      "endpoint": "POST /api/dobras-cutaneas/calcular",
+      "payload": {
+        "userPerfilId": "user202",
+        "protocolo": "guedes",
+        "dadosPessoais": {
+          "genero": "M",
+          "idade": 35,
+          "peso": 78
+        },
+        "medidas": {
+          "triceps": 13,
+          "subescapular": 14,
+          "suprailiaca": 17,
+          "abdominal": 16,
+          "coxa": 19,
+          "peitoral": 9,
+          "axilarMedia": 12
+        }
+      }
+    }
+  },
+  "endpoints_disponíveis": {
+    "listar_protocolos": {
+      "method": "GET",
+      "url": "/api/dobras-cutaneas/protocolos",
+      "descricao": "Lista todos os protocolos disponíveis"
+    },
+    "calcular_sem_salvar": {
+      "method": "POST",
+      "url": "/api/dobras-cutaneas/calcular",
+      "descricao": "Calcula dobras cutâneas sem salvar no banco"
+    },
+    "validar_dados": {
+      "method": "POST",
+      "url": "/api/dobras-cutaneas/validar",
+      "descricao": "Valida os dados antes do cálculo"
+    },
+    "criar_avaliacao": {
+      "method": "POST",
+      "url": "/api/dobras-cutaneas",
+      "descricao": "Cria e salva uma nova avaliação",
+      "auth_required": true
+    },
+    "buscar_por_id": {
+      "method": "GET",
+      "url": "/api/dobras-cutaneas/:id",
+      "descricao": "Busca avaliação específica",
+      "auth_required": true
+    },
+    "buscar_por_usuario": {
+      "method": "GET",
+      "url": "/api/dobras-cutaneas/usuario/:userPerfilId",
+      "descricao": "Lista avaliações de um usuário",
+      "auth_required": true
+    }
+  },
+  "protocolos_info": {
+    "faulkner": {
+      "nome": "Faulkner",
+      "dobras": ["triceps", "subescapular", "suprailiaca", "bicipital"],
+      "requer_idade": false,
+      "genero": "ambos"
+    },
+    "pollock-3-homens": {
+      "nome": "Pollock 3 dobras (Homens)",
+      "dobras": ["peitoral", "abdominal", "coxa"],
+      "requer_idade": true,
+      "idade_min": 18,
+      "idade_max": 61,
+      "genero": "masculino"
+    },
+    "pollock-3-mulheres": {
+      "nome": "Pollock 3 dobras (Mulheres)",
+      "dobras": ["triceps", "suprailiaca", "coxa"],
+      "requer_idade": true,
+      "idade_min": 18,
+      "idade_max": 61,
+      "genero": "feminino"
+    },
+    "pollock-7": {
+      "nome": "Pollock 7 dobras",
+      "dobras": ["triceps", "subescapular", "suprailiaca", "abdominal", "peitoral", "axilarMedia", "coxa"],
+      "requer_idade": true,
+      "idade_min": 18,
+      "idade_max": 61,
+      "genero": "ambos"
+    },
+    "pollock-9": {
+      "nome": "Pollock 9 dobras (Atletas)",
+      "dobras": ["triceps", "subescapular", "suprailiaca", "abdominal", "peitoral", "axilarMedia", "coxa", "biceps", "panturrilha"],
+      "requer_idade": false,
+      "genero": "ambos",
+      "observacao": "Bíceps e panturrilha são registrados mas não entram na equação"
+    },
+    "guedes": {
+      "nome": "Guedes (População Brasileira)",
+      "dobras": ["triceps", "subescapular", "suprailiaca", "abdominal", "coxa", "peitoral", "axilarMedia"],
+      "requer_idade": true,
+      "genero": "ambos"
+    }
+  }
+}

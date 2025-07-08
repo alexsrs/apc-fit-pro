@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import Loading from "@/components/ui/Loading";
 import { useAvaliacaoValida } from "@/hooks/useAvaliacaoValida";
-import { ModalTriagem } from "@/components/ModalTriagem";
-import { ModalAnamnese } from "@/components/ModalAnamnese";
-import { ModalMedidasCorporais } from "@/components/ModalMedidasCorporais";
+import { ModalAvaliacaoAluno } from "@/components/ModalAvaliacaoAluno";
 import {
   CalendarCheck,
   Dumbbell,
@@ -20,6 +18,8 @@ import {
   MessageCircle,
   ArrowDown,
   ArrowUpRight,
+  UserCheck,
+  Play,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,37 +29,13 @@ import {
   ListaAvaliacoes,
   ListaAvaliacoesHandle,
 } from "@/components/ListaAvaliacoes";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useProximaAvaliacao } from "@/hooks/useProximaAvaliacao";
 import { useEvolucaoFisica } from "@/hooks/useEvolucaoFisica";
 import {
   AlertasPersistente,
   AlertasPersistenteHandle,
 } from "@/app/components/AlertasPersistente";
-import {
-  ResultadoAvaliacao,
-  type ResultadoAvaliacaoProps,
-} from "@/components/ResultadoAvaliacao";
-import { normalizarGenero } from "@/utils/normalizar-genero";
-
-// Função utilitária para calcular idade
-function calcularIdade(dataNascimento?: string): number | undefined {
-  if (!dataNascimento) return undefined;
-  const nascimento = new Date(dataNascimento);
-  if (isNaN(nascimento.getTime())) return undefined;
-  const hoje = new Date();
-  let idade = hoje.getFullYear() - nascimento.getFullYear();
-  const m = hoje.getMonth() - nascimento.getMonth();
-  if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
-    idade--;
-  }
-  return idade >= 0 ? idade : undefined;
-}
+import { ModalDetalhesAvaliacao } from "@/components/ModalDetalhesAvaliacao";
 
 export default function AlunosDashboard() {
   const { profile } = useUserProfile();
@@ -69,10 +45,7 @@ export default function AlunosDashboard() {
   );
 
   const router = useRouter();
-  const [showAnamnese, setShowAnamnese] = useState(false);
-  const [showMedidas, setShowMedidas] = useState(false);
-  const [, setLastTriagemObj] = useState<string | null>(null);
-  const [showTriagem, setShowTriagem] = useState(false);
+  const [showAvaliacaoCompleta, setShowAvaliacaoCompleta] = useState(false);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] =
     useState<Avaliacao | null>(null);
   const listaRef = useRef<ListaAvaliacoesHandle>(null);
@@ -88,13 +61,12 @@ export default function AlunosDashboard() {
 
   useEffect(() => {
     // Abre o modal se não houver avaliação válida (inclui 404, vencida ou inválida)
-    if (avaliacaoValida === false) setShowTriagem(true);
+    if (avaliacaoValida === false) setShowAvaliacaoCompleta(true);
   }, [avaliacaoValida]);
 
   useEffect(() => {
     function handleOpenTriagemModal() {
-      setShowAnamnese(false);
-      setShowTriagem(true);
+      setShowAvaliacaoCompleta(true);
     }
     window.addEventListener("open-triagem-modal", handleOpenTriagemModal);
     return () => {
@@ -104,8 +76,7 @@ export default function AlunosDashboard() {
 
   useEffect(() => {
     function handleOpenAnamneseModal() {
-      setShowAnamnese(false);
-      setTimeout(() => setShowAnamnese(true), 50);
+      setShowAvaliacaoCompleta(true);
     }
     window.addEventListener("open-anamnese-modal", handleOpenAnamneseModal);
     return () => {
@@ -118,8 +89,7 @@ export default function AlunosDashboard() {
 
   useEffect(() => {
     function handleOpenMedidasModal() {
-      setShowMedidas(false);
-      setTimeout(() => setShowMedidas(true), 50);
+      setShowAvaliacaoCompleta(true);
     }
     window.addEventListener("open-medidas-modal", handleOpenMedidasModal);
     return () => {
@@ -127,30 +97,11 @@ export default function AlunosDashboard() {
     };
   }, []);
 
-  // Função para lidar com o sucesso da triagem
-  // e decidir se deve abrir a anamnese ou recarregar a página
-  function handleTriagemSuccess(objetivo?: string) {
-    setShowTriagem(false);
-    if (objetivo && objetivo !== "Alto rendimento esportivo") {
-      setShowAnamnese(true);
-      setLastTriagemObj(objetivo);
-    } else {
-      window.location.reload();
-    }
-  }
-
-  const idade =
-    profile && profile.dataNascimento
-      ? calcularIdade(
-          typeof profile.dataNascimento === "string"
-            ? profile.dataNascimento
-            : profile.dataNascimento.toISOString()
-        )
-      : undefined;
-
-  function handleMedidasSuccess() {
+  // Função para lidar com o sucesso da avaliação completa
+  function handleAvaliacaoSuccess() {
+    setShowAvaliacaoCompleta(false);
     listaRef.current?.refetch();
-    setShowMedidas(false);
+    window.location.reload();
   }
 
   if (!profile) return <Loading />;
@@ -310,7 +261,11 @@ export default function AlunosDashboard() {
   ];
 
   const acoesRapidas = [
-    { icon: <ClipboardList className="w-6 h-6" />, label: "Minhas Avaliações" },
+    { 
+      icon: <UserCheck className="w-6 h-6" />, 
+      label: "Realizar Avaliação",
+      acao: () => setShowAvaliacaoCompleta(true)
+    },
     { icon: <Brain className="w-6 h-6" />, label: "Anamnese" },
     { icon: <Dumbbell className="w-6 h-6" />, label: "Meu Treino Atual" },
     { icon: <BarChart2 className="w-6 h-6" />, label: "Minha Evolução" },
@@ -399,12 +354,22 @@ export default function AlunosDashboard() {
         </Card>
       </div>
       {/* Card Minhas Avaliações em destaque abaixo (único) */}
-      <div className="mt-4 flex md:justify-start justify-center">
+      <div className="mt-4 flex md:justify-start justify-center" data-section="avaliacoes">
         <div className="w-full md:w-1/3">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 w-full">
-                <ClipboardList className="h-5 w-5" /> Minhas Avaliações
+              <CardTitle className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5" /> Minhas Avaliações
+                </div>
+                <Button 
+                  onClick={() => setShowAvaliacaoCompleta(true)}
+                  size="sm"
+                  className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
+                >
+                  <Play className="h-4 w-4" />
+                  Iniciar Avaliação
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -423,9 +388,10 @@ export default function AlunosDashboard() {
             className="flex flex-col items-center gap-1 py-6"
             aria-label={a.label}
             onClick={() => {
-              if (a.label === "Anamnese") {
-                setShowAnamnese(false); // Garante reset
-                setTimeout(() => setShowAnamnese(true), 50); // Força abrir
+              if (a.acao) {
+                a.acao();
+              } else if (a.label === "Anamnese") {
+                setShowAvaliacaoCompleta(true);
               }
             }}
           >
@@ -434,86 +400,23 @@ export default function AlunosDashboard() {
           </Button>
         ))}
       </div>
-      {/* Modal de triagem */}
-      <ModalTriagem
-        open={showTriagem}
-        onClose={() => setShowTriagem(false)}
-        userPerfilId={profile.id ?? ""}
-        onSuccess={(objetivo) => handleTriagemSuccess(objetivo)}
+      {/* Modal de avaliação completa para alunos */}
+      <ModalAvaliacaoAluno
+        open={showAvaliacaoCompleta}
+        onClose={() => setShowAvaliacaoCompleta(false)}
+        onSuccess={handleAvaliacaoSuccess}
       />
-      <ModalAnamnese
-        open={showAnamnese}
-        onClose={() => setShowAnamnese(false)}
-        userPerfilId={profile.id ?? ""}
-        onSuccess={() => window.location.reload()}
-      />
-      <ModalMedidasCorporais
-        open={showMedidas}
-        onClose={() => setShowMedidas(false)}
-        userPerfilId={profile.id ?? ""}
-        onSuccess={handleMedidasSuccess}
-        dataNascimento={
-          profile.dataNascimento ? String(profile.dataNascimento) : ""
-        }
-        idade={idade ?? 0} // Passe a idade calculada aqui!
-      />
-      {/* Modal de detalhes */}
-      <Dialog
-        open={!!avaliacaoSelecionada}
-        onOpenChange={() => setAvaliacaoSelecionada(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Detalhes da Avaliação</DialogTitle>
-          </DialogHeader>
-          {avaliacaoSelecionada && (
-            <div className="space-y-2">
-              <p>
-                <b>Tipo:</b> {avaliacaoSelecionada.tipo}
-              </p>
-              <p>
-                <b>Data:</b>{" "}
-                {new Date(avaliacaoSelecionada.data).toLocaleDateString(
-                  "pt-BR"
-                )}
-              </p>
-              <p>
-                <b>Status:</b> {avaliacaoSelecionada.status}
-              </p>
-              {avaliacaoSelecionada.objetivo && (
-                <p>
-                  <b>Objetivo:</b> {avaliacaoSelecionada.objetivo}
-                </p>
-              )}
-              {/* Exibe resultado detalhado se existir */}
-              {avaliacaoSelecionada.resultado &&
-                typeof avaliacaoSelecionada.resultado === "object" &&
-                !Array.isArray(avaliacaoSelecionada.resultado) && (
-                  <>
-                    <h4 className="font-semibold mt-4 mb-2 text-sm text-zinc-700">
-                      Conteúdo da avaliação:
-                    </h4>
-                    <ResultadoAvaliacao
-                      resultado={
-                        typeof avaliacaoSelecionada.resultado === "string"
-                          ? (JSON.parse(
-                              avaliacaoSelecionada.resultado
-                            ) as ResultadoAvaliacaoProps["resultado"])
-                          : (avaliacaoSelecionada.resultado as ResultadoAvaliacaoProps["resultado"])
-                      }
-                      inModal={true}
-                      generoUsuario={normalizarGenero(profile?.genero)}
-                      tipo={avaliacaoSelecionada.tipo}
-                      objetivoClassificado={
-                        avaliacaoSelecionada.objetivoClassificado
-                      }
-                    />
-                  </>
-                )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Modal de detalhes da avaliação */}
+      {avaliacaoSelecionada && avaliacaoSelecionada.resultado && (
+        <ModalDetalhesAvaliacao
+          open={!!avaliacaoSelecionada}
+          onClose={() => setAvaliacaoSelecionada(null)}
+          avaliacao={{
+            ...avaliacaoSelecionada,
+            resultado: avaliacaoSelecionada.resultado
+          }}
+        />
+      )}
     </div>
   );
 }

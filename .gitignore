@@ -36,3 +36,65 @@ deployment-credentials*.json
 logs/
 temp/
 tmp/
+
+# 🧪 ARQUIVOS DE TESTE E DESENVOLVIMENTO
+# Arquivos de teste temporários
+teste*.ts
+teste*.js
+teste*.tsx
+teste*.jsx
+test-*.ts
+test-*.js
+test-*.tsx
+test-*.jsx
+**/teste/**
+**/temp-tests/**
+**/sandbox/**
+
+# Arquivos de prototipagem
+prototype*.ts
+prototype*.js
+prototype*.tsx
+prototype*.jsx
+draft*.ts
+draft*.js
+draft*.tsx
+draft*.jsx
+
+# Documentação temporária
+temp*.md
+draft*.md
+teste*.md
+sandbox*.md
+
+# Node.js e dependências
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build e compilação
+dist/
+build/
+.next/
+out/
+generated/
+
+# IDE e editores
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS específicos
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+/docs/script-teste-grupos.js

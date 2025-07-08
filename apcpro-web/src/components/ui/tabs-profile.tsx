@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LoadingInline } from "@/components/ui/Loading";
 import apiClient from "@/lib/api-client";
 
 export default function TabsProfile() {
@@ -224,9 +225,14 @@ export default function TabsProfile() {
                 <SelectTrigger>
                   <SelectValue
                     placeholder={
-                      loadingProfessores
-                        ? "Carregando..."
-                        : "Selecione o professor"
+                      loadingProfessores ? (
+                        <div className="flex items-center gap-2">
+                          <LoadingInline size="sm" />
+                          <span>Carregando...</span>
+                        </div>
+                      ) : (
+                        "Selecione o professor"
+                      )
                     }
                   />
                 </SelectTrigger>

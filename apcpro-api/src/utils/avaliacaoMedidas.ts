@@ -2,11 +2,23 @@ import { Genero } from "../models/genero-model";
 import { RcqService } from "../services/rcq-service";
 import { converterMedidasJson } from "./conversorMedidas";
 import { RCQResultado } from "../models/rcq-model";
+import { generoParaString } from "./genero-converter";
 
 // Função utilitária para processar o body do frontend:
 export function processarMedidas(body: any) {
   const medidas = converterMedidasJson(body);
   return calcularIndicesMedidas(medidas);
+}
+
+// Interface para dobras cutâneas (7 pontos mais comuns)
+export interface DobrasCutaneas {
+  triceps?: number;          // mm
+  biceps?: number;           // mm
+  subescapular?: number;     // mm
+  suprailiaca?: number;      // mm
+  abdominal?: number;        // mm
+  coxa?: number;             // mm
+  panturrilha?: number;      // mm
 }
 
 export interface MedidasInput {
@@ -18,6 +30,8 @@ export interface MedidasInput {
   pescoco?: number; // em cm
   quadril?: number; // em cm (obrigatório para mulheres)
   abdomen?: number; // em cm
+  // Novo: Dobras cutâneas
+  dobras?: DobrasCutaneas;
 }
 
 // Função utilitária para converter genero para número
@@ -96,18 +110,33 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
     1.2 * imc + 0.23 * dados.idade - 10.8 * sexoNum - 5.4;
 
   // %GC Marinha
-  const percentualGC_Marinha = calcularPercentualGorduraMarinha({
-    cintura: dados.cintura,
-    pescoco: dados.pescoco!,
-    quadril: dados.quadril,
-    altura: dados.altura,
-    sexo: dados.genero === Genero.Masculino ? "masculino" : "feminino",
-  });
+  let percentualGC_Marinha: number | null = null;
+  let classificacaoGC_Marinha: string | null = null;
 
-  const classificacaoGC_Marinha = classificarPercentualGordura(
-    percentualGC_Marinha,
-    dados.genero === Genero.Masculino ? "masculino" : "feminino"
-  );
+  if (dados.pescoco && dados.cintura && dados.altura) {
+    try {
+      percentualGC_Marinha = calcularPercentualGorduraMarinha({
+        cintura: dados.cintura,
+        pescoco: dados.pescoco,
+        quadril: dados.quadril,
+        altura: dados.altura,
+        sexo: generoParaString(dados.genero),
+      });
+
+      // Verifica se o resultado é válido
+      if (isNaN(percentualGC_Marinha) || !isFinite(percentualGC_Marinha)) {
+        percentualGC_Marinha = null;
+      } else {
+        classificacaoGC_Marinha = classificarPercentualGordura(
+          percentualGC_Marinha,
+          generoParaString(dados.genero)
+        );
+      }
+    } catch (error) {
+      percentualGC_Marinha = null;
+      classificacaoGC_Marinha = null;
+    }
+  }
 
   // Relação Cintura-Quadril (RCQ)
   let rcqResultado: RCQResultado | null = null;
@@ -122,6 +151,32 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
   // Circunferência Abdominal (CA)
   const ca = typeof dados.abdomen === "number" ? dados.abdomen : null;
 
+  // Cálculos de Dobras Cutâneas
+  let percentualGC_Faulkner: number | null = null;
+  let percentualGC_Pollock: number | null = null;
+  let percentualGC_Guedes: number | null = null;
+  let classificacaoGC_Faulkner: string | null = null;
+  let classificacaoGC_Pollock: string | null = null;
+  let classificacaoGC_Guedes: string | null = null;
+
+  if (dados.dobras) {
+    percentualGC_Faulkner = calculateFaulkner(dados.dobras, dados.genero);
+    percentualGC_Pollock = calculatePollock(dados.dobras, dados.genero, dados.idade);
+    percentualGC_Guedes = calculateGuedes(dados.dobras, dados.genero);
+
+    // Classificações das dobras cutâneas
+    const sexo = generoParaString(dados.genero);
+    if (percentualGC_Faulkner !== null) {
+      classificacaoGC_Faulkner = classificarPercentualGordura(percentualGC_Faulkner, sexo);
+    }
+    if (percentualGC_Pollock !== null) {
+      classificacaoGC_Pollock = classificarPercentualGordura(percentualGC_Pollock, sexo);
+    }
+    if (percentualGC_Guedes !== null) {
+      classificacaoGC_Guedes = classificarPercentualGordura(percentualGC_Guedes, sexo);
+    }
+  }
+
   return {
     ...dados,
     imc,
@@ -133,6 +188,13 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
     classificacaoCA: ca !== null ? classificarCA(ca, dados.genero) : null,
     percentualGC_Marinha,
     classificacaoGC_Marinha,
+    // Novos campos: Dobras Cutâneas
+    percentualGC_Faulkner,
+    classificacaoGC_Faulkner,
+    percentualGC_Pollock,
+    classificacaoGC_Pollock,
+    percentualGC_Guedes,
+    classificacaoGC_Guedes,
   };
 }
 
@@ -140,7 +202,7 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
 // https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight
 function classificarIMC(imc: number): string {
   if (imc < 18.5) return "Abaixo do peso";
-  if (imc < 25) return "Peso normal";
+  if (imc < 25) return "Normal";
   if (imc < 30) return "Pré-obesidade";
   if (imc < 35) return "Obesidade I";
   if (imc < 40) return "Obesidade II";
@@ -210,4 +272,71 @@ function classificarPercentualGC(
   if (percentualGC < adequado) return "Ideal"; // Indicado para praticantes regulares de atividade física e adultos saudáveis
   if (percentualGC < alto) return "Acima do ideal"; // Frequente em adultos sedentários ou em processo de emagrecimento
   return "Muito acima do ideal"; // Comum em pessoas com obesidade ou sedentarismo prolongado
+}
+
+// ===== FUNÇÕES PARA CÁLCULO DE DOBRAS CUTÂNEAS =====
+
+/**
+ * Protocolo de Faulkner et al. (1968) - 4 dobras
+ * Usa: triceps, subescapular, suprailíaca, abdominal
+ */
+export function calculateFaulkner(dobras: DobrasCutaneas, genero: Genero): number | null {
+  const { triceps, subescapular, suprailiaca, abdominal } = dobras;
+  
+  if (!triceps || !subescapular || !suprailiaca || !abdominal) {
+    return null; // Precisa das 4 dobras obrigatórias
+  }
+  
+  const somaDobras = triceps + subescapular + suprailiaca + abdominal;
+  
+  if (genero === Genero.Masculino) {
+    return 0.153 * somaDobras + 5.783;
+  } else {
+    return 0.213 * somaDobras + 7.9;
+  }
+}
+
+/**
+ * Protocolo de Pollock e Jackson (1984) - 3 ou 7 dobras
+ * Para homens: triceps, subescapular, suprailíaca
+ * Para mulheres: triceps, coxa, suprailíaca
+ */
+export function calculatePollock(dobras: DobrasCutaneas, genero: Genero, idade: number): number | null {
+  const { triceps, subescapular, suprailiaca, coxa } = dobras;
+  
+  if (genero === Genero.Masculino) {
+    if (!triceps || !subescapular || !suprailiaca) {
+      return null;
+    }
+    const somaDobras = triceps + subescapular + suprailiaca;
+    const densidadeCorporal = 1.10938 - (0.0008267 * somaDobras) + (0.0000016 * Math.pow(somaDobras, 2)) - (0.0002574 * idade);
+    return ((4.95 / densidadeCorporal) - 4.5) * 100;
+  } else {
+    if (!triceps || !coxa || !suprailiaca) {
+      return null;
+    }
+    const somaDobras = triceps + coxa + suprailiaca;
+    const densidadeCorporal = 1.0994921 - (0.0009929 * somaDobras) + (0.0000023 * Math.pow(somaDobras, 2)) - (0.0001392 * idade);
+    return ((4.95 / densidadeCorporal) - 4.5) * 100;
+  }
+}
+
+/**
+ * Protocolo de Guedes (1994) - Específico para brasileiros
+ * Usa: triceps, subescapular, suprailíaca, panturrilha
+ */
+export function calculateGuedes(dobras: DobrasCutaneas, genero: Genero): number | null {
+  const { triceps, subescapular, suprailiaca, panturrilha } = dobras;
+  
+  if (!triceps || !subescapular || !suprailiaca || !panturrilha) {
+    return null; // Precisa das 4 dobras obrigatórias
+  }
+  
+  const somaDobras = triceps + subescapular + suprailiaca + panturrilha;
+  
+  if (genero === Genero.Masculino) {
+    return 0.1051 * somaDobras + 2.585;
+  } else {
+    return 0.1548 * somaDobras + 3.580;
+  }
 }

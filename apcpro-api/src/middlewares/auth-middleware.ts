@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user-model";
+import prisma from "../prisma";
 
 /**
  * Middleware de autenticação JWT para rotas protegidas.
@@ -66,6 +67,49 @@ export async function authenticateUser(
     res.status(401).json({
       error: "Token JWT inválido ou expirado.",
       details: process.env.NODE_ENV !== "production" ? err.message : undefined,
+    });
+    return;
+  }
+}
+
+/**
+ * Middleware para verificar se o usuário é professor
+ * Deve ser usado após authenticateUser
+ */
+export async function requireProfessor(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({
+        error: "Usuário não autenticado",
+        message: "É necessário estar logado para acessar esta funcionalidade",
+      });
+      return;
+    }
+
+    // Buscar o perfil do usuário para verificar o role
+    const userProfile = await prisma.userPerfil.findFirst({
+      where: { userId: req.user.id },
+    });
+
+    if (!userProfile || userProfile.role !== "professor") {
+      res.status(403).json({
+        error: "Acesso negado",
+        message:
+          "Apenas professores podem realizar avaliações de dobras cutâneas. Esta funcionalidade requer conhecimento técnico especializado e equipamentos adequados para medições precisas.",
+      });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    console.error("[requireProfessor] Erro ao verificar role do usuário:", error);
+    res.status(500).json({
+      error: "Erro interno do servidor",
+      message: "Erro ao verificar permissões do usuário",
     });
     return;
   }

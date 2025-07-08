@@ -2,7 +2,7 @@ import "dotenv/config";
 import { Router, Request, Response, NextFunction } from "express";
 
 import {
-  getUser,
+  getAllUsers,
   getUserById,
   getUserStudents,
   addStudentToUser,
@@ -12,6 +12,9 @@ import {
   createUserGroup,
   updateUserGroup,
   deleteUserGroup,
+  addStudentToGroup,
+  removeStudentFromGroup,
+  getGroupStudents,
   getUserProfileByUserId,
   postUserProfileByUserId,
   getProfessores,
@@ -21,11 +24,22 @@ import {
   getProfessorById,
   getProximaAvaliacaoAluno,
   getEvolucaoFisica,
+  aprovarAvaliacaoAluno,
+  reprovarAvaliacaoAluno,
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
-import { authenticateUser } from "./middlewares/auth-middleware";
+import { authenticateUser, requireProfessor } from "./middlewares/auth-middleware";
 
 import { avaliarCAController } from "./controllers/avaliarCA-controller";
+import { calcularMedidasController } from "./controllers/avaliacao-controller";
+import {
+  criarAvaliacaoDobrasCutaneas,
+  calcularDobrasCutaneas,
+  buscarAvaliacoesPorUsuario,
+  buscarAvaliacaoPorId,
+  listarProtocolos,
+  validarDadosDobrasCutaneas
+} from "./controllers/dobras-cutaneas-controller";
 
 const router = Router();
 
@@ -341,7 +355,7 @@ router.get("/metrics", authenticateUser, (req: Request, res: Response) => {
 });
 
 // Outras rotas públicas
-router.get("/users", authenticateUser, getUser);
+router.get("/users", authenticateUser, getAllUsers);
 router.get("/users/:id", authenticateUser, getUserById);
 router.post("/:userId/profile", authenticateUser, postUserProfileByUserId);
 router.get("/:userId/profile", authenticateUser, getUserProfileByUserId);
@@ -622,6 +636,11 @@ router.get("/users/:id/grupos", authenticateUser, getUserGroups);
 router.post("/users/:id/grupos", authenticateUser, createUserGroup);
 router.put("/users/:id/grupos/:groupId", authenticateUser, updateUserGroup);
 router.delete("/users/:id/grupos/:groupId", authenticateUser, deleteUserGroup);
+
+// Rotas para gerenciar alunos nos grupos
+router.post("/users/:id/grupos/:groupId/alunos/:studentId", authenticateUser, addStudentToGroup);
+router.delete("/users/:id/grupos/:groupId/alunos/:studentId", authenticateUser, removeStudentFromGroup);
+router.get("/users/:id/grupos/:groupId/alunos", authenticateUser, getGroupStudents);
 
 /**
  * @swagger
@@ -1048,6 +1067,30 @@ router.get(
   getEvolucaoFisica
 );
 
+// Rotas para aprovação/reprovação de avaliações
+router.patch(
+  "/avaliacoes/:avaliacaoId/aprovar",
+  authenticateUser,
+  async (req, res, next) => {
+    try {
+      await aprovarAvaliacaoAluno(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+router.patch(
+  "/avaliacoes/:avaliacaoId/reprovar",
+  authenticateUser,
+  async (req, res, next) => {
+    try {
+      await reprovarAvaliacaoAluno(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // Rota para autenticação
 router.post("/auth/sessions", persistSession as any);
 // Certifique-se de importar ou definir o authMiddleware corretamenteAjuste o caminho conforme necessário
@@ -1059,6 +1102,158 @@ router.post("/avaliar-ca", authenticateUser, async (req, res, next) => {
     await avaliarCAController(req, res);
   } catch (error) {
     next(error);
+  }
+});
+
+// Endpoint para calcular medidas corporais (inclui dobras cutâneas)
+router.post("/calcular-medidas", async (req, res, next) => {
+  try {
+    await calcularMedidasController(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// === ROTAS PARA DOBRAS CUTÂNEAS ===
+
+// Listar protocolos disponíveis
+router.get("/dobras-cutaneas/protocolos", async (req, res, next) => {
+  try {
+    await listarProtocolos(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Calcular dobras cutâneas sem salvar (APENAS PROFESSORES)
+router.post("/dobras-cutaneas/calcular", authenticateUser, requireProfessor, async (req, res, next) => {
+  try {
+    await calcularDobrasCutaneas(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Validar dados antes do cálculo (APENAS PROFESSORES)
+router.post("/dobras-cutaneas/validar", authenticateUser, requireProfessor, async (req, res, next) => {
+  try {
+    await validarDadosDobrasCutaneas(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Criar nova avaliação de dobras cutâneas (APENAS PROFESSORES)
+router.post("/dobras-cutaneas", authenticateUser, requireProfessor, async (req, res, next) => {
+  try {
+    await criarAvaliacaoDobrasCutaneas(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Buscar avaliação específica por ID
+router.get("/dobras-cutaneas/:id", authenticateUser, async (req, res, next) => {
+  try {
+    await buscarAvaliacaoPorId(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Buscar avaliações por usuário
+router.get("/dobras-cutaneas/usuario/:userPerfilId", authenticateUser, async (req, res, next) => {
+  try {
+    await buscarAvaliacoesPorUsuario(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// === ROTAS GENÉRICAS PARA AVALIAÇÕES (para compatibilidade com testes) ===
+
+// Criar nova avaliação
+router.post("/avaliacoes", authenticateUser, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // Para testes de integração, redireciona para a rota padrão com userPerfilId
+    const { userPerfilId, ...dadosAvaliacao } = req.body;
+    if (!userPerfilId) {
+      res.status(400).json({ 
+        erro: "userPerfilId é obrigatório",
+        message: "userPerfilId é obrigatório para criar avaliação" 
+      });
+      return;
+    }
+    
+    // Simula o comportamento de criação de avaliação
+    (req.params as any).userPerfilId = userPerfilId;
+    req.body = dadosAvaliacao;
+    
+    await cadastrarAvaliacaoAluno(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Listar avaliações por usuário
+router.get("/avaliacoes/:userPerfilId", authenticateUser, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    await listarAvaliacoesAluno(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Atualizar status da avaliação
+router.put("/avaliacoes/:id/status", authenticateUser, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { status, motivo, diasValidade } = req.body;
+    
+    if (status === 'aprovada') {
+      (req.params as any).avaliacaoId = req.params.id;
+      req.body = { diasValidade };
+      await aprovarAvaliacaoAluno(req, res, next);
+    } else if (status === 'reprovada') {
+      (req.params as any).avaliacaoId = req.params.id;
+      req.body = { motivo };
+      await reprovarAvaliacaoAluno(req, res, next);
+    } else {
+      res.status(400).json({ 
+        erro: "Status inválido",
+        message: "Status deve ser 'aprovada' ou 'reprovada'" 
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// === FIM DAS ROTAS GENÉRICAS PARA AVALIAÇÕES ===
+
+// Endpoint temporário para debug de grupos
+router.get('/debug/grupos', async (req: Request, res: Response) => {
+  try {
+    const { DebugGrupos } = await import('./utils/debug-grupos');
+    
+    console.log('🔍 Iniciando debug de grupos...');
+    
+    // Verificar estado atual
+    const estado = await DebugGrupos.verificarEstadoAtual();
+    
+    // Criar dados de teste se necessário
+    await DebugGrupos.criarDadosTeste();
+    
+    res.json({
+      success: true,
+      message: 'Debug executado com sucesso. Verifique o console do servidor.',
+      estado
+    });
+  } catch (error) {
+    console.error('Erro no debug:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 });
 

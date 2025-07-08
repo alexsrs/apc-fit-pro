@@ -8,8 +8,9 @@ import { userProfileSchema } from "../validators/user-profile.validator";
 import { grupoSchema } from "../validators/group.validator";
 import { classificarObjetivoAnamnese } from "../utils/avaliacaoProcessor";
 import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
-// Adicione a importação ou declaração do tipo Sexo
-type Sexo = "masculino" | "feminino" | 1 | 0;
+import { Genero, isGenero } from "../models/genero-model";
+import { NovaAvaliacaoMessage } from "../utils/messaging";
+import { converterSexoParaGenero, isSexoValido, SexoInput } from "../utils/genero-converter";
 
 function handleServiceError(error: unknown, message: string): never {
   console.error(message, error);
@@ -180,6 +181,10 @@ export class UsersService {
         telefone: perfil.telefone ?? "",
         dataNascimento: perfil.dataNascimento ?? null,
         genero: perfil.genero ?? "",
+        grupos: perfil.grupos?.map((grupo: any) => ({
+          id: grupo.id,
+          nome: grupo.nome
+        })) || [], // Inclui os grupos do aluno formatados
       }));
     } catch (error) {
       handleServiceError(
@@ -188,14 +193,93 @@ export class UsersService {
       );
     }
   }
-  addStudentToUser(userId: string, body: any) {
-    throw new Error("Method not implemented.");
+  async addStudentToUser(userId: string, body: any) {
+    try {
+      // Valida se o professor existe
+      const professor = await this.userRepository.getUserProfileById(userId);
+      if (!professor || professor.role !== "professor") {
+        throw new Error("Usuário não é um professor válido");
+      }
+
+      // Valida dados do aluno
+      if (!body.userId || !body.telefone || !body.dataNascimento) {
+        throw new Error("Dados do aluno são obrigatórios: userId, telefone, dataNascimento");
+      }
+
+      // Cria o perfil do aluno vinculado ao professor
+      const aluno = await this.userRepository.addStudentToUser(userId, {
+        userId: body.userId,
+        role: "aluno",
+        telefone: body.telefone,
+        dataNascimento: new Date(body.dataNascimento),
+        genero: body.genero || null,
+        professorId: userId,
+      });
+
+      return aluno;
+    } catch (error) {
+      handleServiceError(error, "Erro ao adicionar aluno ao professor.");
+    }
   }
-  updateUserStudent(userId: string, studentId: string, body: any) {
-    throw new Error("Method not implemented.");
+
+  async updateUserStudent(userId: string, studentId: string, body: any) {
+    try {
+      // Valida se o professor existe e se o aluno pertence a ele
+      const professor = await this.userRepository.getUserProfileById(userId);
+      if (!professor || professor.role !== "professor") {
+        throw new Error("Usuário não é um professor válido");
+      }
+
+      const aluno = await this.userRepository.getUserProfileById(studentId);
+      if (!aluno || aluno.professorId !== userId) {
+        throw new Error("Aluno não encontrado ou não pertence a este professor");
+      }
+
+      // Atualiza apenas campos permitidos
+      const dadosPermitidos = {
+        telefone: body.telefone,
+        dataNascimento: body.dataNascimento ? new Date(body.dataNascimento) : undefined,
+        genero: body.genero,
+      };
+
+      // Remove campos undefined
+      Object.keys(dadosPermitidos).forEach(key => 
+        dadosPermitidos[key as keyof typeof dadosPermitidos] === undefined && 
+        delete dadosPermitidos[key as keyof typeof dadosPermitidos]
+      );
+
+      const alunoAtualizado = await this.userRepository.updateUserStudent(
+        userId, 
+        studentId, 
+        dadosPermitidos
+      );
+
+      return alunoAtualizado;
+    } catch (error) {
+      handleServiceError(error, "Erro ao atualizar informações do aluno.");
+    }
   }
-  removeStudentFromUser(userId: string, studentId: string) {
-    throw new Error("Method not implemented.");
+
+  async removeStudentFromUser(userId: string, studentId: string) {
+    try {
+      // Valida se o professor existe e se o aluno pertence a ele
+      const professor = await this.userRepository.getUserProfileById(userId);
+      if (!professor || professor.role !== "professor") {
+        throw new Error("Usuário não é um professor válido");
+      }
+
+      const aluno = await this.userRepository.getUserProfileById(studentId);
+      if (!aluno || aluno.professorId !== userId) {
+        throw new Error("Aluno não encontrado ou não pertence a este professor");
+      }
+
+      // Remove o vínculo (apenas o perfil, não o usuário)
+      await this.userRepository.removeStudentFromUser(userId, studentId);
+      
+      return { message: "Aluno removido com sucesso" };
+    } catch (error) {
+      handleServiceError(error, "Erro ao remover aluno do professor.");
+    }
   }
   async createUserGroup(userId: string, body: any) {
     try {
@@ -219,11 +303,201 @@ export class UsersService {
       handleServiceError(error, "Não foi possível criar o grupo.");
     }
   }
-  updateUserGroup(userId: string, groupId: string, body: any) {
-    throw new Error("Method not implemented.");
+  async updateUserGroup(userId: string, groupId: string, body: any) {
+    try {
+      // Validação dos dados do grupo
+      const validatedData = grupoSchema
+        .omit({
+          id: true,
+          criadoPorId: true,
+          criadoEm: true,
+          atualizadoEm: true,
+          membros: true,
+        })
+        .parse(body);
+
+      // Buscar o perfil do professor
+      const professorPerfil = await this.userRepository.getUserProfileByUserId(userId);
+      if (!professorPerfil || professorPerfil.role !== 'professor') {
+        throw new Error("Professor não encontrado");
+      }
+
+      // Verificar se o grupo pertence ao usuário
+      const grupoExistente = await this.userRepository.getUserGroupById(professorPerfil.id, groupId);
+      if (!grupoExistente) {
+        throw new Error("Grupo não encontrado ou não pertence ao usuário");
+      }
+
+      // Atualizar o grupo no repositório
+      const grupoAtualizado = await this.userRepository.updateUserGroup(userId, groupId, validatedData);
+      
+      return this.processGroup(grupoAtualizado);
+    } catch (error) {
+      handleServiceError(error, "Não foi possível atualizar o grupo.");
+    }
   }
-  deleteUserGroup(userId: string, groupId: string) {
-    throw new Error("Method not implemented.");
+
+  async deleteUserGroup(userId: string, groupId: string) {
+    try {
+      // Buscar o perfil do professor
+      const professorPerfil = await this.userRepository.getUserProfileByUserId(userId);
+      if (!professorPerfil || professorPerfil.role !== 'professor') {
+        throw new Error("Professor não encontrado");
+      }
+
+      // Verificar se o grupo pertence ao usuário
+      const grupoExistente = await this.userRepository.getUserGroupById(professorPerfil.id, groupId);
+      if (!grupoExistente) {
+        throw new Error("Grupo não encontrado ou não pertence ao usuário");
+      }
+
+      // Deletar o grupo
+      await this.userRepository.deleteUserGroup(userId, groupId);
+      
+      return { message: "Grupo deletado com sucesso" };
+    } catch (error) {
+      handleServiceError(error, "Não foi possível deletar o grupo.");
+    }
+  }
+
+  async addStudentToGroup(userId: string, groupId: string, studentId: string) {
+    try {
+      console.log('[addStudentToGroup] ======== INICIANDO ADIÇÃO DE ALUNO AO GRUPO ========');
+      console.log('[addStudentToGroup] Parâmetros recebidos:', { userId, groupId, studentId });
+      
+      // Buscar o perfil do professor (userId é User.id, precisamos do UserPerfil.id)
+      const professorPerfil = await this.userRepository.getUserProfileByUserId(userId);
+      console.log('[addStudentToGroup] Professor perfil encontrado:', {
+        id: professorPerfil?.id,
+        userId: professorPerfil?.userId,
+        role: professorPerfil?.role,
+        professorId: professorPerfil?.professorId,
+      });
+      
+      if (!professorPerfil || professorPerfil.role !== 'professor') {
+        console.log('[addStudentToGroup] ❌ ERRO: Professor não encontrado ou não é professor');
+        throw new Error("Professor não encontrado");
+      }
+
+      // Verificar se o grupo pertence ao professor
+      const grupo = await this.userRepository.getUserGroupById(professorPerfil.id, groupId);
+      console.log('[addStudentToGroup] Grupo encontrado:', {
+        id: grupo?.id,
+        nome: grupo?.nome,
+        criadoPorId: grupo?.criadoPorId,
+        professorPerfilId: professorPerfil.id
+      });
+      
+      if (!grupo) {
+        console.log('[addStudentToGroup] ❌ ERRO: Grupo não encontrado ou não pertence ao professor');
+        throw new Error("Grupo não encontrado ou não pertence ao usuário");
+      }
+
+      // Verificar se o aluno pertence ao professor
+      const aluno = await this.userRepository.getUserProfileById(studentId);
+      console.log('[addStudentToGroup] Aluno encontrado:', {
+        id: aluno?.id,
+        userId: aluno?.userId,
+        role: aluno?.role,
+        professorId: aluno?.professorId,
+        grupoId: aluno?.grupoId,
+        expectedProfessorId: userId
+      });
+      
+      if (!aluno || aluno.professorId !== userId) {
+        console.log('[addStudentToGroup] ❌ ERRO: Aluno não encontrado ou não pertence a este professor');
+        console.log('[addStudentToGroup] Comparação: aluno.professorId =', aluno?.professorId, 'vs userId =', userId);
+        throw new Error("Aluno não encontrado ou não pertence a este professor");
+      }
+
+      // Verificar se aluno já está no grupo
+      if (aluno.grupoId === groupId) {
+        console.log('[addStudentToGroup] ⚠️ AVISO: Aluno já está neste grupo');
+        return { message: "Aluno já está neste grupo", aluno };
+      }
+
+      // Adicionar aluno ao grupo
+      console.log('[addStudentToGroup] 🔄 Executando atualização no banco...');
+      const resultado = await this.userRepository.addStudentToGroup(groupId, studentId);
+      console.log('[addStudentToGroup] ✅ Resultado da operação:', resultado);
+      console.log('[addStudentToGroup] ======== ADIÇÃO CONCLUÍDA COM SUCESSO ========');
+      
+      return { message: "Aluno adicionado ao grupo com sucesso", aluno: resultado };
+    } catch (error) {
+      console.error('[addStudentToGroup] ❌ ERRO FINAL:', error);
+      handleServiceError(error, "Não foi possível adicionar aluno ao grupo.");
+    }
+  }
+
+  async removeStudentFromGroup(userId: string, groupId: string, studentId: string) {
+    try {
+      console.log('[removeStudentFromGroup] Iniciando remoção - userId:', userId, 'groupId:', groupId, 'studentId:', studentId);
+      
+      // Buscar o perfil do professor (userId é User.id, precisamos do UserPerfil.id)
+      const professorPerfil = await this.userRepository.getUserProfileByUserId(userId);
+      console.log('[removeStudentFromGroup] Professor perfil encontrado:', professorPerfil?.id, professorPerfil?.role);
+      
+      if (!professorPerfil || professorPerfil.role !== 'professor') {
+        throw new Error("Professor não encontrado");
+      }
+
+      // Verificar se o grupo pertence ao professor
+      const grupo = await this.userRepository.getUserGroupById(professorPerfil.id, groupId);
+      console.log('[removeStudentFromGroup] Grupo encontrado:', grupo?.id, grupo?.nome);
+      console.log('[removeStudentFromGroup] Grupo criadoPorId:', grupo?.criadoPorId, 'esperado:', professorPerfil.id);
+      
+      if (!grupo) {
+        throw new Error("Grupo não encontrado ou não pertence ao usuário");
+      }
+
+      // Verificar se o aluno pertence ao professor
+      const aluno = await this.userRepository.getUserProfileById(studentId);
+      console.log('[removeStudentFromGroup] Aluno encontrado:', aluno?.id, aluno?.professorId, 'esperado professorId (User.id):', userId);
+      
+      if (!aluno || aluno.professorId !== userId) {
+        throw new Error("Aluno não encontrado ou não pertence a este professor");
+      }
+
+      // Remover aluno do grupo
+      const resultado = await this.userRepository.removeStudentFromGroup(groupId, studentId);
+      console.log('[removeStudentFromGroup] Resultado:', resultado);
+      
+      return resultado;
+    } catch (error) {
+      console.error('[removeStudentFromGroup] Erro:', error);
+      handleServiceError(error, "Não foi possível remover aluno do grupo.");
+    }
+  }
+
+  async getGroupStudents(userId: string, groupId: string) {
+    try {
+      // Buscar o perfil do professor (userId é User.id, precisamos do UserPerfil.id)
+      const professorPerfil = await this.userRepository.getUserProfileByUserId(userId);
+      if (!professorPerfil || professorPerfil.role !== 'professor') {
+        throw new Error("Professor não encontrado");
+      }
+
+      // Verificar se o grupo pertence ao professor
+      const grupo = await this.userRepository.getUserGroupById(professorPerfil.id, groupId);
+      if (!grupo) {
+        throw new Error("Grupo não encontrado ou não pertence ao usuário");
+      }
+
+      // Buscar membros do grupo
+      const membros = await this.userRepository.getGroupStudents(groupId);
+      
+      return membros.map((membro: any) => ({
+        id: membro.id,
+        name: membro.user?.name ?? "Aluno sem nome",
+        email: membro.user?.email ?? "",
+        image: membro.user?.image ?? null,
+        telefone: membro.telefone ?? "",
+        dataNascimento: membro.dataNascimento ?? null,
+        genero: membro.genero ?? "",
+      }));
+    } catch (error) {
+      handleServiceError(error, "Não foi possível buscar membros do grupo.");
+    }
   }
 
   async alunoPossuiAvaliacaoValida(userPerfilId: string): Promise<boolean> {
@@ -294,10 +568,20 @@ export class UsersService {
         objetivoClassificado = "alto_rendimento";
       }
 
+      // Calcular validade se for professor e especificou dias de validade
+      let validadeAte = null;
+      if (dados.diasValidade && typeof dados.diasValidade === 'number' && dados.diasValidade > 0) {
+        validadeAte = new Date();
+        validadeAte.setDate(validadeAte.getDate() + dados.diasValidade);
+      }
+
       const avaliacaoParaSalvar = {
         ...dados,
         resultado,
         objetivoClassificado,
+        validadeAte,
+        // Se professor especificou validade, status é 'aprovada', senão 'pendente'
+        status: validadeAte ? 'aprovada' : (dados.status || 'pendente')
       };
 
       // Salva avaliação no banco
@@ -444,8 +728,8 @@ export class UsersService {
 
       // Ajuste aqui: verifique se a propriedade correta é 'genero' ou similar
       const genero = perfil.genero;
-      const sexo: Sexo = isSexo(genero) ? genero : "feminino"; // valor padrão seguro
-      const sexoNum = sexoToNumber(sexo);
+      const sexo: SexoInput = isSexoValido(genero) ? genero : "feminino"; // valor padrão seguro
+      const sexoNum = converterSexoParaGenero(sexo);
 
       if (!maisRecente || !anterior) {
         console.error("Avaliações insuficientes para cálculo.");
@@ -507,16 +791,18 @@ export class UsersService {
     }
   }
 
-  private processGroup(group: Grupo): Grupo {
+  private processGroup(group: any): Grupo {
     return {
       ...grupoSchema.parse({
         ...group,
         criadoEm: group.criadoEm ?? new Date(),
         atualizadoEm: group.atualizadoEm ?? new Date(),
       }),
-      membros: (group.membros ?? []).map((membro) => ({
-        ...membro,
+      membros: (group.membros ?? []).map((membro: any) => ({
+        id: membro.id,
         professorId: membro.professorId ?? undefined,
+        grupoId: membro.grupoId !== null && membro.grupoId !== undefined ? membro.grupoId as string : undefined,
+        telefone: membro.telefone !== null && membro.telefone !== undefined ? membro.telefone : undefined,
       })),
     };
   }
@@ -536,25 +822,45 @@ export class UsersService {
     }
     return null;
   }
-}
 
-// Função utilitária para validar o tipo Sexo
-function isSexo(value: any): value is Sexo {
-  return (
-    value === "masculino" || value === "feminino" || value === 1 || value === 0
-  );
-}
-import { Genero, isGenero } from "../models/genero-model";
-import { NovaAvaliacaoMessage } from "../utils/messaging";
+  async aprovarAvaliacao(avaliacaoId: string, validadeDias: number) {
+    try {
+      const validadeAte = new Date();
+      validadeAte.setDate(validadeAte.getDate() + validadeDias);
 
-/**
- * Converte o valor de sexo para o tipo Genero.
- * @param sexo "masculino" | "feminino" | 1 | 0
- * @returns Genero.Masculino ou Genero.Feminino
- */
-function sexoToNumber(sexo: string | number): Genero {
-  if (sexo === "masculino" || sexo === 1) return Genero.Masculino;
-  if (sexo === "feminino" || sexo === 0) return Genero.Feminino;
-  // Valor padrão seguro
-  return Genero.Feminino;
+      const avaliacao = await this.userRepository.atualizarAvaliacaoAluno(
+        avaliacaoId,
+        {
+          status: 'aprovada',
+          validadeAte
+        }
+      );
+
+      return avaliacao;
+    } catch (error) {
+      handleServiceError(error, "Erro ao aprovar avaliação do aluno.");
+    }
+  }
+
+  async reprovarAvaliacao(avaliacaoId: string, motivo?: string) {
+    try {
+      // Buscar a avaliação atual primeiro
+      const avaliacaoAtual = await this.userRepository.buscarAvaliacaoPorId(avaliacaoId);
+      
+      const avaliacao = await this.userRepository.atualizarAvaliacaoAluno(
+        avaliacaoId,
+        {
+          status: 'reprovada',
+          resultado: motivo ? { 
+            ...(typeof avaliacaoAtual?.resultado === "object" && avaliacaoAtual?.resultado !== null ? avaliacaoAtual.resultado : {}), 
+            motivoReprovacao: motivo 
+          } : avaliacaoAtual?.resultado
+        }
+      );
+
+      return avaliacao;
+    } catch (error) {
+      handleServiceError(error, "Erro ao reprovar avaliação do aluno.");
+    }
+  }
 }

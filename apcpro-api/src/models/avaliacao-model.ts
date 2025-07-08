@@ -19,4 +19,11 @@ export interface AvaliacaoMedidasResponse extends MedidasInput {
   classificacaoRCQ: string | null;
   ca: number | null;
   classificacaoCA: string | null;
+  // Novos campos: Dobras Cutâneas
+  percentualGC_Faulkner: number | null;
+  classificacaoGC_Faulkner: string | null;
+  percentualGC_Pollock: number | null;
+  classificacaoGC_Pollock: string | null;
+  percentualGC_Guedes: number | null;
+  classificacaoGC_Guedes: string | null;
 }

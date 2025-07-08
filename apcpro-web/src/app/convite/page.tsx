@@ -3,12 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, Suspense } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ModalPadrao } from "@/components/ui/ModalPadrao";
 import FormularioCadastroAluno from "@/components/FormularioCadastroAluno";
 
 function ConviteAlunoPage() {
@@ -30,14 +25,16 @@ function ConviteAlunoPage() {
   // Sempre renderiza o formulário de cadastro de aluno, independente da role
   return (
     <DashboardLayout>
-      <Dialog open>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Cadastro de Aluno</DialogTitle>
-          </DialogHeader>
-          <FormularioCadastroAluno professorId={professorId} />
-        </DialogContent>
-      </Dialog>
+      <ModalPadrao
+        open={true}
+        onClose={() => router.push('/')}
+        title="Cadastro de Aluno"
+        description="Complete o cadastro para se tornar aluno e começar seus treinos personalizados."
+        maxWidth="lg"
+        showScrollArea={false}
+      >
+        <FormularioCadastroAluno professorId={professorId} />
+      </ModalPadrao>
     </DashboardLayout>
   );
 }
