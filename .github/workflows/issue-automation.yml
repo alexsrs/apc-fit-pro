@@ -10,202 +10,202 @@ on:
 
 jobs:
   # Auto-assign issues com prioridade alta
-    auto-assign-high-priority:
-      if: github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'priority:high')
-      runs-on: ubuntu-latest
-      permissions:
-        issues: write
-        pull-requests: write
-        contents: read
-      steps:
-        - name: Auto-assign high priority issues
-          uses: actions/github-script@v7
-          with:
-            script: |
-              await github.rest.issues.addAssignees({
+  auto-assign-high-priority:
+    if: github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'priority:high')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Auto-assign high priority issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              assignees: [context.repo.owner]
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🚨 **Issue de alta prioridade detectada!**
+              
+              Esta issue foi automaticamente atribuída devido à sua prioridade alta.
+              
+              **Próximos passos:**
+              1. ✅ Revisar os critérios de aceitação
+              2. 📅 Estimar pontos de história
+              3. 🌿 Criar branch seguindo a convenção: \`feature/nome-da-funcionalidade\`
+              4. 🔄 Mover para "In Progress" no projeto
+              
+              ---
+              *Automação via GitHub Actions* 🤖`
+            });
+
+  # Adicionar label de size baseado na estimativa
+  estimate-size:
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add size label based on content
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body.toLowerCase();
+            let sizeLabel = '';
+
+            if (body.includes('1-2 horas') || body.includes('pontos: 1') || body.includes('pontos: 2')) {
+              sizeLabel = 'size:xs';
+            } else if (body.includes('3-8 horas') || body.includes('pontos: 3') || body.includes('pontos: 4')) {
+              sizeLabel = 'size:s';
+            } else if (body.includes('1-2 dias') || body.includes('pontos: 5') || body.includes('pontos: 6')) {
+              sizeLabel = 'size:m';
+            } else if (body.includes('3-5 dias') || body.includes('pontos: 7') || body.includes('pontos: 8')) {
+              sizeLabel = 'size:l';
+            } else if (body.includes('1+ semana') || body.includes('pontos: 9') || body.includes('pontos de história:** 1')) {
+              sizeLabel = 'size:xl';
+            }
+
+            if (sizeLabel) {
+              await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                assignees: [context.repo.owner]
+                labels: [sizeLabel]
               });
+            }
 
+  # Welcome message para novas issues
+  welcome-new-issue:
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome new issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueType = context.payload.issue.labels.some(label => label.name.includes('bug')) ? 'bug' : 'feature';
+            const welcomeMessage = issueType === 'bug' 
+              ? `🐛 **Obrigado por reportar este bug!**
+              
+              Sua contribuição ajuda a melhorar o APC FIT PRO. Nossa equipe irá:
+              
+              1. 🔍 Analisar o problema reportado
+              2. 🏷️ Adicionar labels apropriadas
+              3. 📅 Priorizar baseado na severidade
+              4. 🔧 Trabalhar na correção
+              
+              **Tempo estimado de resposta:** 24-48 horas para bugs críticos, 3-5 dias para outros.`
+              : `🚀 **Obrigado pela sugestão de funcionalidade!**
+              
+              Sua ideia será avaliada pela equipe do APC FIT PRO. Processo:
+              
+              1. 📝 Análise de viabilidade técnica
+              2. 🎯 Alinhamento com roadmap
+              3. 📊 Estimativa de esforço
+              4. 📅 Priorização no backlog
+              
+              **Acompanhe o progresso:** Esta issue será atualizada conforme avançamos.`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `${welcomeMessage}
+              
+              ---
+              📚 **Recursos úteis:**
+              - [Guia de Contribuição](./CONTRIBUTING.md)
+              - [Documentação do Projeto](./README.md)
+              - [Roadmap Atual](./docs/github-issues-setup.md)
+              
+              *Automação via GitHub Actions* 🤖`
+            });
+
+  # Verificar se PR tem issue linkada
+  check-pr-has-issue:
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if PR links to an issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body || '';
+            const prTitle = context.payload.pull_request.title;
+
+            // Verificar se o PR menciona uma issue
+            const hasIssueReference = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+/i.test(prBody) || 
+                                     /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+/i.test(prTitle) ||
+                                     /#\d+/.test(prBody);
+
+            if (!hasIssueReference) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: `🚨 **Issue de alta prioridade detectada!**
+                body: `⚠️ **PR sem issue linkada detectado**
                 
-                Esta issue foi automaticamente atribuída devido à sua prioridade alta.
+                Este Pull Request não parece estar linkado a uma issue específica.
                 
-                **Próximos passos:**
-                1. ✅ Revisar os critérios de aceitação
-                2. 📅 Estimar pontos de história
-                3. 🌿 Criar branch seguindo a convenção: \`feature/nome-da-funcionalidade\`
-                4. 🔄 Mover para "In Progress" no projeto
+                **Por favor:**
+                1. 🔗 Linke a uma issue existente usando \`closes #123\`
+                2. 📝 Ou crie uma issue primeiro descrevendo a mudança
+                3. ✅ Atualize a descrição do PR
+                
+                **Por que isso é importante:**
+                - 📊 Rastreabilidade das mudanças
+                - 🎯 Contexto claro do que está sendo alterado
+                - 📈 Métricas de desenvolvimento precisas
                 
                 ---
                 *Automação via GitHub Actions* 🤖`
               });
-
-    # Adicionar label de size baseado na estimativa
-    estimate-size:
-      if: github.event_name == 'issues' && github.event.action == 'opened'
-      runs-on: ubuntu-latest
-      steps:
-        - name: Add size label based on content
-          uses: actions/github-script@v7
-          with:
-            script: |
-              const body = context.payload.issue.body.toLowerCase();
-              let sizeLabel = '';
-
-              if (body.includes('1-2 horas') || body.includes('pontos: 1') || body.includes('pontos: 2')) {
-                sizeLabel = 'size:xs';
-              } else if (body.includes('3-8 horas') || body.includes('pontos: 3') || body.includes('pontos: 4')) {
-                sizeLabel = 'size:s';
-              } else if (body.includes('1-2 dias') || body.includes('pontos: 5') || body.includes('pontos: 6')) {
-                sizeLabel = 'size:m';
-              } else if (body.includes('3-5 dias') || body.includes('pontos: 7') || body.includes('pontos: 8')) {
-                sizeLabel = 'size:l';
-              } else if (body.includes('1+ semana') || body.includes('pontos: 9') || body.includes('pontos de história:** 1')) {
-                sizeLabel = 'size:xl';
-              }
-
-              if (sizeLabel) {
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  labels: [sizeLabel]
-                });
-              }
-
-    # Welcome message para novas issues
-    welcome-new-issue:
-      if: github.event_name == 'issues' && github.event.action == 'opened'
-      runs-on: ubuntu-latest
-      steps:
-        - name: Welcome new issue
-          uses: actions/github-script@v7
-          with:
-            script: |
-              const issueType = context.payload.issue.labels.some(label => label.name.includes('bug')) ? 'bug' : 'feature';
-              const welcomeMessage = issueType === 'bug' 
-                ? `🐛 **Obrigado por reportar este bug!**
-                
-                Sua contribuição ajuda a melhorar o APC FIT PRO. Nossa equipe irá:
-                
-                1. 🔍 Analisar o problema reportado
-                2. 🏷️ Adicionar labels apropriadas
-                3. 📅 Priorizar baseado na severidade
-                4. 🔧 Trabalhar na correção
-                
-                **Tempo estimado de resposta:** 24-48 horas para bugs críticos, 3-5 dias para outros.`
-                : `🚀 **Obrigado pela sugestão de funcionalidade!**
-                
-                Sua ideia será avaliada pela equipe do APC FIT PRO. Processo:
-                
-                1. 📝 Análise de viabilidade técnica
-                2. 🎯 Alinhamento com roadmap
-                3. 📊 Estimativa de esforço
-                4. 📅 Priorização no backlog
-                
-                **Acompanhe o progresso:** Esta issue será atualizada conforme avançamos.`;
-
-              await github.rest.issues.createComment({
+              
+              // Adicionar label de "needs-issue"
+              await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: `${welcomeMessage}
-                
-                ---
-                📚 **Recursos úteis:**
-                - [Guia de Contribuição](./CONTRIBUTING.md)
-                - [Documentação do Projeto](./README.md)
-                - [Roadmap Atual](./docs/github-issues-setup.md)
-                
-                *Automação via GitHub Actions* 🤖`
+                labels: ['needs-issue']
               });
+            }
 
-    # Verificar se PR tem issue linkada
-    check-pr-has-issue:
-      if: github.event_name == 'pull_request' && github.event.action == 'opened'
-      runs-on: ubuntu-latest
-      steps:
-        - name: Check if PR links to an issue
-          uses: actions/github-script@v7
-          with:
-            script: |
-              const prBody = context.payload.pull_request.body || '';
-              const prTitle = context.payload.pull_request.title;
+  # Celebrar merge de PR
+  celebrate-merge:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Celebrate successful merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const author = context.payload.pull_request.user.login;
 
-              // Verificar se o PR menciona uma issue
-              const hasIssueReference = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+/i.test(prBody) || 
-                                       /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+/i.test(prTitle) ||
-                                       /#\d+/.test(prBody);
-
-              if (!hasIssueReference) {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  body: `⚠️ **PR sem issue linkada detectado**
-                  
-                  Este Pull Request não parece estar linkado a uma issue específica.
-                  
-                  **Por favor:**
-                  1. 🔗 Linke a uma issue existente usando \`closes #123\`
-                  2. 📝 Ou crie uma issue primeiro descrevendo a mudança
-                  3. ✅ Atualize a descrição do PR
-                  
-                  **Por que isso é importante:**
-                  - 📊 Rastreabilidade das mudanças
-                  - 🎯 Contexto claro do que está sendo alterado
-                  - 📈 Métricas de desenvolvimento precisas
-                  
-                  ---
-                  *Automação via GitHub Actions* 🤖`
-                });
-                
-                // Adicionar label de "needs-issue"
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  labels: ['needs-issue']
-                });
-              }
-
-    # Celebrar merge de PR
-    celebrate-merge:
-      if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-      runs-on: ubuntu-latest
-      steps:
-        - name: Celebrate successful merge
-          uses: actions/github-script@v7
-          with:
-            script: |
-              const prTitle = context.payload.pull_request.title;
-              const author = context.payload.pull_request.user.login;
-
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: `🎉 **Pull Request mergeado com sucesso!**
-                
-                **Parabéns @${author}!** Sua contribuição foi incorporada ao APC FIT PRO.
-                
-                **Resumo:**
-                - ✅ ${prTitle}
-                - 🚀 Deploy será realizado automaticamente
-                - 📊 Métricas atualizadas no dashboard
-                
-                **Próximos passos:**
-                1. 🧪 Testes automáticos em produção
-                2. 📝 Documentação atualizada
-                3. 🔄 Issue relacionada será fechada automaticamente
-                
-                ---
-                *Obrigado por contribuir com o APC FIT PRO!* 💪`
-              });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🎉 **Pull Request mergeado com sucesso!**
+              
+              **Parabéns @${author}!** Sua contribuição foi incorporada ao APC FIT PRO.
+              
+              **Resumo:**
+              - ✅ ${prTitle}
+              - 🚀 Deploy será realizado automaticamente
+              - 📊 Métricas atualizadas no dashboard
+              
+              **Próximos passos:**
+              1. 🧪 Testes automáticos em produção
+              2. 📝 Documentação atualizada
+              3. 🔄 Issue relacionada será fechada automaticamente
+              
+              ---
+              *Obrigado por contribuir com o APC FIT PRO!* 💪`
+            });

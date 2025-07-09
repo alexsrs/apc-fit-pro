@@ -37,19 +37,6 @@ logs/
 temp/
 tmp/
 
-# 🧪 ARQUIVOS DE TESTE E DESENVOLVIMENTO
-# Arquivos de teste temporários
-teste*.ts
-teste*.js
-teste*.tsx
-teste*.jsx
-test-*.ts
-test-*.js
-test-*.tsx
-test-*.jsx
-**/teste/**
-**/temp-tests/**
-**/sandbox/**
 
 # Arquivos de prototipagem
 prototype*.ts
