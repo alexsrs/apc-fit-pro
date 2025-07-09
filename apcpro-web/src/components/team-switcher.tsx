@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ChevronsUpDown, Plus, Users, LucideProps } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LoadingInline, LoadingSkeleton } from "@/components/ui/Loading";
+import { LoadingInline } from "@/components/ui/Loading";
 
 import {
   DropdownMenu,
@@ -45,9 +45,10 @@ type Grupo = {
 interface TeamSwitcherProps {
   teams?: Team[];
   onTeamChange?: (groupId: string | null) => void;
+  onGerenciarGruposClick?: () => void;
 }
 
-export function TeamSwitcher({ teams = [], onTeamChange }: TeamSwitcherProps) {
+export function TeamSwitcher({ teams = [], onTeamChange, onGerenciarGruposClick }: TeamSwitcherProps) {
   const { isMobile } = useSidebar();
   const { profile } = useUserProfile();
   
@@ -230,6 +231,20 @@ export function TeamSwitcher({ teams = [], onTeamChange }: TeamSwitcherProps) {
                 )}
               </div>
             </DropdownMenuItem>
+            {/* Item Gerenciar Grupos como menu item, dispara callback */}
+            {onGerenciarGruposClick && (
+              <DropdownMenuItem
+                className="gap-2 p-2 cursor-pointer"
+                onClick={onGerenciarGruposClick}
+              >
+                <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                  <Users className="size-4" />
+                </div>
+                <div className="text-muted-foreground font-medium flex items-center gap-2">
+                  Gerenciar Grupos
+                </div>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
         

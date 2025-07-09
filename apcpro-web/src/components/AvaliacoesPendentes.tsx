@@ -228,67 +228,58 @@ export function AvaliacoesPendentes({ professorId, onAtualizacao }: AvaliacoesPe
   const renderizarItemAvaliacao = (avaliacao: AvaliacaoPendente, compacto = false) => (
     <div
       key={avaliacao.id}
-      className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors ${
-        compacto ? 'p-3' : ''
-      }`}
+      className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-3 sm:gap-0 w-full`}
     >
-      <div className="flex-1">
-        <div className="flex items-center gap-3 mb-2">
-          <User className="h-4 w-4 text-gray-500" />
-          <span className="font-medium">{avaliacao.userPerfil.user.name}</span>
-          <Badge className="bg-yellow-100 text-yellow-800">
-            {formatarTipo(avaliacao.tipo)}
-          </Badge>
+      <div className="flex-1 min-w-0 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-2 w-full">
+          <span className="flex items-center gap-1 min-w-0 w-full sm:w-auto">
+            <User className="h-4 w-4 text-gray-500 shrink-0" />
+            <span className="font-medium truncate max-w-full sm:max-w-[180px]" title={avaliacao.userPerfil.user.name}>{avaliacao.userPerfil.user.name}</span>
+          </span>
+          <Badge className="bg-yellow-100 text-yellow-800 whitespace-nowrap w-fit sm:w-auto mt-1 sm:mt-0">{formatarTipo(avaliacao.tipo)}</Badge>
         </div>
-        
-        <div className="flex items-center gap-4 text-sm text-gray-600">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-600 w-full">
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            <span>
-              {new Date(avaliacao.data).toLocaleDateString('pt-BR')}
-            </span>
+            <span>{new Date(avaliacao.data).toLocaleDateString('pt-BR')}</span>
           </div>
           {!compacto && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 min-w-0 w-full sm:w-auto">
               <FileText className="h-4 w-4" />
-              <span>{avaliacao.userPerfil.user.email}</span>
+              <span className="truncate max-w-full sm:max-w-[200px]" title={avaliacao.userPerfil.user.email}>{avaliacao.userPerfil.user.email}</span>
             </div>
           )}
         </div>
-        
         {!compacto && formatarResultado(avaliacao.resultado, avaliacao.tipo) && (
-          <div className="mt-2 text-sm text-gray-500">
+          <div className="mt-2 text-sm text-gray-500 break-words w-full">
             {formatarResultado(avaliacao.resultado, avaliacao.tipo)}
           </div>
         )}
       </div>
-
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto justify-end items-stretch sm:items-center mt-2 sm:mt-0">
         <Button
           size="sm"
           variant="ghost"
           onClick={() => setModalDetalhes({ open: true, avaliacao })}
-          className="text-blue-600 hover:bg-blue-50"
+          className="text-blue-600 hover:bg-blue-50 w-full sm:w-auto"
         >
           <Eye className="h-4 w-4" />
           {!compacto && <span className="ml-1">Ver</span>}
         </Button>
-        
         <Button
           size="sm"
           variant="outline"
-          className="text-green-600 border-green-600 hover:bg-green-50"
+          className="text-green-600 border-green-600 hover:bg-green-50 w-full sm:w-auto"
           onClick={() => setModalAprovacao({ open: true, avaliacao })}
           disabled={processando === avaliacao.id}
         >
           <CheckCircle className="h-4 w-4" />
           {!compacto && <span className="ml-1">Aprovar</span>}
         </Button>
-        
         <Button
           size="sm"
           variant="outline"
-          className="text-red-600 border-red-600 hover:bg-red-50"
+          className="text-red-600 border-red-600 hover:bg-red-50 w-full sm:w-auto"
           onClick={() => setModalReprovacao({ open: true, avaliacao })}
           disabled={processando === avaliacao.id}
         >
@@ -467,7 +458,7 @@ export function AvaliacoesPendentes({ professorId, onAtualizacao }: AvaliacoesPe
 
       {/* Modal de Lista Completa */}
       <Dialog open={modalListaCompleta} onOpenChange={setModalListaCompleta}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+        <DialogContent className="w-full max-w-lg sm:max-w-4xl max-h-[80vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <List className="h-5 w-5" />
@@ -478,11 +469,9 @@ export function AvaliacoesPendentes({ professorId, onAtualizacao }: AvaliacoesPe
               Lista completa de avaliações aguardando aprovação
             </DialogDescription>
           </DialogHeader>
-
-          <div className="overflow-y-auto max-h-[60vh] space-y-3">
+          <div className="overflow-y-auto max-h-[60vh] space-y-2 pr-1">
             {avaliacoes.map((avaliacao) => renderizarItemAvaliacao(avaliacao, true))}
           </div>
-
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalListaCompleta(false)}>
               Fechar

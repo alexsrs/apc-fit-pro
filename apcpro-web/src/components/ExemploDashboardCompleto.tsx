@@ -225,7 +225,7 @@ export function ExemploDashboardCompleto() {
           <div>
             <h4 className="font-semibold text-sm">🔹 Cards de Métricas:</h4>
             <p className="text-sm text-muted-foreground">
-              Use <code className="bg-gray-100 px-1 rounded">LoadingSkeleton variant="card"</code> 
+              Use <code className="bg-gray-100 px-1 rounded">LoadingSkeleton variant=&quot;card&quot;</code> 
               para cada card de métrica durante o carregamento.
             </p>
           </div>
@@ -233,7 +233,7 @@ export function ExemploDashboardCompleto() {
           <div>
             <h4 className="font-semibold text-sm">🔹 Alertas e Listas:</h4>
             <p className="text-sm text-muted-foreground">
-              Use <code className="bg-gray-100 px-1 rounded">LoadingSkeleton variant="list"</code> 
+              Use <code className="bg-gray-100 px-1 rounded">LoadingSkeleton variant=&quot;list&quot;</code> 
               para itens de alertas, notificações e listas simples.
             </p>
           </div>
@@ -241,7 +241,7 @@ export function ExemploDashboardCompleto() {
           <div>
             <h4 className="font-semibold text-sm">🔹 Perfis de Alunos:</h4>
             <p className="text-sm text-muted-foreground">
-              Use <code className="bg-gray-100 px-1 rounded">LoadingSkeleton variant="profile" showAvatar</code> 
+              Use <code className="bg-gray-100 px-1 rounded">LoadingSkeleton variant=&quot;profile&quot; showAvatar</code> 
               para cards de alunos com avatar e informações pessoais.
             </p>
           </div>

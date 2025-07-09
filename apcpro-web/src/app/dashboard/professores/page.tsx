@@ -287,44 +287,33 @@ export default function ProfessoresDashboard() {
       </div>
       {/* Header com filtros avançados */}
       <div className="flex flex-col gap-4">
-        <div className="flex flex-row items-center gap-3 justify-between">
-          <div className="flex items-center gap-3">
-            <div className="max-w-xs">
-              <TeamSwitcher 
-                teams={[]} 
-                onTeamChange={(groupId) => setGrupoSelecionado(groupId)}
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setModalGerenciarGruposOpen(true)}
-              aria-label="Gerenciar grupos"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Gerenciar Grupos
-            </Button>
-            <Button
-              variant="default"
-              onClick={() => setModalConviteOpen(true)}
-              aria-label="Adicionar novo aluno"
-            >
-              + Novo aluno
-            </Button>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full mb-4">
+          <div className="max-w-xs">
+            <TeamSwitcher 
+              teams={[]}
+              onTeamChange={(groupId) => setGrupoSelecionado(groupId)}
+              onGerenciarGruposClick={() => setModalGerenciarGruposOpen(true)}
+            />
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" aria-label="Notificações">
-              <Bell className="h-5 w-5" />
-            </Button>
-          </div>
+          <Button
+            variant="default"
+            onClick={() => setModalConviteOpen(true)}
+            aria-label="Adicionar novo aluno"
+            className="shrink-0"
+          >
+            + Novo aluno
+          </Button>
+          <Button variant="outline" size="icon" aria-label="Notificações">
+            <Bell className="h-5 w-5" />
+          </Button>
+          <FiltrosAvancados
+            busca={busca}
+            onBuscaChange={setBusca}
+            filtros={filtros}
+            onFiltrosChange={setFiltros}
+            grupos={grupos}
+          />
         </div>
-        
-        <FiltrosAvancados
-          busca={busca}
-          onBuscaChange={setBusca}
-          filtros={filtros}
-          onFiltrosChange={setFiltros}
-          grupos={grupos}
-        />
       </div>
       <ConviteAlunoModal
         open={modalConviteOpen}
