@@ -13,7 +13,7 @@ describe('Avaliações API Integration Tests', () => {
   });
 
   describe('POST /avaliacoes', () => {
-    test('deve criar uma nova avaliação com dados válidos', async () => {
+    it('deve criar uma nova avaliação com dados válidos', async () => {
       const dadosAvaliacao = {
         userPerfilId: 'test-user-id',
         tipo: 'triagem',
@@ -31,13 +31,13 @@ describe('Avaliações API Integration Tests', () => {
         .send(dadosAvaliacao)
         .expect('Content-Type', /json/);
 
-      // Note: Como estamos usando mocks, vamos verificar a estrutura esperada
-      // Em um teste real, verificaríamos status 201 e dados salvos
-      expect(response.status).toBe(200); // Assumindo mock retorna 200
+      // Esperado: status 201 e retorno com id
+      expect([200, 201]).toContain(response.status);
       expect(response.body).toBeDefined();
+      expect(response.body.id).toBeDefined();
     });
 
-    test('deve rejeitar avaliação com dados inválidos', async () => {
+    it('deve rejeitar avaliação com dados inválidos', async () => {
       const dadosInvalidos = {
         userPerfilId: '', // ID vazio
         tipo: 'tipo-inexistente',
@@ -51,12 +51,11 @@ describe('Avaliações API Integration Tests', () => {
         .post('/avaliacoes')
         .send(dadosInvalidos);
 
-      // Deve retornar erro de validação
       expect(response.status).toBeGreaterThanOrEqual(400);
       expect(response.status).toBeLessThan(500);
     });
 
-    test('deve processar avaliação de dobras cutâneas', async () => {
+    it('deve processar avaliação de dobras cutâneas', async () => {
       const dadosDobrasCutaneas = {
         userPerfilId: 'test-user-id',
         tipo: 'dobras-cutaneas',
@@ -75,13 +74,14 @@ describe('Avaliações API Integration Tests', () => {
         .send(dadosDobrasCutaneas)
         .expect('Content-Type', /json/);
 
-      expect(response.status).toBe(200);
+      expect([200, 201]).toContain(response.status);
       expect(response.body).toBeDefined();
+      expect(response.body.id).toBeDefined();
     });
   });
 
   describe('GET /avaliacoes/:userPerfilId', () => {
-    test('deve retornar avaliações do usuário', async () => {
+    it('deve retornar avaliações do usuário', async () => {
       const userPerfilId = 'test-user-id';
 
       const response = await request(app)
@@ -93,22 +93,31 @@ describe('Avaliações API Integration Tests', () => {
       expect(Array.isArray(response.body) || response.body.data).toBeTruthy();
     });
 
-    test('deve retornar 404 para usuário inexistente', async () => {
+    it('deve retornar 404 ou array vazio para usuário inexistente', async () => {
       const userPerfilIdInexistente = 'usuario-inexistente';
 
       const response = await request(app)
         .get(`/avaliacoes/${userPerfilIdInexistente}`);
 
-      // Pode retornar 404 ou array vazio, dependendo da implementação
-      expect(response.status === 404 || 
-             (response.status === 200 && Array.isArray(response.body) && response.body.length === 0)
+      // Pode retornar 404 ou array vazio
+      expect(
+        response.status === 404 ||
+        (response.status === 200 && Array.isArray(response.body) && response.body.length === 0)
       ).toBeTruthy();
     });
   });
 
   describe('PUT /avaliacoes/:id/status', () => {
-    test('deve aprovar uma avaliação', async () => {
-      const avaliacaoId = 'test-avaliacao-id';
+    it('deve aprovar uma avaliação', async () => {
+      // Primeiro cria uma avaliação para obter o id
+      const criacao = await request(app)
+        .post('/avaliacoes')
+        .send({
+          userPerfilId: 'test-user-id',
+          tipo: 'triagem',
+          resultado: { peso: 70, altura: 175, idade: 25, genero: 'masculino' }
+        });
+      const avaliacaoId = criacao.body.id || 'test-avaliacao-id';
       const dadosAprovacao = {
         status: 'aprovada',
         validadeDias: 90,
@@ -124,8 +133,16 @@ describe('Avaliações API Integration Tests', () => {
       expect(response.body).toBeDefined();
     });
 
-    test('deve reprovar uma avaliação com motivo', async () => {
-      const avaliacaoId = 'test-avaliacao-id';
+    it('deve reprovar uma avaliação com motivo', async () => {
+      // Cria avaliação para obter id
+      const criacao = await request(app)
+        .post('/avaliacoes')
+        .send({
+          userPerfilId: 'test-user-id',
+          tipo: 'triagem',
+          resultado: { peso: 70, altura: 175, idade: 25, genero: 'masculino' }
+        });
+      const avaliacaoId = criacao.body.id || 'test-avaliacao-id';
       const dadosReprovacao = {
         status: 'reprovada',
         motivo: 'Dados inconsistentes',
@@ -141,8 +158,16 @@ describe('Avaliações API Integration Tests', () => {
       expect(response.body).toBeDefined();
     });
 
-    test('deve rejeitar alteração de status sem autorização', async () => {
-      const avaliacaoId = 'test-avaliacao-id';
+    it('deve rejeitar alteração de status sem autorização', async () => {
+      // Cria avaliação para obter id
+      const criacao = await request(app)
+        .post('/avaliacoes')
+        .send({
+          userPerfilId: 'test-user-id',
+          tipo: 'triagem',
+          resultado: { peso: 70, altura: 175, idade: 25, genero: 'masculino' }
+        });
+      const avaliacaoId = criacao.body.id || 'test-avaliacao-id';
       const dadosSemAutorizacao = {
         status: 'aprovada'
         // professorId ausente
@@ -157,7 +182,7 @@ describe('Avaliações API Integration Tests', () => {
   });
 
   describe('Validações de negócio', () => {
-    test('deve validar dados obrigatórios para triagem', async () => {
+    it('deve validar dados obrigatórios para triagem', async () => {
       const triagemIncompleta = {
         userPerfilId: 'test-user-id',
         tipo: 'triagem',
@@ -174,7 +199,7 @@ describe('Avaliações API Integration Tests', () => {
       expect(response.status).toBeGreaterThanOrEqual(400);
     });
 
-    test('deve validar protocolo de dobras cutâneas', async () => {
+    it('deve validar protocolo de dobras cutâneas', async () => {
       const dobrasSemProtocolo = {
         userPerfilId: 'test-user-id',
         tipo: 'dobras-cutaneas',
@@ -193,7 +218,7 @@ describe('Avaliações API Integration Tests', () => {
       expect(response.status).toBeGreaterThanOrEqual(400);
     });
 
-    test('deve validar valores de dobras cutâneas dentro de range válido', async () => {
+    it('deve validar valores de dobras cutâneas dentro de range válido', async () => {
       const dobrasInvalidas = {
         userPerfilId: 'test-user-id',
         tipo: 'dobras-cutaneas',
@@ -215,7 +240,7 @@ describe('Avaliações API Integration Tests', () => {
   });
 
   describe('Fluxo completo de avaliação', () => {
-    test('deve processar fluxo completo: criação -> aprovação -> consulta', async () => {
+    it('deve processar fluxo completo: criação -> aprovação -> consulta', async () => {
       // 1. Criar avaliação
       const dadosAvaliacao = {
         userPerfilId: 'test-user-complete',
@@ -233,10 +258,9 @@ describe('Avaliações API Integration Tests', () => {
         .post('/avaliacoes')
         .send(dadosAvaliacao);
 
-      expect(criacaoResponse.status).toBe(200);
-      
-      // Em um teste real, extrairíamos o ID da resposta
-      const avaliacaoId = 'test-avaliacao-complete';
+      expect([200, 201]).toContain(criacaoResponse.status);
+      expect(criacaoResponse.body).toBeDefined();
+      const avaliacaoId = criacaoResponse.body.id || 'test-avaliacao-complete';
 
       // 2. Aprovar avaliação
       const dadosAprovacao = {
@@ -257,11 +281,12 @@ describe('Avaliações API Integration Tests', () => {
 
       expect(consultaResponse.status).toBe(200);
       expect(consultaResponse.body).toBeDefined();
+      expect(Array.isArray(consultaResponse.body) || consultaResponse.body.data).toBeTruthy();
     });
   });
 
   describe('Performance e limites', () => {
-    test('deve lidar com requisições concorrentes', async () => {
+    it('deve lidar com requisições concorrentes', async () => {
       const promises = Array.from({ length: 10 }, (_, i) => 
         request(app)
           .post('/avaliacoes')
@@ -278,19 +303,16 @@ describe('Avaliações API Integration Tests', () => {
       );
 
       const responses = await Promise.all(promises);
-      
-      // Todas as requisições devem ser processadas
       responses.forEach(response => {
         expect(response.status).toBeLessThan(500);
       });
     });
 
-    test('deve validar tamanho máximo do payload', async () => {
+    it('deve validar tamanho máximo do payload', async () => {
       const payloadGrande = {
         userPerfilId: 'test-user-id',
         tipo: 'anamnese',
         resultado: {
-          // Simular dados muito grandes
           historico: 'x'.repeat(10000), // 10KB de texto
           observacoes: 'y'.repeat(10000)
         }
@@ -300,8 +322,7 @@ describe('Avaliações API Integration Tests', () => {
         .post('/avaliacoes')
         .send(payloadGrande);
 
-      // Deve ser aceito se dentro do limite, ou rejeitado se muito grande
-      expect(response.status === 200 || response.status === 413).toBeTruthy();
+      expect([200, 413]).toContain(response.status);
     });
   });
 });

@@ -1,2 +1,0 @@
-// Arquivo removido temporariamente por tifurico em 2025-07-08 para evitar testes de integração sem banco de dados de testes seguro.
-// Quando o ambiente de testes estiver pronto, basta restaurar o conteúdo original deste arquivo.
