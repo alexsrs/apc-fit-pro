@@ -12,13 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import apiClient from "@/lib/api-client";
-import type { AvaliacaoCompleta } from "@/types/dobras-cutaneas";
 import {
   avaliarCA,
   CircunferenciaAbdominalResultado,
 } from "@/services/ca-service";
 import { CaInfo } from "./CaInfo";
-import { DobrasCutaneasModernas } from "./DobrasCutaneasModernas";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 
 // Service que chama a API de medidas
@@ -150,7 +148,6 @@ export function ModalMedidasCorporais({
   const [loading, setLoading] = useState(false);
   const [resultadoCA] = useState<CircunferenciaAbdominalResultado | null>(null);
   const [activeTab, setActiveTab] = useState("medidas");
-  const [dobrasCutaneasResultados, setDobrasCutaneasResultados] = useState<AvaliacaoCompleta | null>(null);
   const { profile } = useUserProfile();
 
   // Verifica se o usuário é professor
@@ -167,11 +164,6 @@ export function ModalMedidasCorporais({
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm({ ...form, [e.target.id]: e.target.value });
-  }
-
-  // Callback para receber os resultados das dobras cutâneas
-  function handleDobrasCutaneasResultados(resultados: AvaliacaoCompleta) {
-    setDobrasCutaneasResultados(resultados);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -226,7 +218,7 @@ export function ModalMedidasCorporais({
           : undefined,
       },
       // Adiciona os resultados das dobras cutâneas se disponíveis
-      dobrasCutaneas: dobrasCutaneasResultados,
+      dobrasCutaneas: undefined,
     };
 
     // Chama a API que já retorna todos os índices, inclusive CA
@@ -284,240 +276,219 @@ export function ModalMedidasCorporais({
       maxWidth="lg"
     >
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="medidas">Medidas Corporais</TabsTrigger>
-          <TabsTrigger 
-            value="dobras"
-            className={!isUserProfessor ? "opacity-50 cursor-not-allowed" : ""}
-          >
-            Dobras Cutâneas {!isUserProfessor && "🔒"}
-          </TabsTrigger>
+          {/* Removido: Aba Dobras Cutâneas */}
         </TabsList>
 
-              <TabsContent value="medidas" className="space-y-4">
-                <form className="flex flex-col gap-1" onSubmit={handleSubmit}>
-                  {/* PESO E ALTURA CENTRALIZADOS EM 2 COLUNAS */}
-                  <div className="grid grid-cols-2 gap-x-8 mb-4">
-                    <div className="flex flex-col items-center">
-                      <LabelWithTooltip
-                        htmlFor="peso"
-                        label="Peso (kg)"
-                        tooltip="Informe o peso corporal atual em quilogramas."
-                      />
-                      <Input
-                        id="peso"
-                        className="w-28"
-                        placeholder="Ex: 70"
-                        type="number"
-                        step="0.01"
-                        value={form.peso || ""}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <LabelWithTooltip
-                        htmlFor="altura"
-                        label="Altura (cm)"
-                        tooltip="Informe a altura em centímetros, sem sapatos."
-                      />
-                      <Input
-                        id="altura"
-                        className="w-28"
-                        placeholder="Ex: 175"
-                        type="number"
-                        step="0.1"
-                        value={form.altura || ""}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  </div>
+        <TabsContent value="medidas" className="space-y-4">
+          <form className="flex flex-col gap-1" onSubmit={handleSubmit}>
+            {/* PESO E ALTURA CENTRALIZADOS EM 2 COLUNAS */}
+            <div className="grid grid-cols-2 gap-x-8 mb-4">
+              <div className="flex flex-col items-center">
+                <LabelWithTooltip
+                  htmlFor="peso"
+                  label="Peso (kg)"
+                  tooltip="Informe o peso corporal atual em quilogramas."
+                />
+                <Input
+                  id="peso"
+                  className="w-28"
+                  placeholder="Ex: 70"
+                  type="number"
+                  step="0.01"
+                  value={form.peso || ""}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="flex flex-col items-center">
+                <LabelWithTooltip
+                  htmlFor="altura"
+                  label="Altura (cm)"
+                  tooltip="Informe a altura em centímetros, sem sapatos."
+                />
+                <Input
+                  id="altura"
+                  className="w-28"
+                  placeholder="Ex: 175"
+                  type="number"
+                  step="0.1"
+                  value={form.altura || ""}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
 
-                  {/* Inputs centrais acima da imagem, divididos em 3 colunas */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2 mb-2">
-                    <div className="flex flex-col items-center gap-2">
-                      <div>
-                        <LabelWithTooltip
-                          htmlFor="pescoco"
-                          label="Pescoço"
-                          tooltip="Meça logo abaixo da laringe (pomo de Adão)."
-                        />
-                        <Input
-                          id="pescoco"
-                          className="w-28"
-                          placeholder="cm"
-                          type="number"
-                          value={form.pescoco || ""}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <LabelWithTooltip
-                          htmlFor="torax"
-                          label="Tórax"
-                          tooltip="Meça a circunferência do tórax na linha dos mamilos, com os braços relaxados."
-                        />
-                        <Input
-                          id="torax"
-                          className="w-28"
-                          placeholder="cm"
-                          type="number"
-                          value={form.torax || ""}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <div>
-                        <LabelWithTooltip
-                          htmlFor="cintura"
-                          label="Cintura"
-                          tooltip="Homens: ao nível do umbigo. Mulheres: parte mais estreita do abdômen."
-                        />
-                        <Input
-                          id="cintura"
-                          className="w-28"
-                          placeholder="cm"
-                          type="number"
-                          value={form.cintura || ""}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <div>
-                        <LabelWithTooltip
-                          htmlFor="quadril"
-                          label="Quadril"
-                          tooltip="Meça na parte mais larga dos glúteos."
-                        />
-                        <Input
-                          id="quadril"
-                          className="w-28"
-                          placeholder="cm"
-                          type="number"
-                          value={form.quadril || ""}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <LabelWithTooltip
-                          htmlFor="abdomen"
-                          label="Abdômen"
-                          tooltip="Meça a circunferência abdominal na altura do umbigo."
-                        />
-                        <Input
-                          id="abdomen"
-                          className="w-28"
-                          placeholder="cm"
-                          type="number"
-                          value={form.abdomen || ""}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Inputs laterais e imagem central */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2 items-start">
-                    {/* Coluna esquerda */}
-                    <div className="flex flex-col items-center gap-2">
-                      {bodyParts
-                        .filter((part) => part.side === "left")
-                        .map((part) => (
-                          <div key={part.id}>
-                            <LabelWithTooltip
-                              htmlFor={part.id}
-                              label={part.label}
-                              tooltip={
-                                part.tooltip ||
-                                "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
-                              }
-                            />
-                            <Input
-                              id={part.id}
-                              className="w-28"
-                              placeholder="cm"
-                              type="number"
-                              value={form[part.id] || ""}
-                              onChange={handleChange}
-                              required
-                            />
-                          </div>
-                        ))}
-                    </div>
-                    {/* Imagem central */}
-                    <div className="flex flex-col items-center gap-2">
-                      <Image
-                        src="/images/human-silhouette.png"
-                        alt="Figura medidas corporais"
-                        width={220}
-                        height={370}
-                        style={{ maxWidth: "100%", height: "auto" }}
-                      />
-                    </div>
-                    {/* Coluna direita */}
-                    <div className="flex flex-col items-center gap-2">
-                      {bodyParts
-                        .filter((part) => part.side === "right")
-                        .map((part) => (
-                          <div key={part.id}>
-                            <LabelWithTooltip
-                              htmlFor={part.id}
-                              label={part.label}
-                              tooltip={
-                                part.tooltip ||
-                                "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
-                              }
-                            />
-                            <Input
-                              id={part.id}
-                              className="w-28"
-                              placeholder="cm"
-                              type="number"
-                              value={form[part.id] || ""}
-                              onChange={handleChange}
-                              required
-                            />
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Botão de envio */}
-                  <div className="flex justify-end mt-6 p-4">
-                    <Button type="submit" disabled={loading}>
-                      {loading ? "Salvando..." : "Salvar Avaliação"}
-                    </Button>
-                  </div>
-                </form>
-                {/* Exibe o resultado do CA se existir */}
-                {resultadoCA && <CaInfo resultado={resultadoCA} />}
-              </TabsContent>
-
-              <TabsContent value="dobras" className="space-y-4">
-                {form.peso && form.altura ? (
-                  <DobrasCutaneasModernas
-                    userPerfilId={profile?.id}
-                    onResultado={handleDobrasCutaneasResultados}
-                    modoCalculoApenas={false}
-                    className="mt-4"
+            {/* Inputs centrais acima da imagem, divididos em 3 colunas */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2 mb-2">
+              <div className="flex flex-col items-center gap-2">
+                <div>
+                  <LabelWithTooltip
+                    htmlFor="pescoco"
+                    label="Pescoço"
+                    tooltip="Meça logo abaixo da laringe (pomo de Adão)."
                   />
-                ) : (
-                <div className="p-6 text-center">
-                  <p className="text-muted-foreground">
-                    Para calcular as dobras cutâneas, primeiro preencha o peso e altura na aba &quot;Medidas Corporais&quot;.
-                  </p>
+                  <Input
+                    id="pescoco"
+                    className="w-28"
+                    placeholder="cm"
+                    type="number"
+                    value={form.pescoco || ""}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                <div>
+                  <LabelWithTooltip
+                    htmlFor="torax"
+                    label="Tórax"
+                    tooltip="Meça a circunferência do tórax na linha dos mamilos, com os braços relaxados."
+                  />
+                  <Input
+                    id="torax"
+                    className="w-28"
+                    placeholder="cm"
+                    type="number"
+                    value={form.torax || ""}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div>
+                  <LabelWithTooltip
+                    htmlFor="cintura"
+                    label="Cintura"
+                    tooltip="Homens: ao nível do umbigo. Mulheres: parte mais estreita do abdômen."
+                  />
+                  <Input
+                    id="cintura"
+                    className="w-28"
+                    placeholder="cm"
+                    type="number"
+                    value={form.cintura || ""}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div>
+                  <LabelWithTooltip
+                    htmlFor="quadril"
+                    label="Quadril"
+                    tooltip="Meça na parte mais larga dos glúteos."
+                  />
+                  <Input
+                    id="quadril"
+                    className="w-28"
+                    placeholder="cm"
+                    type="number"
+                    value={form.quadril || ""}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <LabelWithTooltip
+                    htmlFor="abdomen"
+                    label="Abdômen"
+                    tooltip="Meça a circunferência abdominal na altura do umbigo."
+                  />
+                  <Input
+                    id="abdomen"
+                    className="w-28"
+                    placeholder="cm"
+                    type="number"
+                    value={form.abdomen || ""}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Inputs laterais e imagem central */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2 items-start">
+              {/* Coluna esquerda */}
+              <div className="flex flex-col items-center gap-2">
+                {bodyParts
+                  .filter((part) => part.side === "left")
+                  .map((part) => (
+                    <div key={part.id}>
+                      <LabelWithTooltip
+                        htmlFor={part.id}
+                        label={part.label}
+                        tooltip={
+                          part.tooltip ||
+                          "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
+                        }
+                      />
+                      <Input
+                        id={part.id}
+                        className="w-28"
+                        placeholder="cm"
+                        type="number"
+                        value={form[part.id] || ""}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  ))}
+              </div>
+              {/* Imagem central */}
+              <div className="flex flex-col items-center gap-2">
+                <Image
+                  src="/images/human-silhouette.png"
+                  alt="Figura medidas corporais"
+                  width={220}
+                  height={370}
+                  style={{ maxWidth: "100%", height: "auto" }}
+                />
+              </div>
+              {/* Coluna direita */}
+              <div className="flex flex-col items-center gap-2">
+                {bodyParts
+                  .filter((part) => part.side === "right")
+                  .map((part) => (
+                    <div key={part.id}>
+                      <LabelWithTooltip
+                        htmlFor={part.id}
+                        label={part.label}
+                        tooltip={
+                          part.tooltip ||
+                          "Meça a circunferência na parte indicada, mantendo a fita confortável e nivelada."
+                        }
+                      />
+                      <Input
+                        id={part.id}
+                        className="w-28"
+                        placeholder="cm"
+                        type="number"
+                        value={form[part.id] || ""}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Botão de envio */}
+            <div className="flex justify-end mt-6 p-4">
+              <Button type="submit" disabled={loading}>
+                {loading ? "Salvando..." : "Salvar Avaliação"}
+              </Button>
+            </div>
+          </form>
+          {/* Exibe o resultado do CA se existir */}
+          {resultadoCA && <CaInfo resultado={resultadoCA} />}
+        </TabsContent>
+        {/* Removido: TabsContent de Dobras Cutâneas */}
+      </Tabs>
     </ModalPadrao>
   );
 }

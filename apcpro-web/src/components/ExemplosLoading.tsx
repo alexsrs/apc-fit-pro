@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Loading, { LoadingInline, LoadingButton, LoadingSkeleton } from '@/components/ui/Loading';
+import Image from "next/image";
 
 export function ExemplosLoading() {
   const [loading1, setLoading1] = useState(false);
@@ -196,10 +197,13 @@ export function ExemplosLoading() {
                 {/* Card Real */}
                 <Card>
                   <CardContent className="p-4">
-                    <img 
+                    <Image 
                       src="/api/placeholder/400/200" 
                       alt="Exemplo"
+                      width={400}
+                      height={200}
                       className="w-full h-48 object-cover rounded-lg mb-4"
+                      priority
                     />
                     <h3 className="font-semibold text-lg mb-2">Título do Card</h3>
                     <p>Descrição do conteúdo do card após carregamento.</p>

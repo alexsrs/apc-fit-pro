@@ -11,7 +11,7 @@ import { ModalPadrao } from '@/components/ui/ModalPadrao';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LoadingInline, LoadingSkeleton } from '@/components/ui/Loading';
+import { LoadingInline } from '@/components/ui/Loading';
 import { 
   CheckCircle, 
   ArrowRight, 
@@ -22,8 +22,7 @@ import {
   Stethoscope,
   Trophy,
   Ruler,
-  Calculator,
-  RefreshCw
+  Calculator
 } from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import apiClient from '@/lib/api-client';
@@ -130,14 +129,15 @@ export function ModalAvaliacaoCompleta({
       obrigatoria: true,
       completed: !!dadosMedidas
     },
-    {
+    // Adiciona etapa de dobras cutâneas apenas para professor
+    ...(profile?.role === 'professor' ? [{
       id: 'dobras',
       nome: 'Dobras Cutâneas',
       icone: <Calculator className="h-5 w-5" />,
       descricao: 'Composição corporal (opcional)',
       obrigatoria: false,
       completed: !!dadosDobras
-    }
+    }] : [])
   ];
 
   // Buscar dados já existentes das avaliações ao abrir o modal
@@ -192,10 +192,6 @@ export function ModalAvaliacaoCompleta({
       const medidas = avaliacoesValidas
         .filter((a: any) => a.tipo === 'medidas')
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      
-      const dobras = avaliacoesValidas
-        .filter((a: any) => a.tipo === 'dobras-cutaneas')
-        .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
 
       // Para professores, sempre carregar dados existentes (independente de quem criou)
       // Para alunos, apenas se não for professor atual
@@ -223,7 +219,6 @@ export function ModalAvaliacaoCompleta({
           }));
         }
       }
-      if (dobras) setDadosDobras(dobras.resultado);
 
     } catch (error) {
       console.error('Erro ao buscar avaliações existentes:', error);
@@ -302,6 +297,8 @@ export function ModalAvaliacaoCompleta({
           return tipoAvaliacao === 'alto-rendimento' ? !!dadosAltoRendimento : false;
         case 'medidas':
           return !!dadosMedidas;
+        case 'dobras':
+          return !!dadosDobras;
         default:
           return false;
       }
@@ -577,30 +574,20 @@ export function ModalAvaliacaoCompleta({
             onOpenMedidasModal={() => setModalMedidasCorporaisOpen(true)}
           />
         );
-        
       case 'dobras':
+        // Etapa exclusiva para professor
         return (
           <div className="space-y-4">
-            {profile?.role !== "professor" ? (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Apenas professores podem realizar avaliação de dobras cutâneas.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <DobrasCutaneasModernas
-                userPerfilId={userPerfilId}
-                onResultado={(resultado) => {
-                  setDadosDobras(resultado);
-                }}
-                modoCalculoApenas={false}
-                className="space-y-4"
-              />
-            )}
+            <DobrasCutaneasModernas
+              userPerfilId={userPerfilId}
+              onResultado={(resultado) => {
+                setDadosDobras(resultado);
+              }}
+              modoCalculoApenas={false}
+              className="space-y-4"
+            />
           </div>
         );
-        
       default:
         return <div>Etapa não encontrada</div>;
     }
@@ -841,7 +828,7 @@ export function ModalAvaliacaoCompleta({
         />
       )}
 
-      {dadosDobras && (
+      {dadosDobras && profile?.role === 'professor' && (
         <ModalDetalhesAvaliacao
           open={modalDetalhesDobras}
           onClose={() => setModalDetalhesDobras(false)}

@@ -1,6 +1,3 @@
-<div align="center">
-  <img src="apcpro-web/public/images/logo-na-capa.png" alt="Logo" height="200">
-
   <h1>APC FIT PRO</h1>
   
   <p><strong>Plataforma Completa para Avaliação, Prescrição e Controle de Treinos Físicos</strong></p>
@@ -31,7 +28,9 @@
 
 # Introdução
 
-O **APC FIT PRO** é uma plataforma completa para prescrição, avaliação e controle de treinos físicos, unindo ciência e tecnologia para revolucionar a experiência de profissionais de educação física e alunos. Baseado no método **"Avaliar, Planejar e Controlar" (APC)**, oferece avaliação detalhada, planejamento personalizado e controle preciso de carga em uma única solução.
+# Introdução
+
+O **APC FIT PRO** é uma plataforma completa para prescrição, avaliação e controle de treinos físicos, unindo ciência e tecnologia para revolucionar a experiência de profissionais de educação física e alunos. Baseado no método **"Avaliar, Planejar e Controlar" (APC)**, oferece avaliação detalhada, planejamento personalizado e controle preciso de carga em uma única solução. O grande diferencial está na personalização avançada, integração entre profissionais e alunos, e ajustes contínuos para otimizar resultados.
 
 ## 🎯 Principais Características
 
@@ -49,21 +48,6 @@ O **APC FIT PRO** é uma plataforma completa para prescrição, avaliação e co
 - **Diferencial:** Personalização avançada, integração entre profissionais e alunos, e ajustes contínuos para otimizar resultados.
 - **Público-Alvo:** Profissionais de Educação Física e seus alunos
 - **Modalidade:** Plataforma Web Progressive (PWA)er">
-  <img src="apcpro-web/public/images/logo-na-capa.png" alt="Logo" height="200">
-
-  <h1>APC FIT PRO</h1>
-</div>
-
-# Introdução
-
-O APC FIT PRO é uma plataforma completa para prescrição, avaliação e controle de treinos físicos, unindo ciência e tecnologia para revolucionar a experiência de profissionais de educação física e alunos. Baseado no método “Avaliar, Planejar e Controlar” (APC), oferece avaliação detalhada, planejamento personalizado e controle preciso de carga em uma única solução. O grande diferencial está na personalização avançada, integração entre profissionais e alunos, e ajustes contínuos para otimizar resultados.
-
----
-
-# Visão Geral do Projeto
-
-- **Objetivo:** Oferecer avaliações detalhadas, planejamento personalizado e controle preciso de treinos, tudo em um só lugar, com base no método APC.
-- **Diferencial:** Personalização avançada, integração entre profissionais e alunos, e ajustes contínuos para otimizar resultados.
 
 ---
 
