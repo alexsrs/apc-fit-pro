@@ -8,13 +8,12 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import {
+  AlertTriangle,
+  CheckCircle,
   History,
   Heart,
   Settings,
-  AlertTriangle,
-  User,
-  CheckCircle,
-  Info,
+  Info
 } from "lucide-react";
 
 // Tipagem para o resultado de anamnese
@@ -96,8 +95,7 @@ export function AnamneseInfo({ resultado }: AnamneseInfoProps) {
    */
   const renderSection = (
     title: string,
-    data: Record<string, unknown>,
-    icon: React.ReactNode
+    data: Record<string, unknown>
   ) => {
     const hasData = Object.values(data || {}).some(
       (value) => value !== undefined && value !== null && value !== ""
@@ -161,8 +159,7 @@ export function AnamneseInfo({ resultado }: AnamneseInfoProps) {
               <AccordionContent className="px-4 pb-4">
                 {renderSection(
                   "Histórico de Treino",
-                  resultado.historicoTreino,
-                  <History className="w-5 h-5 text-blue-600" />
+                  resultado.historicoTreino
                 )}
               </AccordionContent>
             </AccordionItem>
@@ -182,8 +179,7 @@ export function AnamneseInfo({ resultado }: AnamneseInfoProps) {
               <AccordionContent className="px-4 pb-4">
                 {renderSection(
                   "Preferências Individuais",
-                  resultado.preferenciasIndividuais,
-                  <Settings className="w-5 h-5 text-green-600" />
+                  resultado.preferenciasIndividuais
                 )}
               </AccordionContent>
             </AccordionItem>
@@ -204,8 +200,7 @@ export function AnamneseInfo({ resultado }: AnamneseInfoProps) {
               <AccordionContent className="px-4 pb-4">
                 {renderSection(
                   "Lesões e Limitações",
-                  resultado.lesoesLimitacoes,
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  resultado.lesoesLimitacoes
                 )}
               </AccordionContent>
             </AccordionItem>
@@ -225,8 +220,7 @@ export function AnamneseInfo({ resultado }: AnamneseInfoProps) {
               <AccordionContent className="px-4 pb-4">
                 {renderSection(
                   "Estilo de Vida e Recuperação",
-                  resultado.estiloVidaRecuperacao,
-                  <Heart className="w-5 h-5 text-purple-600" />
+                  resultado.estiloVidaRecuperacao
                 )}
               </AccordionContent>
             </AccordionItem>

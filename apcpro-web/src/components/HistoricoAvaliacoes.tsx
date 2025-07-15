@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import { Avaliacao } from "./ListaAvaliacoes";
 
 type HistoricoAvaliacoesProps = {
@@ -45,7 +45,7 @@ export function HistoricoAvaliacoes({ avaliacoes, onVer }: HistoricoAvaliacoesPr
             <div className="flex flex-col md:flex-row md:items-center gap-2 flex-1">
               <span className="font-medium truncate max-w-[120px]">{a.tipo}</span>
               <span className="text-xs text-gray-500">{new Date(a.data).toLocaleDateString('pt-BR')}</span>
-              <span className="text-xs text-gray-500">{a.email || a.userPerfil?.user?.email}</span>
+              {/* Removido campo de email e userPerfil inexistente no tipo Avaliacao */}
             </div>
             <div className="flex items-center gap-2 min-w-fit md:justify-end md:text-right">
               <Badge className={`${badgeClass} flex items-center gap-1`}>

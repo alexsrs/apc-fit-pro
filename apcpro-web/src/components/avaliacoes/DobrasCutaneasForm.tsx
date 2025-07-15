@@ -87,31 +87,51 @@ export function DobrasCutaneasForm({
   useEffect(() => {
     const fetchDadosPessoais = async () => {
       try {
-        // Busca peso/altura da última avaliação do tipo "medidas"
+        // Busca todas as avaliações do usuário
         const avalResponse = await apiClient.get(`/api/avaliacoes/${userId}`);
-        let peso = dadosPessoais.peso;
-        let altura = dadosPessoais.altura;
-        let dataAvaliacao = "";
+        let peso = 0;
+        let altura = 0;
+        let genero = '';
+        let idade = 0;
+        let email = '';
+        let dataAvaliacao = '';
+
         if (avalResponse.data && avalResponse.data.length > 0) {
-          const ultimaMedidas = avalResponse.data.find((a: any) => a.tipo === "medidas");
-          if (ultimaMedidas) {
-            peso = ultimaMedidas.medidas?.peso ?? peso;
-            altura = ultimaMedidas.medidas?.altura ?? altura;
-            if (ultimaMedidas.data) {
-              dataAvaliacao = new Date(ultimaMedidas.data).toLocaleDateString('pt-BR');
+          // Busca avaliação mais recente do tipo "medidas"
+          const medidasRecentes = avalResponse.data
+            .filter((a: any) => a.tipo === "medidas")
+            .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
+          if (medidasRecentes) {
+            peso = medidasRecentes.medidas?.peso ?? 0;
+            altura = medidasRecentes.medidas?.altura ?? 0;
+            if (medidasRecentes.data) {
+              dataAvaliacao = new Date(medidasRecentes.data).toLocaleDateString('pt-BR');
+            }
+          }
+          // Busca gênero e idade em avaliações do tipo "anamnese" se houver
+          const anamneseRecentes = avalResponse.data
+            .filter((a: any) => a.tipo === "anamnese")
+            .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
+          if (anamneseRecentes) {
+            genero = anamneseRecentes.dados?.genero ?? '';
+            // Se houver dataNascimento, calcula idade
+            if (anamneseRecentes.dados?.dataNascimento) {
+              const nascimento = new Date(anamneseRecentes.dados.dataNascimento);
+              const hoje = new Date();
+              idade = hoje.getFullYear() - nascimento.getFullYear();
+              const m = hoje.getMonth() - nascimento.getMonth();
+              if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+                idade--;
+              }
             }
           }
         }
-        // Busca gênero, dataNascimento e email do perfil
+        // Busca dados do perfil para complementar (gênero, email, dataNascimento)
         const perfilResponse = await apiClient.get(`/api/${userId}/profile`);
-        let genero = dadosPessoais.genero;
-        let idade = dadosPessoais.idade;
-        let email = "";
         if (perfilResponse.data) {
           genero = perfilResponse.data.genero ?? genero;
-          email = perfilResponse.data.email ?? "";
-          // Calcula idade a partir da dataNascimento
-          if (perfilResponse.data.dataNascimento) {
+          email = perfilResponse.data.email ?? '';
+          if (perfilResponse.data.dataNascimento && idade === 0) {
             const nascimento = new Date(perfilResponse.data.dataNascimento);
             const hoje = new Date();
             idade = hoje.getFullYear() - nascimento.getFullYear();
