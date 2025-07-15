@@ -60,7 +60,7 @@ export default function TabsProfile() {
     if (formData.role === "aluno") {
       setLoadingProfessores(true);
       apiClient
-        .get("/professores")
+        .get("/api/professores")
         .then((res) => setProfessores(res.data))
         .catch(() => setProfessores([]))
         .finally(() => setLoadingProfessores(false));
@@ -238,9 +238,9 @@ export default function TabsProfile() {
                 </SelectTrigger>
                 <SelectContent>
                   {professores.length === 0 && !loadingProfessores && (
-                    <SelectItem value="" disabled>
+                    <div className="px-3 py-2 text-muted-foreground text-sm">
                       Nenhum professor encontrado
-                    </SelectItem>
+                    </div>
                   )}
                   {professores.map((prof) => (
                     <SelectItem key={prof.id} value={prof.id}>

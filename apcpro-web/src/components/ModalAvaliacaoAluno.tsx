@@ -82,6 +82,7 @@ export function ModalAvaliacaoAluno({
   const [modalDetalhesAnamnese, setModalDetalhesAnamnese] = useState(false);
   const [modalDetalhesAltoRendimento, setModalDetalhesAltoRendimento] = useState(false);
   const [modalDetalhesMedidas, setModalDetalhesMedidas] = useState(false);
+  const [modalDetalhesDobras, setModalDetalhesDobras] = useState(false);
 
   // Dados salvos de cada etapa
   const [dadosTriagem, setDadosTriagem] = useState<any>(null);
@@ -89,6 +90,46 @@ export function ModalAvaliacaoAluno({
   const [dadosAltoRendimento, setDadosAltoRendimento] = useState<any>(null);
   const [dadosMedidas, setDadosMedidas] = useState<any>(null);
   
+  // Função para executar a etapa atual
+  const executarEtapa = () => {
+    const etapa = etapas[etapaAtual];
+    switch (etapa.id) {
+      case 'triagem':
+        setModalTriagemOpen(true);
+        break;
+      case 'anamnese':
+        setModalAnamneseOpen(true);
+        break;
+      case 'alto-rendimento':
+        setModalAltoRendimentoOpen(true);
+        break;
+      case 'medidas':
+        setModalMedidasCorporaisOpen(true);
+        break;
+    }
+  };
+
+  // Função para visualizar detalhes da etapa
+  const visualizarDetalhes = () => {
+    const etapa = etapas[etapaAtual];
+    switch (etapa.id) {
+      case 'triagem':
+        setModalDetalhesTriagem(true);
+        break;
+      case 'anamnese':
+        setModalDetalhesAnamnese(true);
+        break;
+      case 'alto-rendimento':
+        setModalDetalhesAltoRendimento(true);
+        break;
+      case 'medidas':
+        setModalDetalhesMedidas(true);
+        if (dadosMedidas?.dobrasCutaneas) {
+          setModalDetalhesDobras(true);
+        }
+        break;
+    }
+  };
   // Dados do usuário para medidas corporais
   const [idadeUsuario, setIdadeUsuario] = useState<number>(25); // valor padrão
   const [dataNascimentoUsuario, setDataNascimentoUsuario] = useState<string>('1999-01-01'); // valor padrão
@@ -288,46 +329,6 @@ export function ModalAvaliacaoAluno({
   const finalizarAvaliacao = () => {
     onSuccess();
     onClose();
-  };
-
-  // Função para executar a etapa atual
-  const executarEtapa = () => {
-    const etapa = etapas[etapaAtual];
-    
-    switch (etapa.id) {
-      case 'triagem':
-        setModalTriagemOpen(true);
-        break;
-      case 'anamnese':
-        setModalAnamneseOpen(true);
-        break;
-      case 'alto-rendimento':
-        setModalAltoRendimentoOpen(true);
-        break;
-      case 'medidas':
-        setModalMedidasCorporaisOpen(true);
-        break;
-    }
-  };
-
-  // Função para visualizar detalhes da etapa
-  const visualizarDetalhes = () => {
-    const etapa = etapas[etapaAtual];
-    
-    switch (etapa.id) {
-      case 'triagem':
-        setModalDetalhesTriagem(true);
-        break;
-      case 'anamnese':
-        setModalDetalhesAnamnese(true);
-        break;
-      case 'alto-rendimento':
-        setModalDetalhesAltoRendimento(true);
-        break;
-      case 'medidas':
-        setModalDetalhesMedidas(true);
-        break;
-    }
   };
 
   const etapaAtualObj = etapas[etapaAtual];
@@ -593,6 +594,22 @@ export function ModalAvaliacaoAluno({
           }}
         />
       )}
+
+      {/* Modal de detalhes de dobras cutâneas para alunos */}
+      {dadosMedidas?.dobrasCutaneas && (
+        <ModalDetalhesAvaliacao
+          open={modalDetalhesDobras}
+          onClose={() => setModalDetalhesDobras(false)}
+          avaliacao={{
+            id: 'dobras-cutaneas-current',
+            tipo: 'dobras-cutaneas',
+            data: new Date().toISOString(),
+            status: 'concluido',
+            resultado: dadosMedidas.dobrasCutaneas
+          }}
+        />
+      )}
+      {/* Exibe detalhes de dobras cutâneas se o aluno possuir essa avaliação */}
     </>
   );
 }

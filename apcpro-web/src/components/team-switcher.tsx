@@ -265,15 +265,6 @@ export function TeamSwitcher({ teams = [], onTeamChange, onGerenciarGruposClick 
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição (opcional)</Label>
-                <Input
-                  id="descricao"
-                  placeholder="Descrição do grupo..."
-                  value={newTeamDescription}
-                  onChange={(e) => setNewTeamDescription(e.target.value)}
-                />
-              </div>
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"

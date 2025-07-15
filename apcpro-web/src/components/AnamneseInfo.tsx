@@ -106,67 +106,52 @@ export function AnamneseInfo({ resultado }: AnamneseInfoProps) {
     if (!hasData) return null;
 
     return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-          {icon}
-          {title}
-        </div>
-        <div className="grid gap-2">
-          {Object.entries(data || {}).map(([key, value]) => {
-            if (value === undefined || value === null || value === "")
-              return null;
+      <div className="grid gap-2">
+        {Object.entries(data || {}).map(([key, value]) => {
+          if (value === undefined || value === null || value === "")
+            return null;
 
-            const fieldName = getFieldDisplayName(key);
+          const fieldName = getFieldDisplayName(key);
 
-            return (
-              <div key={key} className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-gray-700">
-                  {fieldName}:
-                </span>
-                {typeof value === "boolean" ? (
-                  <div className="ml-2">
-                    {key.includes("dores") &&
-                      renderBooleanBadge(value, "Relata dores", "Sem dores")}
-                    {key.includes("limitacoes") &&
-                      renderBooleanBadge(
-                        value,
-                        "Possui limitações",
-                        "Sem limitações"
-                      )}
-                    {!key.includes("dores") &&
-                      !key.includes("limitacoes") &&
-                      renderBooleanBadge(value, "Sim", "Não")}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-600 ml-2 bg-gray-50 p-2 rounded">
-                    {String(value)}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
+          return (
+            <div key={key} className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-700">
+                {fieldName}:
+              </span>
+              {typeof value === "boolean" ? (
+                <div className="ml-2">
+                  {key.includes("dores") &&
+                    renderBooleanBadge(value, "Relata dores", "Sem dores")}
+                  {key.includes("limitacoes") &&
+                    renderBooleanBadge(
+                      value,
+                      "Possui limitações",
+                      "Sem limitações"
+                    )}
+                  {!key.includes("dores") &&
+                    !key.includes("limitacoes") &&
+                    renderBooleanBadge(value, "Sim", "Não")}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600 ml-2 bg-gray-50 p-2 rounded">
+                  {String(value)}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
 
+  // JSX principal movido para dentro da função
   return (
-    <Card className="border-l-4 border-l-indigo-500">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <User className="w-6 h-6 text-indigo-600" />
-          <h2 className="text-xl font-bold text-gray-900">
-            Resultado da Anamnese
-          </h2>
-        </div>
-
-        <Accordion type="single" collapsible className="w-full space-y-2">
+    <Card className="shadow-md border">
+      <CardContent>
+        <Accordion type="multiple" className="w-full">
           {/* Histórico de Treino */}
           {resultado.historicoTreino && (
-            <AccordionItem
-              value="historico-treino"
-              className="border rounded-lg"
-            >
+            <AccordionItem value="historico" className="border rounded-lg">
               <AccordionTrigger className="px-4 py-3">
                 <span className="flex items-center gap-2">
                   <History className="w-5 h-5 text-blue-600" />

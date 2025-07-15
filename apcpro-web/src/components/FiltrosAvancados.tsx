@@ -163,9 +163,16 @@ export function FiltrosAvancados({
                       <SelectValue placeholder={`Todos ${filtro.label.toLowerCase()}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">
-                        Todos {filtro.label.toLowerCase()}
-                      </SelectItem>
+                      <div className="px-2 py-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-left text-muted-foreground"
+                          onClick={() => onFiltrosChange({ ...filtros, [filtro.key]: "" })}
+                        >
+                          Limpar filtro
+                        </Button>
+                      </div>
                       {filtro.opcoes.map((opcao) => (
                         <SelectItem key={opcao.value} value={opcao.value}>
                           {opcao.label}
@@ -193,7 +200,16 @@ export function FiltrosAvancados({
                       <SelectValue placeholder="Todos os grupos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os grupos</SelectItem>
+                      <div className="px-2 py-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-left text-muted-foreground"
+                          onClick={() => onFiltrosChange({ ...filtros, grupoId: "" })}
+                        >
+                          Limpar filtro
+                        </Button>
+                      </div>
                       {grupos.map((grupo) => (
                         <SelectItem key={grupo.id} value={grupo.id}>
                           {grupo.nome}

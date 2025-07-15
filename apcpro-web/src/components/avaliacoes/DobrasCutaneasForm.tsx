@@ -37,6 +37,8 @@ interface DadosPessoais {
   genero?: string;
   peso?: number;
   altura?: number;
+  email?: string;
+  dataAvaliacao?: string;
 }
 
 interface Medidas {
@@ -80,6 +82,60 @@ export function DobrasCutaneasForm({
     peso: initialData?.peso || 0,
     altura: initialData?.altura || 0
   });
+
+  // Buscar peso/altura da última avaliação, gênero/idade/email do perfil e data da avaliação
+  useEffect(() => {
+    const fetchDadosPessoais = async () => {
+      try {
+        // Busca peso/altura da última avaliação do tipo "medidas"
+        const avalResponse = await apiClient.get(`/api/avaliacoes/${userId}`);
+        let peso = dadosPessoais.peso;
+        let altura = dadosPessoais.altura;
+        let dataAvaliacao = "";
+        if (avalResponse.data && avalResponse.data.length > 0) {
+          const ultimaMedidas = avalResponse.data.find((a: any) => a.tipo === "medidas");
+          if (ultimaMedidas) {
+            peso = ultimaMedidas.medidas?.peso ?? peso;
+            altura = ultimaMedidas.medidas?.altura ?? altura;
+            if (ultimaMedidas.data) {
+              dataAvaliacao = new Date(ultimaMedidas.data).toLocaleDateString('pt-BR');
+            }
+          }
+        }
+        // Busca gênero, dataNascimento e email do perfil
+        const perfilResponse = await apiClient.get(`/api/${userId}/profile`);
+        let genero = dadosPessoais.genero;
+        let idade = dadosPessoais.idade;
+        let email = "";
+        if (perfilResponse.data) {
+          genero = perfilResponse.data.genero ?? genero;
+          email = perfilResponse.data.email ?? "";
+          // Calcula idade a partir da dataNascimento
+          if (perfilResponse.data.dataNascimento) {
+            const nascimento = new Date(perfilResponse.data.dataNascimento);
+            const hoje = new Date();
+            idade = hoje.getFullYear() - nascimento.getFullYear();
+            const m = hoje.getMonth() - nascimento.getMonth();
+            if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+              idade--;
+            }
+          }
+        }
+        setDadosPessoais(prev => ({
+          ...prev,
+          peso,
+          altura,
+          genero,
+          idade,
+          email,
+          dataAvaliacao
+        }));
+      } catch (error) {
+        console.error('Erro ao buscar dados pessoais:', error);
+      }
+    };
+    fetchDadosPessoais();
+  }, [userId]);
   const [medidas, setMedidas] = useState<Medidas>({});
   const [resultado, setResultado] = useState<Resultado | null>(null);
 
@@ -105,17 +161,10 @@ export function DobrasCutaneasForm({
   });
 
   const handleInputChange = (field: string, value: string | number) => {
-    if (field in dadosPessoais) {
-      setDadosPessoais(prev => ({
-        ...prev,
-        [field]: typeof value === 'string' ? parseFloat(value) || 0 : value
-      }));
-    } else {
-      setMedidas(prev => ({
-        ...prev,
-        [field]: typeof value === 'string' ? parseFloat(value) || 0 : value
-      }));
-    }
+    setMedidas(prev => ({
+      ...prev,
+      [field]: typeof value === 'string' ? parseFloat(value) || 0 : value
+    }));
   };
 
   const calcularResultado = async () => {
@@ -196,6 +245,41 @@ export function DobrasCutaneasForm({
         <h3 className="text-lg font-semibold">Dobras Cutâneas</h3>
       </div>
 
+      {/* Card Medidas Corporais */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Medidas Corporais</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Data da Avaliação</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.dataAvaliacao || '-'}</div>
+            </div>
+            <div>
+              <Label>Email</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.email || '-'}</div>
+            </div>
+            <div>
+              <Label>Peso</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.peso ? `${dadosPessoais.peso} kg` : '-'}</div>
+            </div>
+            <div>
+              <Label>Altura</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.altura ? `${dadosPessoais.altura} cm` : '-'}</div>
+            </div>
+            <div>
+              <Label>Idade</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.idade || '-'}</div>
+            </div>
+            <div>
+              <Label>Gênero</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.genero || '-'}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Seleção do protocolo */}
       <Card>
         <CardHeader>
@@ -221,7 +305,6 @@ export function DobrasCutaneasForm({
                 </SelectContent>
               </Select>
             </div>
-            
             {protocolo && (
               <div className="bg-blue-50 p-3 rounded-lg">
                 <p className="text-sm font-medium">Dobras utilizadas:</p>
@@ -234,39 +317,6 @@ export function DobrasCutaneasForm({
                 </div>
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Dados pessoais */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Dados Pessoais</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="peso">Peso (kg)</Label>
-              <Input
-                id="peso"
-                type="number"
-                step="0.1"
-                value={dadosPessoais.peso || ""}
-                onChange={(e) => handleInputChange("peso", e.target.value)}
-                placeholder="Ex: 70.5"
-              />
-            </div>
-            <div>
-              <Label htmlFor="altura">Altura (cm)</Label>
-              <Input
-                id="altura"
-                type="number"
-                step="0.1"
-                value={dadosPessoais.altura || ""}
-                onChange={(e) => handleInputChange("altura", e.target.value)}
-                placeholder="Ex: 175"
-              />
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -354,7 +404,6 @@ export function DobrasCutaneasForm({
           <Calculator className="h-4 w-4 mr-2" />
           {loading ? "Calculando..." : "Calcular"}
         </Button>
-        
         <Button
           onClick={handleSave}
           disabled={loading || !resultado}
