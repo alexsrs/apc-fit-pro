@@ -96,7 +96,7 @@ export const PROTOCOLOS_INFO: Record<ProtocoloDisponivel, InfoProtocolo> = {
     descricao: 'Protocolo completo para atletas com registro detalhado',
     numDobras: 9,
     pontos: ['Tríceps', 'Subescapular', 'Supra-ilíaca', 'Abdominal', 'Peitoral', 'Axilar Média', 'Coxa', 'Bíceps*', 'Panturrilha*'],
-    indicacao: 'Atletas e esportistas (*não entram na equação)',
+    indicacao: 'Atletas e esportistas',
     requerIdade: true,
     sexoEspecifico: false
   },

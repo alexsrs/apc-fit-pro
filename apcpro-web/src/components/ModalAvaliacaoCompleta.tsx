@@ -144,61 +144,27 @@ export function ModalAvaliacaoCompleta({
   const buscarAvaliacoesExistentes = useCallback(async () => {
     setCarregandoDados(true);
     try {
-      // Buscar dados do usuário (idade e data de nascimento)
-      try {
-        const userResponse = await apiClient.get(`alunos/${userPerfilId}`);
-        const userData = userResponse.data;
-        
-        if (userData.dataNascimento) {
-          setDataNascimentoUsuario(userData.dataNascimento);
-          
-          // Calcular idade
-          const today = new Date();
-          const birthDate = new Date(userData.dataNascimento);
-          let age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          
-          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-          }
-          
-          setIdadeUsuario(age);
-        }
-      } catch (userError) {
-        console.warn('Erro ao buscar dados do usuário, usando valores padrão:', userError);
-      }
-
+      // Buscar avaliações do aluno
       const response = await apiClient.get(`alunos/${userPerfilId}/avaliacoes`);
       const avaliacoes = response.data || [];
-
-      // Filtrar apenas avaliações pendentes ou aprovadas (ignorar reprovadas)
-      const avaliacoesValidas = avaliacoes.filter((a: any) => 
-        a.status === 'pendente' || a.status === 'aprovada'
-      );
+      const avaliacoesValidas = avaliacoes;
 
       // Separar avaliações por tipo (pegar a mais recente de cada tipo válido)
       const triagem = avaliacoesValidas
         .filter((a: any) => a.tipo === 'triagem')
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      
       const anamnese = avaliacoesValidas
         .filter((a: any) => a.tipo === 'anamnese')
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      
       const altoRendimento = avaliacoesValidas
         .filter((a: any) => a.tipo === 'alto-rendimento')
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      
       const medidas = avaliacoesValidas
         .filter((a: any) => a.tipo === 'medidas')
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
 
-      // Para professores, sempre carregar dados existentes (independente de quem criou)
-      // Para alunos, apenas se não for professor atual
       if (triagem) {
         setDadosTriagem(triagem.resultado);
-        
-        // Definir tipo de avaliação baseado na triagem existente
         const objetivo = triagem.resultado?.bloco4?.objetivo || triagem.resultado?.atleta?.objetivo;
         if (objetivo === 'Alto rendimento esportivo') {
           setTipoAvaliacao('alto-rendimento');
@@ -210,7 +176,6 @@ export function ModalAvaliacaoCompleta({
       if (altoRendimento) setDadosAltoRendimento(altoRendimento.resultado);
       if (medidas) {
         setDadosMedidas(medidas.resultado);
-        // Extrair peso e altura para evitar perguntar novamente
         if (medidas.resultado?.peso || medidas.resultado?.altura) {
           setDadosColetados(prev => ({
             ...prev,
@@ -218,6 +183,49 @@ export function ModalAvaliacaoCompleta({
             ...(medidas.resultado?.altura && { altura: medidas.resultado.altura })
           }));
         }
+      }
+
+      // Extrair userId do aluno das avaliações (campo alunoId)
+      let userId = '';
+      for (const avaliacao of avaliacoesValidas) {
+        if (avaliacao.alunoId && typeof avaliacao.alunoId === 'string') {
+          userId = avaliacao.alunoId;
+          break;
+        }
+      }
+
+      // Buscar data de nascimento via endpoint de perfil do aluno usando userId
+      if (userId) {
+        let dataNascimentoApi = '';
+        try {
+          // Busca o perfil do aluno usando o userId correto (não o userPerfilId)
+          const perfilResponse = await apiClient.get(`alunos/${userId}/profile`);
+          if (perfilResponse?.data?.dataNascimento) {
+            dataNascimentoApi = perfilResponse.data.dataNascimento;
+            setDataNascimentoUsuario(dataNascimentoApi);
+            // Calcular idade
+            const today = new Date();
+            const birthDate = new Date(dataNascimentoApi);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+              age--;
+            }
+            setIdadeUsuario(age);
+          } else {
+            setErro('Data de nascimento não encontrada no perfil do aluno.');
+            setDataNascimentoUsuario('');
+            setIdadeUsuario(0);
+          }
+        } catch (err) {
+          setErro('Erro ao buscar perfil do aluno para data de nascimento.');
+          setDataNascimentoUsuario('');
+          setIdadeUsuario(0);
+        }
+      } else {
+        setErro('Não foi possível identificar o userId do aluno. Dados de perfil não serão exibidos.');
+        setDataNascimentoUsuario('');
+        setIdadeUsuario(0);
       }
 
     } catch (error) {
@@ -230,21 +238,34 @@ export function ModalAvaliacaoCompleta({
   // Função para aprovar automaticamente a última avaliação criada
   const aprovarUltimaAvaliacao = async (tipoAvaliacao: string) => {
     try {
-      // Buscar a avaliação mais recente do tipo especificado
+      // Buscar avaliações para extrair o id real do aluno
       const response = await apiClient.get(`alunos/${userPerfilId}/avaliacoes`);
       const avaliacoes = response.data || [];
-      
-      const avaliacaoMaisRecente = avaliacoes
+      // Filtrar avaliações válidas (pendente ou aprovada)
+      const avaliacoesValidas = avaliacoes.filter((a: any) =>
+        a.status === 'pendente' || a.status === 'aprovada'
+      );
+      // Extrair id real do aluno
+      let alunoIdParaPerfil = userPerfilId;
+      if (avaliacoesValidas.length > 0 && avaliacoesValidas[0].alunoId) {
+        alunoIdParaPerfil = avaliacoesValidas[0].alunoId;
+      }
+      // Buscar novamente as avaliações usando o id real do aluno
+      const responseAluno = await apiClient.get(`alunos/${alunoIdParaPerfil}/avaliacoes`);
+      const avaliacoesAluno = responseAluno.data || [];
+      const avaliacaoMaisRecente = avaliacoesAluno
         .filter((a: any) => a.tipo === tipoAvaliacao)
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      
-      if (avaliacaoMaisRecente && avaliacaoMaisRecente.status === 'pendente') {
-        // Aprovar a avaliação
-        await apiClient.put(`avaliacoes/${avaliacaoMaisRecente.id}/aprovar`, {
-          observacoes: 'Aprovada automaticamente pelo professor responsável'
-        });
-        
-        console.log(`Avaliação ${tipoAvaliacao} aprovada automaticamente`);
+      if (avaliacaoMaisRecente && avaliacaoMaisRecente.id) {
+        // Buscar detalhes da avaliação pelo id correto
+        const avaliacaoDetalhada = await apiClient.get(`avaliacoes/${avaliacaoMaisRecente.id}`);
+        if (avaliacaoDetalhada?.data?.status === 'pendente') {
+          // Aprovar a avaliação
+          await apiClient.put(`avaliacoes/${avaliacaoMaisRecente.id}/aprovar`, {
+            observacoes: 'Aprovada automaticamente pelo professor responsável'
+          });
+          console.log(`Avaliação ${tipoAvaliacao} aprovada automaticamente`);
+        }
       }
     } catch (error) {
       console.error(`Erro ao aprovar avaliação ${tipoAvaliacao}:`, error);
@@ -580,7 +601,7 @@ export function ModalAvaliacaoCompleta({
           <div className="space-y-4">
             <DobrasCutaneasModernas
               userPerfilId={userPerfilId}
-              onResultado={(resultado) => {
+              onResultado={(resultado: any) => {
                 setDadosDobras(resultado);
               }}
               modoCalculoApenas={false}

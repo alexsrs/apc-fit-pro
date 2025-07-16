@@ -3,10 +3,14 @@
  * Integrado com a nova API de protocolos independentes
  */
 
-'use client';
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { calcularIdade } from '@/utils/idade';
+// ...existing code...
+
+
+
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,15 +21,38 @@ import { AlertCircle, Calculator, Save, Users, Target, Clock } from 'lucide-reac
 import apiClient from '@/lib/api-client';
 import type { 
   AvaliacaoCompleta, 
-  DadosPessoais, 
   Medidas, 
   ProtocoloInfo 
 } from '@/types/dobras-cutaneas';
 
+// Unificação: garantir que DadosPessoais tenha todos os campos necessários
+// ...existing code...
+
+// Unificação: garantir que DadosPessoais tenha todos os campos necessários
+interface DadosPessoais {
+  genero: string;
+  peso: string;
+  idade: string;
+  altura: string;
+  dataNascimento?: string;
+  nome?: string;
+  image?: string;
+}
+
+// Props do componente DobrasCutaneasModernas
+interface AlunoBasic {
+  id: string;
+  dataNascimento?: string;
+  name?: string;
+  genero?: string;
+  image?: string;
+}
+
 interface DobrasCutaneasModernasProps {
-  userPerfilId?: string;
-  onResultado?: (resultado: AvaliacaoCompleta) => void;
-  modoCalculoApenas?: boolean; // Se true, não salva no banco
+  userPerfilId: string;
+  aluno?: AlunoBasic;
+  onResultado: (resultado: any) => void;
+  modoCalculoApenas?: boolean;
   className?: string;
 }
 
@@ -73,17 +100,20 @@ const dobrasInfo = {
 };
 
 export function DobrasCutaneasModernas({ 
-  userPerfilId, 
-  onResultado, 
+  userPerfilId,
+  aluno,
+  onResultado,
   modoCalculoApenas = false,
-  className 
+  className
 }: DobrasCutaneasModernasProps) {
   // Estados principais
   const [protocolos, setProtocolos] = useState<ProtocoloInfo[]>([]);
   const [protocoloSelecionado, setProtocoloSelecionado] = useState<string>('');
   const [dadosPessoais, setDadosPessoais] = useState<DadosPessoais>({
-    genero: 'M',
-    peso: 70
+    genero: '-',
+    idade: '-',
+    peso: '-',
+    altura: '-'
   });
   const [medidas, setMedidas] = useState<Medidas>({});
   const [resultado, setResultado] = useState<AvaliacaoCompleta | null>(null);
@@ -94,10 +124,59 @@ export function DobrasCutaneasModernas({
   const [errors, setErrors] = useState<string[]>([]);
   const [dobraAtiva, setDobraAtiva] = useState<string>('');
 
-  // Carregar protocolos disponíveis
+  // Carregar protocolos disponíveis apenas uma vez ao montar o componente
   useEffect(() => {
     carregarProtocolos();
   }, []);
+
+  // Validação: garantir que o ID passado é de aluno, não de professor
+  useEffect(() => {
+    if (!userPerfilId || typeof userPerfilId !== 'string' || userPerfilId.startsWith('prof') || userPerfilId.startsWith('personal')) {
+      setErrors(["Selecione um aluno válido para realizar a avaliação física. O ID informado não corresponde a um aluno."]);
+      setDadosPessoais({ genero: '-', idade: '-', peso: '-', altura: '-' });
+      return;
+    }
+    carregarDadosPessoais();
+  }, [userPerfilId]);
+
+  // Função para buscar dados pessoais do aluno: gênero e idade do perfil, peso/altura da avaliação
+  const carregarDadosPessoais = async () => {
+    if (!userPerfilId) {
+      setErrors(["ID do aluno não informado. Não é possível buscar dados pessoais."]);
+      setDadosPessoais({ genero: '-', idade: '-', peso: '-', altura: '-' });
+      return;
+    }
+    // Sempre prioriza a prop aluno se o id bater
+    if (aluno && aluno.id === userPerfilId) {
+      let genero = '-';
+      if (aluno.genero) {
+        if (aluno.genero.toLowerCase() === 'masculino' || aluno.genero.toLowerCase() === 'm') {
+          genero = 'M';
+        } else if (aluno.genero.toLowerCase() === 'feminino' || aluno.genero.toLowerCase() === 'f') {
+          genero = 'F';
+        } else {
+          genero = '-';
+        }
+      }
+      // Calcular idade a partir da dataNascimento, se disponível
+      let idade = '-';
+      if (aluno.dataNascimento) {
+        idade = String(calcularIdade(aluno.dataNascimento));
+      }
+      setDadosPessoais(prev => ({
+        ...prev,
+        dataNascimento: aluno.dataNascimento ?? '-',
+        nome: aluno.name ?? '-',
+        genero,
+        image: aluno.image ?? '-',
+        idade
+      }));
+      return;
+    }
+    // Se não houver prop aluno válida, limpa os dados pessoais
+    setDadosPessoais({ genero: '-', idade: '-', peso: '-', altura: '-' });
+    setErrors(["Dados do aluno não encontrados. Verifique se a prop 'aluno' está sendo passada corretamente."]);
+  };
 
   const carregarProtocolos = async () => {
     try {
@@ -136,8 +215,8 @@ export function DobrasCutaneasModernas({
 
   // Validar dados pessoais
   const dadosValidos = () => {
-    if (!dadosPessoais.peso || dadosPessoais.peso <= 0) return false;
-    if (protocoloInfo?.requerIdade && (!dadosPessoais.idade || dadosPessoais.idade <= 0)) return false;
+    if (dadosPessoais.peso === '-' || Number(dadosPessoais.peso) <= 0) return false;
+    if (protocoloInfo?.requerIdade && (dadosPessoais.idade === '-' || Number(dadosPessoais.idade) <= 0)) return false;
     return true;
   };
 
@@ -270,68 +349,33 @@ export function DobrasCutaneasModernas({
         </CardContent>
       </Card>
 
-      {/* Dados Pessoais */}
+      {/* Dados Pessoais do Aluno */}
       {protocoloSelecionado && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Dados Pessoais
+              Dados do Aluno
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="genero">Gênero</Label>
-                <Select 
-                  value={dadosPessoais.genero} 
-                  onValueChange={(value: 'M' | 'F') => 
-                    setDadosPessoais(prev => ({ ...prev, genero: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="M">Masculino</SelectItem>
-                    <SelectItem value="F">Feminino</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label>Gênero</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.genero === 'M' ? 'Masculino' : dadosPessoais.genero === 'F' ? 'Feminino' : '-'}</div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="peso">Peso (kg)</Label>
-                <Input
-                  id="peso"
-                  type="number"
-                  step="0.1"
-                  min="1"
-                  max="300"
-                  value={dadosPessoais.peso || ''}
-                  onChange={(e) => 
-                    setDadosPessoais(prev => ({ ...prev, peso: parseFloat(e.target.value) || 0 }))
-                  }
-                  placeholder="Ex: 70.5"
-                />
+              <div>
+                <Label>Peso</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.peso !== '-' ? `${dadosPessoais.peso} kg` : '-'}</div>
               </div>
-
-              {protocoloInfo?.requerIdade && (
-                <div className="space-y-2">
-                  <Label htmlFor="idade">Idade (anos)</Label>
-                  <Input
-                    id="idade"
-                    type="number"
-                    min="1"
-                    max="120"
-                    value={dadosPessoais.idade || ''}
-                    onChange={(e) => 
-                      setDadosPessoais(prev => ({ ...prev, idade: parseInt(e.target.value) || undefined }))
-                    }
-                    placeholder="Ex: 25"
-                    required
-                  />
-                </div>
-              )}
+              <div>
+                <Label>Idade</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.idade !== '-' ? dadosPessoais.idade : '-'}</div>
+              </div>
+              <div>
+                <Label>Altura</Label>
+              <div className="text-sm text-gray-700">{dadosPessoais.altura !== '-' ? `${dadosPessoais.altura} cm` : '-'}</div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -351,113 +395,41 @@ export function DobrasCutaneasModernas({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {protocoloInfo && protocoloInfo.dobrasNecessarias && protocoloInfo.dobrasNecessarias.length > 0 ? 
-                protocoloInfo.dobrasNecessarias.map(dobra => {
-                  const info = dobrasInfo[dobra as keyof typeof dobrasInfo];
-                  const valor = medidas[dobra as keyof Medidas];
-                  
-                  if (!info) {
-                    console.warn(`Informação não encontrada para dobra: ${dobra}`);
-                    return null;
-                  }
-                  
-                  return (
-                    <div key={dobra} className="space-y-2">
-                      <Label htmlFor={`medida-${dobra}`} className="flex items-center gap-2">
-                        {info.nome}
-                        <span className="text-xs text-muted-foreground">(mm)</span>
-                        {valor && (
-                          <Badge variant="outline" className="text-green-600 ml-auto">
-                            {valor} mm
-                          </Badge>
-                        )}
-                      </Label>
-                      <Input
-                        id={`medida-${dobra}`}
-                        type="number"
-                        step="0.1"
-                        min="3"
-                        max="50"
-                        value={medidas[dobra as keyof Medidas] || ''}
-                        onChange={(e) => atualizarMedida(dobra, e.target.value)}
-                        onFocus={() => setDobraAtiva(dobra)}
-                        onBlur={() => setDobraAtiva('')}
-                        placeholder="3.0 - 50.0"
-                        className={`transition-all ${dobraAtiva === dobra ? 'ring-2 ring-blue-500' : ''} ${valor ? 'border-green-300' : ''}`}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {info.descricao}
-                      </p>
-                    </div>
-                  );
-                }).filter(Boolean) : (
-                  <div className="col-span-full text-center p-8 text-muted-foreground">
-                    Selecione um protocolo para visualizar as medidas necessárias
-                  </div>
-                )
-              }
+              {protocoloInfo && protocoloInfo.dobrasNecessarias && protocoloInfo.dobrasNecessarias.length > 0 && (
+                <>
+                  {protocoloInfo.dobrasNecessarias.map(dobra => {
+                    const info = dobrasInfo[dobra as keyof typeof dobrasInfo];
+                    const valor = medidas[dobra as keyof Medidas];
+                    if (!info) {
+                      console.warn(`Informação não encontrada para dobra: ${dobra}`);
+                      return null;
+                    }
+                    return (
+                      <div key={dobra} className="space-y-2">
+                        <Label htmlFor={dobra}>{info.nome}</Label>
+                        <div className="text-xs text-muted-foreground mb-1">{info.descricao}</div>
+                        <Input
+                          id={dobra}
+                          type="number"
+                          min={0}
+                          step={0.1}
+                          value={valor ?? ''}
+                          onChange={e => atualizarMedida(dobra, e.target.value)}
+                          placeholder="mm"
+                          className="w-full"
+                          aria-label={`Valor da dobra ${info.nome}`}
+                        />
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Erros */}
-      {errors && errors.length > 0 && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <ul className="list-disc list-inside space-y-1">
-              {errors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Ações */}
-      {protocoloSelecionado && (
-        <Card>
-          <CardContent className="flex justify-between items-center p-4">
-            <div className="text-sm text-muted-foreground">
-              {medidasCompletas() && dadosValidos() 
-                ? '✅ Pronto para calcular' 
-                : 'Preencha todos os campos obrigatórios'
-              }
-            </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={limpar}
-                disabled={loading}
-              >
-                Limpar
-              </Button>
-              
-              <Button 
-                onClick={calcular}
-                disabled={loading || !medidasCompletas() || !dadosValidos()}
-                className="min-w-[120px]"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Calculando...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {modoCalculoApenas ? <Calculator className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-                    <span>{modoCalculoApenas ? 'Calcular' : 'Calcular e Salvar'}</span>
-                  </div>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Resultados */}
+      {/* Resultado */}
       {resultado && (
         <Card>
           <CardHeader>
@@ -470,25 +442,22 @@ export function DobrasCutaneasModernas({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {resultado.resultados.percentualGordura.toFixed(1)}%
+                  {resultado.resultados.percentualGordura?.toFixed(1)}%
                 </div>
                 <div className="text-sm text-blue-700">Percentual de Gordura</div>
               </div>
-              
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {resultado.resultados.massaMagra.toFixed(1)}kg
+                  {resultado.resultados.massaMagra?.toFixed(1)}kg
                 </div>
                 <div className="text-sm text-green-700">Massa Magra</div>
               </div>
-              
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
-                  {resultado.resultados.massaGorda.toFixed(1)}kg
+                  {resultado.resultados.massaGorda?.toFixed(1)}kg
                 </div>
                 <div className="text-sm text-orange-700">Massa Gorda</div>
               </div>
-              
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-lg font-bold text-purple-600">
                   {resultado.resultados.classificacao}
@@ -496,7 +465,6 @@ export function DobrasCutaneasModernas({
                 <div className="text-sm text-purple-700">Classificação</div>
               </div>
             </div>
-
             <div className="p-4 bg-gray-50 rounded-lg">
               <h4 className="font-medium mb-2">Detalhes da Avaliação</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -507,11 +475,11 @@ export function DobrasCutaneasModernas({
                   <strong>Data:</strong> {new Date(resultado.metadata.dataAvaliacao).toLocaleDateString()}
                 </div>
                 <div>
-                  <strong>Soma das dobras:</strong> {resultado.resultados.somaTotal.toFixed(1)}mm
+                  <strong>Soma das dobras:</strong> {resultado.resultados.somaTotal?.toFixed(1)}mm
                 </div>
                 {resultado.resultados.densidadeCorporal && (
                   <div>
-                    <strong>Densidade corporal:</strong> {resultado.resultados.densidadeCorporal.toFixed(4)}g/cm³
+                    <strong>Densidade corporal:</strong> {resultado.resultados.densidadeCorporal?.toFixed(4)}g/cm³
                   </div>
                 )}
               </div>
@@ -519,6 +487,34 @@ export function DobrasCutaneasModernas({
           </CardContent>
         </Card>
       )}
+
+      {/* Exibição de erro */}
+      {errors.length > 0 && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errors.join(' | ')}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Botões de ação */}
+      <div className="flex justify-between">
+        <Button
+          onClick={calcular}
+          disabled={loading || !protocoloSelecionado}
+          variant="outline"
+        >
+          <Calculator className="h-4 w-4 mr-2" />
+          {loading ? "Calculando..." : "Calcular"}
+        </Button>
+        <Button
+          onClick={limpar}
+          disabled={loading}
+          variant="ghost"
+        >
+          Limpar
+        </Button>
+      </div>
     </div>
   );
 }
+
