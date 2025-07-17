@@ -2,30 +2,32 @@ import "dotenv/config";
 import { Router, Request, Response, NextFunction } from "express";
 
 import {
-  getAllUsers,
-  getUserById,
-  getUserStudents,
-  addStudentToUser,
-  updateUserStudent,
-  removeStudentFromUser,
-  getUserGroups,
-  createUserGroup,
-  updateUserGroup,
-  deleteUserGroup,
-  addStudentToGroup,
-  removeStudentFromGroup,
-  getGroupStudents,
-  getUserProfileByUserId,
-  postUserProfileByUserId,
-  getProfessores,
-  getAlunoAvaliacaoValida,
-  listarAvaliacoesAluno,
-  cadastrarAvaliacaoAluno,
-  getProfessorById,
-  getProximaAvaliacaoAluno,
-  getEvolucaoFisica,
-  aprovarAvaliacaoAluno,
-  reprovarAvaliacaoAluno,
+getAllUsers,
+getUserById,
+getUserStudents,
+addStudentToUser,
+updateUserStudent,
+removeStudentFromUser,
+getUserGroups,
+createUserGroup,
+updateUserGroup,
+deleteUserGroup,
+addStudentToGroup,
+removeStudentFromGroup,
+getGroupStudents,
+getUserProfileByUserId,
+getUserProfileByPerfilId,
+postUserProfileByUserId,
+getProfessores,
+getAlunoAvaliacaoValida,
+listarAvaliacoesAluno,
+cadastrarAvaliacaoAluno,
+getProfessorById,
+getProximaAvaliacaoAluno,
+getEvolucaoFisica,
+aprovarAvaliacaoAluno,
+reprovarAvaliacaoAluno,
+usersService // Adiciona a importação do serviço
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 import { authenticateUser, requireProfessor } from "./middlewares/auth-middleware";
@@ -43,6 +45,8 @@ import {
 
 const router = Router();
 
+// Endpoint para buscar perfil do aluno via userPerfilId
+router.get("/alunos/:userPerfilId/profile", authenticateUser, getUserProfileByPerfilId);
 // 🚀 Deploy Test - CI/CD Pipeline Trigger
 // Este comentário serve para triggerar o deploy automático
 
@@ -358,6 +362,9 @@ router.get("/metrics", authenticateUser, (req: Request, res: Response) => {
 router.get("/users", authenticateUser, getAllUsers);
 router.get("/users/:id", authenticateUser, getUserById);
 router.post("/:userId/profile", authenticateUser, postUserProfileByUserId);
+router.get("/:userId/profile", authenticateUser, getUserProfileByUserId);
+// Desativada: use sempre /alunos/:userPerfilId/profile
+router.post(":userId/profile", authenticateUser, postUserProfileByUserId);
 router.get("/:userId/profile", authenticateUser, getUserProfileByUserId);
 router.get("/professores", getProfessores);
 router.get("/professor/:id", authenticateUser, getProfessorById);

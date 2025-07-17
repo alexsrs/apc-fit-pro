@@ -6,10 +6,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { calcularIdade } from '@/utils/idade';
-// ...existing code...
-
-
-
+import { formatarDataValidade, formatarDataNascimentoBR } from '@/utils/idade';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Calculator, Save, Users, Target, Clock } from 'lucide-react';
 import apiClient from '@/lib/api-client';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 import type { 
   AvaliacaoCompleta, 
   Medidas, 
@@ -39,18 +37,11 @@ interface DadosPessoais {
   image?: string;
 }
 
-// Props do componente DobrasCutaneasModernas
-interface AlunoBasic {
-  id: string;
-  dataNascimento?: string;
-  name?: string;
-  genero?: string;
-  image?: string;
-}
 
-interface DobrasCutaneasModernasProps {
+
+export interface DobrasCutaneasModernasProps {
   userPerfilId: string;
-  aluno?: AlunoBasic;
+  resultado: AvaliacaoCompleta | null;
   onResultado: (resultado: any) => void;
   modoCalculoApenas?: boolean;
   className?: string;
@@ -99,84 +90,149 @@ const dobrasInfo = {
   }
 };
 
-export function DobrasCutaneasModernas({ 
-  userPerfilId,
-  aluno,
+export function DobrasCutaneasModernas({
+  resultado,
   onResultado,
   modoCalculoApenas = false,
   className
 }: DobrasCutaneasModernasProps) {
-  // Estados principais
+  const { profile } = useUserProfile();
+  // Verificação de role: só permite avaliação se não for aluno
+  const isAluno = profile?.role === 'aluno';
+  // Debug visual e console
+  console.log('[DEBUG] DobrasCutaneasModernas resultado:', resultado);
+  const debugAluno = (
+    <div className="mb-4 p-2 bg-yellow-50 border border-yellow-300 rounded">
+      <strong>Debug Dados do Resultado:</strong>
+      <pre className="text-xs text-yellow-800">{JSON.stringify(resultado, null, 2)}</pre>
+    </div>
+  );
+
+  // Função utilitária para pegar o gênero válido
+  function getGeneroValido(...generos: (string | undefined)[]): string {
+    for (const g of generos) {
+      if (g && g.trim() !== '') {
+        const lower = g.toLowerCase();
+        if (lower === 'masculino' || lower === 'm') return 'M';
+        if (lower === 'feminino' || lower === 'f') return 'F';
+        return g;
+      }
+    }
+    return '-';
+  }
+
+  // Estado para gênero buscado via API
+  const [generoApi, setGeneroApi] = useState<string | undefined>(undefined);
+
+  // Efeito para buscar gênero do aluno se não vier nas props
+  useEffect(() => {
+    async function buscarGeneroAluno() {
+      if (!resultado?.aluno?.id) return;
+      // Se já temos um gênero válido, não busca
+      const generoAtual = getGeneroValido(
+        resultado?.aluno?.genero ?? undefined,
+        profile?.genero ?? undefined
+      );
+      if (generoAtual !== '-' && generoAtual !== '') return;
+      try {
+        const resp = await apiClient.get(`/api/alunos/${resultado.aluno.id}`);
+        const genero = resp.data?.genero;
+        if (genero && genero.trim() !== '') {
+          setGeneroApi(genero);
+        }
+      } catch (err) {
+        console.warn('[DEBUG] Falha ao buscar gênero do aluno via API', err);
+      }
+    }
+    buscarGeneroAluno();
+  }, [resultado?.aluno?.id, resultado?.aluno?.genero, profile?.genero]);
+
+  const peso = resultado?.aluno?.peso ?? '-';
+  const altura = resultado?.aluno?.altura ?? '-';
+  const dataNascimentoValida = resultado?.aluno?.dataNascimento ?? '-';
+  const idadeCalculada = dataNascimentoValida && dataNascimentoValida !== '-' ? calcularIdade(dataNascimentoValida) : 0;
+  const idade = idadeCalculada > 0 ? idadeCalculada : '-';
+
+  const genero = resultado?.aluno?.genero
+    ? getGeneroValido(resultado?.aluno?.genero, generoApi ?? undefined)
+    : getGeneroValido(profile?.genero ?? undefined, generoApi ?? undefined);
+  const dataNascimento = dataNascimentoValida;
+
+  const infoAluno = (
+    <div className="mb-4 p-2 bg-blue-50 border border-blue-300 rounded flex flex-wrap gap-4">
+      <div><strong>Peso:</strong> {peso} kg</div>
+      <div><strong>Altura:</strong> {altura} cm</div>
+      <div><strong>Idade:</strong> {idade}</div>
+      <div><strong>Gênero:</strong> {genero}</div>
+      <div><strong>Nascimento:</strong> {dataNascimento && dataNascimento !== '-' ? formatarDataNascimentoBR(dataNascimento) : '-'}</div>
+    </div>
+  );
+
   const [protocolos, setProtocolos] = useState<ProtocoloInfo[]>([]);
-  const [protocoloSelecionado, setProtocoloSelecionado] = useState<string>('');
+  const [protocoloSelecionado, setProtocoloSelecionado] = useState<string>(resultado?.protocolo ?? '');
   const [dadosPessoais, setDadosPessoais] = useState<DadosPessoais>({
-    genero: '-',
-    idade: '-',
-    peso: '-',
-    altura: '-'
+    genero: genero,
+    idade: idade !== '-' ? String(idade) : '-',
+    peso: peso !== '-' ? String(peso) : '-',
+    altura: altura !== '-' ? String(altura) : '-',
   });
   const [medidas, setMedidas] = useState<Medidas>({});
-  const [resultado, setResultado] = useState<AvaliacaoCompleta | null>(null);
-  
-  // Estados de controle
+  const [resultadoState, setResultadoState] = useState<AvaliacaoCompleta | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingProtocolos, setLoadingProtocolos] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
   const [dobraAtiva, setDobraAtiva] = useState<string>('');
 
-  // Carregar protocolos disponíveis apenas uma vez ao montar o componente
   useEffect(() => {
-    carregarProtocolos();
-  }, []);
-
-  // Validação: garantir que o ID passado é de aluno, não de professor
-  useEffect(() => {
-    if (!userPerfilId || typeof userPerfilId !== 'string' || userPerfilId.startsWith('prof') || userPerfilId.startsWith('personal')) {
+    if (!resultado?.aluno?.id || resultado?.aluno?.id.startsWith('prof') || resultado?.aluno?.id.startsWith('personal')) {
       setErrors(["Selecione um aluno válido para realizar a avaliação física. O ID informado não corresponde a um aluno."]);
       setDadosPessoais({ genero: '-', idade: '-', peso: '-', altura: '-' });
       return;
     }
     carregarDadosPessoais();
-  }, [userPerfilId]);
+  }, [resultado]);
 
-  // Função para buscar dados pessoais do aluno: gênero e idade do perfil, peso/altura da avaliação
   const carregarDadosPessoais = async () => {
-    if (!userPerfilId) {
+    if (!resultado?.aluno?.id) {
       setErrors(["ID do aluno não informado. Não é possível buscar dados pessoais."]);
       setDadosPessoais({ genero: '-', idade: '-', peso: '-', altura: '-' });
       return;
     }
-    // Sempre prioriza a prop aluno se o id bater
-    if (aluno && aluno.id === userPerfilId) {
-      let genero = '-';
-      if (aluno.genero) {
-        if (aluno.genero.toLowerCase() === 'masculino' || aluno.genero.toLowerCase() === 'm') {
-          genero = 'M';
-        } else if (aluno.genero.toLowerCase() === 'feminino' || aluno.genero.toLowerCase() === 'f') {
-          genero = 'F';
-        } else {
-          genero = '-';
-        }
+    let genero = '-';
+    if (resultado?.aluno?.genero) {
+      if (resultado.aluno.genero.toLowerCase() === 'masculino' || resultado.aluno.genero.toLowerCase() === 'm') {
+        genero = 'M';
+      } else if (resultado.aluno.genero.toLowerCase() === 'feminino' || resultado.aluno.genero.toLowerCase() === 'f') {
+        genero = 'F';
+      } else {
+        genero = '-';
       }
-      // Calcular idade a partir da dataNascimento, se disponível
-      let idade = '-';
-      if (aluno.dataNascimento) {
-        idade = String(calcularIdade(aluno.dataNascimento));
-      }
-      setDadosPessoais(prev => ({
-        ...prev,
-        dataNascimento: aluno.dataNascimento ?? '-',
-        nome: aluno.name ?? '-',
-        genero,
-        image: aluno.image ?? '-',
-        idade
-      }));
-      return;
     }
-    // Se não houver prop aluno válida, limpa os dados pessoais
-    setDadosPessoais({ genero: '-', idade: '-', peso: '-', altura: '-' });
-    setErrors(["Dados do aluno não encontrados. Verifique se a prop 'aluno' está sendo passada corretamente."]);
+    let idade = '-';
+    let dataNascimento = resultado?.aluno?.dataNascimento;
+    if (dataNascimento) {
+      idade = String(calcularIdade(dataNascimento));
+    } else {
+      idade = '-';
+    }
+    const peso = resultado?.aluno?.peso && resultado.aluno.peso > 0 ? String(resultado.aluno.peso) : '-';
+    const altura = resultado?.aluno?.altura && resultado.aluno.altura > 0 ? String(resultado.aluno.altura) : '-';
+    setDadosPessoais(prev => ({
+      ...prev,
+      dataNascimento: dataNascimento ?? '-',
+      nome: resultado?.aluno?.name ?? '-',
+      genero,
+      image: resultado?.aluno?.image ?? '-',
+      idade,
+      peso,
+      altura
+    }));
   };
+
+  // Carregar protocolos disponíveis apenas uma vez ao montar o componente
+  useEffect(() => {
+    carregarProtocolos();
+  }, []);
 
   const carregarProtocolos = async () => {
     try {
@@ -230,6 +286,41 @@ export function DobrasCutaneasModernas({
     setErrors([]);
   };
 
+  // Função para montar dados pessoais - prioriza aluno selecionado
+  function montarDadosPessoais() {
+    if (resultado?.aluno?.id) {
+      const pesoStr = resultado.aluno.peso && resultado.aluno.peso > 0 ? String(resultado.aluno.peso) : '-';
+      const alturaStr = resultado.aluno.altura && resultado.aluno.altura > 0 ? String(resultado.aluno.altura) : '-';
+      const generoStr = getGeneroValido(resultado.aluno.genero ?? undefined, generoApi ?? undefined);
+      const dataNasc = resultado.aluno.dataNascimento ?? '-';
+      const idadeNum = dataNasc && dataNasc !== '-' ? calcularIdade(dataNasc) : 0;
+      return {
+        genero: generoStr,
+        idade: idadeNum > 0 ? String(idadeNum) : undefined,
+        peso: pesoStr,
+        altura: alturaStr,
+        dataNascimento: dataNasc,
+        nome: resultado.aluno.name ?? undefined,
+        image: resultado.aluno.image ?? undefined
+      };
+    }
+    // fallback para dadosMedidas ou vazio
+    const pesoStr = resultado?.aluno?.peso ? String(resultado.aluno.peso) : '-';
+    const alturaStr = resultado?.aluno?.altura ? String(resultado.aluno.altura) : '-';
+    const generoStr = getGeneroValido(resultado?.aluno?.genero ?? undefined, profile?.genero ?? undefined, generoApi ?? undefined);
+    const dataNasc = resultado?.aluno?.dataNascimento ?? '-';
+    const idadeNum = dataNasc && dataNasc !== '-' ? calcularIdade(dataNasc) : 0;
+    return {
+      genero: generoStr,
+      idade: idadeNum > 0 ? String(idadeNum) : undefined,
+      peso: pesoStr,
+      altura: alturaStr,
+      dataNascimento: dataNasc,
+      nome: resultado?.aluno?.name ?? undefined,
+      image: resultado?.aluno?.image ?? undefined
+    };
+  }
+
   // Calcular protocolo
   const calcular = async () => {
     if (!protocoloSelecionado || !dadosValidos() || !medidasCompletas()) {
@@ -242,9 +333,9 @@ export function DobrasCutaneasModernas({
 
     try {
       const payload = {
-        userPerfilId: userPerfilId || 'temp-user',
+        ...resultado,
         protocolo: protocoloSelecionado,
-        dadosPessoais,
+        dadosPessoais: montarDadosPessoais(),
         medidas,
         observacoes: `Avaliação realizada em ${new Date().toLocaleDateString()}`
       };
@@ -253,7 +344,7 @@ export function DobrasCutaneasModernas({
       const response = await apiClient.post(endpoint, payload);
 
       const avaliacaoCompleta = response.data.data;
-      setResultado(avaliacaoCompleta);
+      setResultadoState(avaliacaoCompleta);
       
       if (onResultado) {
         onResultado(avaliacaoCompleta);
@@ -273,10 +364,20 @@ export function DobrasCutaneasModernas({
   // Limpar formulário
   const limpar = () => {
     setMedidas({});
-    setResultado(null);
+    setResultadoState(null);
     setErrors([]);
     setDobraAtiva('');
   };
+
+  // Debug extra para idade
+  console.log('[DEBUG] Data de nascimento recebida:', resultado?.aluno?.dataNascimento);
+  const debugIdade = (
+    <div className="mb-2 p-2 bg-orange-50 border border-orange-300 rounded">
+      <strong>Debug Idade:</strong>
+      <div>Data de nascimento: <span className="font-mono">{resultado?.aluno?.dataNascimento ?? '-'}</span></div>
+      <div>Idade calculada: <span className="font-mono">{idade}</span></div>
+    </div>
+  );
 
   if (loadingProtocolos) {
     return (
@@ -289,8 +390,53 @@ export function DobrasCutaneasModernas({
     );
   }
 
+  // Bloqueio para role aluno
+  if (isAluno) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Alunos não podem realizar avaliações físicas. Selecione um perfil de professor ou personal trainer para acessar este formulário.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Bloqueio se não houver dados do aluno selecionado
+  if (!resultado?.aluno || !resultado?.aluno?.id || !resultado?.aluno?.dataNascimento) {
+    // Identificar campos ausentes
+    const camposFaltando: string[] = [];
+    if (!resultado?.aluno) camposFaltando.push('aluno');
+    if (!resultado?.aluno?.id) camposFaltando.push('id');
+    if (!resultado?.aluno?.dataNascimento) camposFaltando.push('dataNascimento');
+    if (!resultado?.aluno?.name) camposFaltando.push('name');
+    if (!resultado?.aluno?.genero) camposFaltando.push('genero');
+    if (!resultado?.aluno?.peso) camposFaltando.push('peso');
+    if (!resultado?.aluno?.altura) camposFaltando.push('altura');
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Nenhum aluno selecionado ou dados incompletos.<br />
+          <span className="font-semibold">Campos ausentes:</span>
+          <ul className="mt-2 mb-2 ml-2 list-disc text-red-700 text-sm">
+            {camposFaltando.map((campo) => (
+              <li key={campo} className="flex items-center gap-1">
+                <AlertCircle className="h-3 w-3 text-red-500" /> {campo}
+              </li>
+            ))}
+          </ul>
+          Selecione um aluno válido para realizar a avaliação física.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* Debug visual de idade */}
+      {debugIdade}
+      {/* Alerta idade inválida */}
       {/* Seleção do Protocolo */}
       <Card>
         <CardHeader>
@@ -430,7 +576,7 @@ export function DobrasCutaneasModernas({
       )}
 
       {/* Resultado */}
-      {resultado && (
+      {resultadoState && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -442,25 +588,25 @@ export function DobrasCutaneasModernas({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {resultado.resultados.percentualGordura?.toFixed(1)}%
+                  {resultadoState.resultados.percentualGordura?.toFixed(1)}%
                 </div>
                 <div className="text-sm text-blue-700">Percentual de Gordura</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {resultado.resultados.massaMagra?.toFixed(1)}kg
+                  {resultadoState.resultados.massaMagra?.toFixed(1)}kg
                 </div>
                 <div className="text-sm text-green-700">Massa Magra</div>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
-                  {resultado.resultados.massaGorda?.toFixed(1)}kg
+                  {resultadoState.resultados.massaGorda?.toFixed(1)}kg
                 </div>
                 <div className="text-sm text-orange-700">Massa Gorda</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-lg font-bold text-purple-600">
-                  {resultado.resultados.classificacao}
+                  {resultadoState.resultados.classificacao}
                 </div>
                 <div className="text-sm text-purple-700">Classificação</div>
               </div>
@@ -469,17 +615,17 @@ export function DobrasCutaneasModernas({
               <h4 className="font-medium mb-2">Detalhes da Avaliação</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <strong>Protocolo:</strong> {resultado.metadata.validadeFormula}
+                  <strong>Protocolo:</strong> {resultadoState.metadata.validadeFormula}
                 </div>
                 <div>
-                  <strong>Data:</strong> {new Date(resultado.metadata.dataAvaliacao).toLocaleDateString()}
+                  <strong>Data:</strong> {resultadoState.metadata.dataAvaliacao ? formatarDataValidade(resultadoState.metadata.dataAvaliacao) : '-'}
                 </div>
                 <div>
-                  <strong>Soma das dobras:</strong> {resultado.resultados.somaTotal?.toFixed(1)}mm
+                  <strong>Soma das dobras:</strong> {resultadoState.resultados.somaTotal?.toFixed(1)}mm
                 </div>
-                {resultado.resultados.densidadeCorporal && (
+                {resultadoState.resultados.densidadeCorporal && (
                   <div>
-                    <strong>Densidade corporal:</strong> {resultado.resultados.densidadeCorporal?.toFixed(4)}g/cm³
+                    <strong>Densidade corporal:</strong> {resultadoState.resultados.densidadeCorporal?.toFixed(4)}g/cm³
                   </div>
                 )}
               </div>

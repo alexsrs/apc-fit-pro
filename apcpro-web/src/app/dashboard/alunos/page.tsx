@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import { formatarDataValidade } from "@/utils/idade";
 import Loading from "@/components/ui/Loading";
 import { useAvaliacaoValida } from "@/hooks/useAvaliacaoValida";
-import { ModalAvaliacaoAluno } from "@/components/ModalAvaliacaoAluno";
+import { ModalAvaliacaoCompleta } from "@/components/ModalAvaliacaoCompleta";
 import {
   CalendarCheck,
   Dumbbell,
@@ -38,11 +39,26 @@ import {
 import { ModalDetalhesAvaliacao } from "@/components/ModalDetalhesAvaliacao";
 
 export default function AlunosDashboard() {
+  // Sempre usar o userPerfilId do aluno selecionado
+  const USER_PERFIL_ID = "cmd3ljqn50001vnmo55vckhta";
   const { profile } = useUserProfile();
-  const { proxima, loading } = useProximaAvaliacao(profile?.id ?? ""); // Sempre chamado!
-  const { evolucao, loading: loadingEvolucao } = useEvolucaoFisica(
-    profile?.id ?? ""
-  );
+  const [alunoProfile, setAlunoProfile] = useState<{ dataNascimento?: string; nome?: string } | null>(null);
+  const [loadingAluno, setLoadingAluno] = useState(true);
+  useEffect(() => {
+    async function fetchAlunoProfile() {
+      setLoadingAluno(true);
+      try {
+        const { data } = await fetch(`/api/alunos/${USER_PERFIL_ID}/profile`).then(r => r.json());
+        setAlunoProfile(data);
+      } catch {
+        setAlunoProfile(null);
+      }
+      setLoadingAluno(false);
+    }
+    fetchAlunoProfile();
+  }, []);
+  const { proxima, loading } = useProximaAvaliacao(USER_PERFIL_ID);
+  const { evolucao, loading: loadingEvolucao } = useEvolucaoFisica(USER_PERFIL_ID);
 
   const router = useRouter();
   const [showAvaliacaoCompleta, setShowAvaliacaoCompleta] = useState(false);
@@ -51,7 +67,7 @@ export default function AlunosDashboard() {
   const listaRef = useRef<ListaAvaliacoesHandle>(null);
   const alertasRef = useRef<AlertasPersistenteHandle>(null);
 
-  const avaliacaoValida = useAvaliacaoValida(profile?.id ?? "");
+  const avaliacaoValida = useAvaliacaoValida(USER_PERFIL_ID);
 
   useEffect(() => {
     if (profile && profile.role === "professor") {
@@ -276,8 +292,28 @@ export default function AlunosDashboard() {
     },
   ];
 
+  // Exibe a data de nascimento correta do aluno
+  let nascimento = alunoProfile?.dataNascimento;
+  let idade = "";
+  if (nascimento) {
+    const nascDate = new Date(nascimento);
+    const hoje = new Date();
+    let anos = hoje.getFullYear() - nascDate.getFullYear();
+    if (
+      hoje.getMonth() < nascDate.getMonth() ||
+      (hoje.getMonth() === nascDate.getMonth() && hoje.getDate() < nascDate.getDate())
+    ) {
+      anos--;
+    }
+    idade = anos.toString();
+    // Usa utilitário para garantir exibição correta
+    nascimento = formatarDataValidade(alunoProfile?.dataNascimento);
+  }
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
+      <p className="text-xs text-gray-500 text-center w-full">
+        Data de nascimento: {nascimento ? `${nascimento} (${idade} anos)` : "Carregando..."}
+      </p>
       {/* Cards de métricas - grid responsivo sem scroll */}
       <div>
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -373,7 +409,7 @@ export default function AlunosDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ListaAvaliacoes ref={listaRef} userPerfilId={profile.id ?? ""} />
+              <ListaAvaliacoes ref={listaRef} userPerfilId={USER_PERFIL_ID} />
             </CardContent>
           </Card>
         </div>
@@ -401,10 +437,12 @@ export default function AlunosDashboard() {
         ))}
       </div>
       {/* Modal de avaliação completa para alunos */}
-      <ModalAvaliacaoAluno
+      <ModalAvaliacaoCompleta
         open={showAvaliacaoCompleta}
         onClose={() => setShowAvaliacaoCompleta(false)}
         onSuccess={handleAvaliacaoSuccess}
+        userPerfilId={USER_PERFIL_ID}
+        nomeAluno={profile?.nome ?? ""}
       />
       {/* Modal de detalhes da avaliação */}
       {avaliacaoSelecionada && avaliacaoSelecionada.resultado && (

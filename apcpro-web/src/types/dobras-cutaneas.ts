@@ -43,6 +43,15 @@ export interface AvaliacaoCompleta {
   medidas: Medidas;
   resultados: ResultadoCalculo;
   metadata: MetadataAvaliacao;
+  aluno?: {
+    id: string;
+    name?: string;
+    dataNascimento?: string;
+    peso?: number;
+    altura?: number;
+    genero?: string;
+    image?: string;
+  };
 }
 
 export interface ProtocoloInfo {

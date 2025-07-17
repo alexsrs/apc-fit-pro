@@ -33,8 +33,18 @@ import { ModalAnamnese } from './ModalAnamnese';
 import { DobrasCutaneasModernas } from './DobrasCutaneasModernas';
 import { ModalDetalhesAvaliacao } from './ModalDetalhesAvaliacao';
 import { ModalMedidasCorporais } from './ModalMedidasCorporais';
+import { calcularIdade } from '@/utils/idade';
 
 // Tipos
+interface Aluno {
+  id: string;
+  name: string;
+  dataNascimento?: string;
+  genero?: string;
+  peso?: number;
+  altura?: number;
+}
+
 interface AvaliacaoEtapa {
   id: string;
   nome: string;
@@ -77,6 +87,22 @@ export function ModalAvaliacaoCompleta({
   // Dados coletados nas etapas anteriores para evitar repetição
   const [dadosColetados, setDadosColetados] = useState<DadosColetados>({});
 
+  // Estado para aluno selecionado
+  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+
+  useEffect(() => {
+    async function buscarAluno() {
+      if (!userPerfilId) return;
+      try {
+        const resp = await apiClient.get(`/api/alunos/${userPerfilId}/profile`);
+        setAlunoSelecionado(resp.data);
+      } catch (error) {
+        setAlunoSelecionado(null);
+      }
+    }
+    buscarAluno();
+  }, [userPerfilId]);
+
   // Estados dos modais das etapas
   const [modalTriagemOpen, setModalTriagemOpen] = useState(false);
   const [modalAnamneseOpen, setModalAnamneseOpen] = useState(false);
@@ -98,8 +124,8 @@ export function ModalAvaliacaoCompleta({
   const [dadosDobras, setDadosDobras] = useState<any>(null);
   
   // Dados do usuário para medidas corporais
-  const [idadeUsuario, setIdadeUsuario] = useState<number>(25); // valor padrão
-  const [dataNascimentoUsuario, setDataNascimentoUsuario] = useState<string>('1999-01-01'); // valor padrão
+  const [idadeUsuario, setIdadeUsuario] = useState<number | undefined>(undefined);
+  const [dataNascimentoUsuario, setDataNascimentoUsuario] = useState<string>('');
 
   // Definição das etapas
   const etapas: AvaliacaoEtapa[] = [
@@ -598,16 +624,46 @@ export function ModalAvaliacaoCompleta({
       case 'dobras':
         // Etapa exclusiva para professor
         return (
-          <div className="space-y-4">
+            <div className="space-y-4">
             <DobrasCutaneasModernas
               userPerfilId={userPerfilId}
-              onResultado={(resultado: any) => {
-                setDadosDobras(resultado);
-              }}
-              modoCalculoApenas={false}
-              className="space-y-4"
-            />
-          </div>
+              resultado={{
+              protocolo: '',
+              dadosPessoais: {
+                genero: alunoSelecionado?.genero === 'M' || alunoSelecionado?.genero === 'F'
+                  ? alunoSelecionado.genero
+                  : 'M',
+                peso: alunoSelecionado?.peso || 0,
+                idade: alunoSelecionado?.dataNascimento
+                  ? calcularIdade(alunoSelecionado.dataNascimento)
+                  : undefined
+              },
+              medidas: {},
+              resultados: {
+                somaTotal: 0,
+                percentualGordura: 0,
+                massaGorda: 0,
+                massaMagra: 0,
+                classificacao: '',
+                },
+                metadata: {
+                dataAvaliacao: new Date().toISOString(),
+                validadeFormula: "true"
+                },
+                aluno: {
+                id: alunoSelecionado?.id || userPerfilId,
+                name: alunoSelecionado?.name || nomeAluno,
+                dataNascimento: alunoSelecionado?.dataNascimento || '',
+                genero: alunoSelecionado?.genero || undefined,
+                peso: alunoSelecionado?.peso || undefined,
+                altura: alunoSelecionado?.altura || undefined
+                }
+                }}
+                onResultado={setDadosDobras}
+                modoCalculoApenas={false}
+                className="space-y-4"
+              />
+            </div>
         );
       default:
         return <div>Etapa não encontrada</div>;
@@ -770,8 +826,6 @@ export function ModalAvaliacaoCompleta({
         onClose={() => setModalMedidasCorporaisOpen(false)}
         userPerfilId={userPerfilId}
         onSuccess={handleMedidasSuccess}
-        idade={idadeUsuario}
-        dataNascimento={dataNascimentoUsuario}
       />
 
       {/* Modal Alto Rendimento - usar ModalTriagem com modo diferente se necessário */}
@@ -958,12 +1012,8 @@ function MedidasCorporaisInline({
           )}
         </AlertDescription>
       </Alert>
-      
       <Button 
-        onClick={() => {
-          console.log('Realizar medidas para usuário:', userPerfilId);
-          onOpenMedidasModal();
-        }}
+        onClick={onOpenMedidasModal}
         className="w-full"
         size="lg"
       >

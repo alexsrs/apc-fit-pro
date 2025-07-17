@@ -27,6 +27,15 @@ export class UsersService {
     this.userRepository = new ExternalUserRepositoryClass();
   }
 
+  // Buscar perfil do aluno via userPerfilId
+  async getUserProfileByPerfilId(userPerfilId: string): Promise<UserPerfil | null> {
+    try {
+      return await this.userProfileRepository.findProfileById(userPerfilId);
+    } catch (error) {
+      handleServiceError(error, "Não foi possível buscar o perfil pelo userPerfilId.");
+    }
+  }
+
   async findUserById(userId: string): Promise<User | null> {
     const user = await this.userRepository.getById(userId); // Certifique-se de que o método `findById` existe no repositório
     if (user) {

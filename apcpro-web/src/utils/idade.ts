@@ -9,19 +9,57 @@
  */
 export function calcularIdade(dataNascimento?: string | Date): number {
   if (!dataNascimento) return 0;
-  
-  const nascimento = new Date(dataNascimento);
+  // Força sempre UTC para evitar erro de fuso
+  let nascimento: Date;
+  if (typeof dataNascimento === 'string') {
+    // Se vier só ano-mês-dia, força UTC
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento)) {
+      nascimento = new Date(dataNascimento + 'T00:00:00Z');
+    } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(dataNascimento)) {
+      nascimento = new Date(dataNascimento);
+    } else {
+      nascimento = new Date(dataNascimento);
+    }
+  } else {
+    nascimento = new Date(dataNascimento);
+  }
   if (isNaN(nascimento.getTime())) return 0;
-  
+  // Calcula idade sempre em UTC
   const hoje = new Date();
-  let idade = hoje.getFullYear() - nascimento.getFullYear();
-  const m = hoje.getMonth() - nascimento.getMonth();
-  
-  if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+  let idade = hoje.getUTCFullYear() - nascimento.getUTCFullYear();
+  const m = hoje.getUTCMonth() - nascimento.getUTCMonth();
+  if (m < 0 || (m === 0 && hoje.getUTCDate() < nascimento.getUTCDate())) {
     idade--;
   }
-  
   return idade >= 0 ? idade : 0;
+
+}
+
+/**
+ * Formata data de nascimento para padrão BR (DD/MM/YYYY), sempre em UTC
+ * @param dataNascimento - Data de nascimento (string ou Date)
+ * @returns String formatada da data (DD/MM/YYYY)
+ */
+export function formatarDataNascimentoBR(dataNascimento?: string | Date): string {
+  if (!dataNascimento) return '';
+  let data: Date;
+  if (typeof dataNascimento === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento)) {
+      data = new Date(dataNascimento + 'T00:00:00Z');
+    } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(dataNascimento)) {
+      data = new Date(dataNascimento);
+    } else {
+      data = new Date(dataNascimento);
+    }
+  } else {
+    data = new Date(dataNascimento);
+  }
+  if (isNaN(data.getTime())) return '';
+  // Sempre UTC
+  const dia = String(data.getUTCDate()).padStart(2, '0');
+  const mes = String(data.getUTCMonth() + 1).padStart(2, '0');
+  const ano = data.getUTCFullYear();
+  return `${dia}/${mes}/${ano}`;
 }
 
 /**
@@ -81,11 +119,29 @@ export function calcularDataValidade(diasValidade: number, dataBase?: Date): str
  * @param validadeAte - Data de validade
  * @returns String formatada da data (DD/MM/YYYY)
  */
-export function formatarDataValidade(validadeAte?: string | Date): string {
-  if (!validadeAte) return 'Sem validade definida';
-  
-  const data = new Date(validadeAte);
+/**
+ * Formata uma data para exibição (DD/MM/YYYY), garantindo fuso UTC
+ * @param dataInput - Data (string ou Date)
+ * @returns String formatada da data (DD/MM/YYYY)
+ */
+export function formatarDataValidade(dataInput?: string | Date): string {
+  if (!dataInput) return 'Sem validade definida';
+  let data: Date;
+  if (typeof dataInput === 'string') {
+    // Se vier só ano-mês-dia, força UTC
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dataInput)) {
+      data = new Date(dataInput + 'T00:00:00Z');
+    } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(.\d+)?Z$/.test(dataInput)) {
+      // ISO completa UTC
+      data = new Date(dataInput);
+    } else {
+      // Tenta converter normalmente
+      data = new Date(dataInput);
+    }
+  } else {
+    data = new Date(dataInput);
+  }
   if (isNaN(data.getTime())) return 'Data inválida';
-  
-  return data.toLocaleDateString('pt-BR');
+  // Garante exibição sempre em UTC
+  return `${String(data.getDate()).padStart(2, '0')}/${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
 }

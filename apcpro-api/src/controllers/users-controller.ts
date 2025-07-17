@@ -1,3 +1,23 @@
+// Endpoint para buscar perfil do aluno via userPerfilId
+export const getUserProfileByPerfilId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userPerfilId = req.params.userPerfilId;
+    const userProfile = await usersService.getUserProfileByPerfilId(userPerfilId);
+    if (!userProfile) {
+      const response = notFound("Perfil do aluno não encontrado");
+      res.status(response.statusCode).json(response.body);
+      return;
+    }
+    const response = ok(userProfile);
+    res.status(response.statusCode).json(response.body);
+  } catch (error) {
+    next(error);
+  }
+};
 import { Request, Response, NextFunction } from "express";
 import { UsersService } from "../services/users-service";
 import {
@@ -9,7 +29,7 @@ import {
   internalError,
 } from "../utils/http-helper";
 
-const usersService = new UsersService();
+export const usersService = new UsersService();
 
 // Usuários
 export async function getAllUsers(
