@@ -623,47 +623,61 @@ export function ModalAvaliacaoCompleta({
         );
       case 'dobras':
         // Etapa exclusiva para professor
+        // Função utilitária para montar dados pessoais corretos
+        function montarDadosPessoaisDobras() {
+          // Prioriza dados do aluno da API, sempre retorna 'M' ou 'F'
+          let genero: 'M' | 'F' = 'M';
+          if (alunoSelecionado?.genero) {
+            const g = alunoSelecionado.genero.trim().toLowerCase();
+            if (g === 'f' || g === 'feminino' || g.startsWith('fem') || g.startsWith('f')) genero = 'F';
+            else if (g === 'm' || g === 'masculino' || g.startsWith('masc') || g.startsWith('m')) genero = 'M';
+          }
+          // Peso e altura das últimas medidas salvas
+          const peso = dadosMedidas?.peso !== undefined ? dadosMedidas.peso : alunoSelecionado?.peso || 0;
+          const altura = dadosMedidas?.altura !== undefined ? dadosMedidas.altura : alunoSelecionado?.altura || undefined;
+          // Idade calculada pela data de nascimento do aluno
+          const idade = alunoSelecionado?.dataNascimento ? calcularIdade(alunoSelecionado.dataNascimento) : undefined;
+          return {
+            genero,
+            peso,
+            altura,
+            idade
+          };
+        }
+
         return (
-            <div className="space-y-4">
+          <div className="space-y-4">
             <DobrasCutaneasModernas
               userPerfilId={userPerfilId}
               resultado={{
-              protocolo: '',
-              dadosPessoais: {
-                genero: alunoSelecionado?.genero === 'M' || alunoSelecionado?.genero === 'F'
-                  ? alunoSelecionado.genero
-                  : 'M',
-                peso: alunoSelecionado?.peso || 0,
-                idade: alunoSelecionado?.dataNascimento
-                  ? calcularIdade(alunoSelecionado.dataNascimento)
-                  : undefined
-              },
-              medidas: {},
-              resultados: {
-                somaTotal: 0,
-                percentualGordura: 0,
-                massaGorda: 0,
-                massaMagra: 0,
-                classificacao: '',
+                protocolo: '',
+                dadosPessoais: montarDadosPessoaisDobras(),
+                medidas: {},
+                resultados: {
+                  somaTotal: 0,
+                  percentualGordura: 0,
+                  massaGorda: 0,
+                  massaMagra: 0,
+                  classificacao: '',
                 },
                 metadata: {
-                dataAvaliacao: new Date().toISOString(),
-                validadeFormula: "true"
+                  dataAvaliacao: new Date().toISOString(),
+                  validadeFormula: "true"
                 },
                 aluno: {
-                id: alunoSelecionado?.id || userPerfilId,
-                name: alunoSelecionado?.name || nomeAluno,
-                dataNascimento: alunoSelecionado?.dataNascimento || '',
-                genero: alunoSelecionado?.genero || undefined,
-                peso: alunoSelecionado?.peso || undefined,
-                altura: alunoSelecionado?.altura || undefined
+                  id: alunoSelecionado?.id || userPerfilId,
+                  name: alunoSelecionado?.name || nomeAluno,
+                  dataNascimento: alunoSelecionado?.dataNascimento || '',
+                  genero: alunoSelecionado?.genero || undefined,
+                  peso: dadosMedidas?.peso !== undefined ? dadosMedidas.peso : alunoSelecionado?.peso || undefined,
+                  altura: dadosMedidas?.altura !== undefined ? dadosMedidas.altura : alunoSelecionado?.altura || undefined
                 }
-                }}
-                onResultado={setDadosDobras}
-                modoCalculoApenas={false}
-                className="space-y-4"
-              />
-            </div>
+              }}
+              onResultado={setDadosDobras}
+              modoCalculoApenas={false}
+              className="space-y-4"
+            />
+          </div>
         );
       default:
         return <div>Etapa não encontrada</div>;

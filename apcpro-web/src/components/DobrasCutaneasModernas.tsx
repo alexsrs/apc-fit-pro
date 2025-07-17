@@ -28,10 +28,10 @@ import type {
 
 // Unificação: garantir que DadosPessoais tenha todos os campos necessários
 interface DadosPessoais {
-  genero: string;
-  peso: string;
-  idade: string;
-  altura: string;
+  genero?: 'masculino' | 'feminino';
+  peso?: string;
+  idade?: string;
+  altura?: string;
   dataNascimento?: string;
   nome?: string;
   image?: string;
@@ -108,17 +108,13 @@ export function DobrasCutaneasModernas({
     </div>
   );
 
-  // Função utilitária para pegar o gênero válido
-  function getGeneroValido(...generos: (string | undefined)[]): string {
-    for (const g of generos) {
-      if (g && g.trim() !== '') {
-        const lower = g.toLowerCase();
-        if (lower === 'masculino' || lower === 'm') return 'M';
-        if (lower === 'feminino' || lower === 'f') return 'F';
-        return g;
-      }
-    }
-    return '-';
+  // Função utilitária para garantir que o gênero seja sempre 'masculino' ou 'feminino'
+  function getGeneroValido(genero?: string): 'masculino' | 'feminino' | undefined {
+    if (!genero) return undefined;
+    const lower = genero.trim().toLowerCase();
+    if (lower === 'masculino' || lower === 'm') return 'masculino';
+    if (lower === 'feminino' || lower === 'f') return 'feminino';
+    return undefined;
   }
 
   // Estado para gênero buscado via API
@@ -129,11 +125,10 @@ export function DobrasCutaneasModernas({
     async function buscarGeneroAluno() {
       if (!resultado?.aluno?.id) return;
       // Se já temos um gênero válido, não busca
-      const generoAtual = getGeneroValido(
-        resultado?.aluno?.genero ?? undefined,
-        profile?.genero ?? undefined
+        const generoAtual = getGeneroValido(
+        resultado?.aluno?.genero ?? profile?.genero ?? undefined
       );
-      if (generoAtual !== '-' && generoAtual !== '') return;
+      if (generoAtual !== undefined) return;
       try {
         const resp = await apiClient.get(`/api/alunos/${resultado.aluno.id}`);
         const genero = resp.data?.genero;
@@ -147,15 +142,13 @@ export function DobrasCutaneasModernas({
     buscarGeneroAluno();
   }, [resultado?.aluno?.id, resultado?.aluno?.genero, profile?.genero]);
 
-  const peso = resultado?.aluno?.peso ?? '-';
-  const altura = resultado?.aluno?.altura ?? '-';
-  const dataNascimentoValida = resultado?.aluno?.dataNascimento ?? '-';
-  const idadeCalculada = dataNascimentoValida && dataNascimentoValida !== '-' ? calcularIdade(dataNascimentoValida) : 0;
-  const idade = idadeCalculada > 0 ? idadeCalculada : '-';
+  const peso = resultado?.aluno?.peso;
+  const altura = resultado?.aluno?.altura;
+  const dataNascimentoValida = resultado?.aluno?.dataNascimento;
+  const idadeCalculada = dataNascimentoValida ? calcularIdade(dataNascimentoValida) : undefined;
+  const idade = idadeCalculada && idadeCalculada > 0 ? idadeCalculada : undefined;
 
-  const genero = resultado?.aluno?.genero
-    ? getGeneroValido(resultado?.aluno?.genero, generoApi ?? undefined)
-    : getGeneroValido(profile?.genero ?? undefined, generoApi ?? undefined);
+  const genero = getGeneroValido(resultado?.aluno?.genero);
   const dataNascimento = dataNascimentoValida;
 
   const infoAluno = (
@@ -171,10 +164,13 @@ export function DobrasCutaneasModernas({
   const [protocolos, setProtocolos] = useState<ProtocoloInfo[]>([]);
   const [protocoloSelecionado, setProtocoloSelecionado] = useState<string>(resultado?.protocolo ?? '');
   const [dadosPessoais, setDadosPessoais] = useState<DadosPessoais>({
-    genero: genero,
-    idade: idade !== '-' ? String(idade) : '-',
-    peso: peso !== '-' ? String(peso) : '-',
-    altura: altura !== '-' ? String(altura) : '-',
+    genero,
+    idade: idade ? String(idade) : undefined,
+    peso: peso ? String(peso) : undefined,
+    altura: altura ? String(altura) : undefined,
+    dataNascimento,
+    nome: resultado?.aluno?.name,
+    image: resultado?.aluno?.image
   });
   const [medidas, setMedidas] = useState<Medidas>({});
   const [resultadoState, setResultadoState] = useState<AvaliacaoCompleta | null>(null);
@@ -184,50 +180,23 @@ export function DobrasCutaneasModernas({
   const [dobraAtiva, setDobraAtiva] = useState<string>('');
 
   useEffect(() => {
-    if (!resultado?.aluno?.id || resultado?.aluno?.id.startsWith('prof') || resultado?.aluno?.id.startsWith('personal')) {
-      setErrors(["Selecione um aluno válido para realizar a avaliação física. O ID informado não corresponde a um aluno."]);
-      setDadosPessoais({ genero: '-', idade: '-', peso: '-', altura: '-' });
+    // Se faltar qualquer dado pessoal, exibe erro e bloqueia
+    if (!resultado?.aluno?.id || !resultado?.aluno?.genero || !resultado?.aluno?.peso || !resultado?.aluno?.altura || !resultado?.aluno?.dataNascimento) {
+      setErrors(["Selecione um aluno válido e com todos os dados pessoais preenchidos (gênero, peso, altura, data de nascimento) para realizar a avaliação física."]);
+      setDadosPessoais({});
       return;
     }
-    carregarDadosPessoais();
+    setDadosPessoais({
+      genero: getGeneroValido(resultado?.aluno?.genero),
+      idade: idade ? String(idade) : undefined,
+      peso: peso ? String(peso) : undefined,
+      altura: altura ? String(altura) : undefined,
+      dataNascimento,
+      nome: resultado?.aluno?.name,
+      image: resultado?.aluno?.image
+    });
+    setErrors([]);
   }, [resultado]);
-
-  const carregarDadosPessoais = async () => {
-    if (!resultado?.aluno?.id) {
-      setErrors(["ID do aluno não informado. Não é possível buscar dados pessoais."]);
-      setDadosPessoais({ genero: '-', idade: '-', peso: '-', altura: '-' });
-      return;
-    }
-    let genero = '-';
-    if (resultado?.aluno?.genero) {
-      if (resultado.aluno.genero.toLowerCase() === 'masculino' || resultado.aluno.genero.toLowerCase() === 'm') {
-        genero = 'M';
-      } else if (resultado.aluno.genero.toLowerCase() === 'feminino' || resultado.aluno.genero.toLowerCase() === 'f') {
-        genero = 'F';
-      } else {
-        genero = '-';
-      }
-    }
-    let idade = '-';
-    let dataNascimento = resultado?.aluno?.dataNascimento;
-    if (dataNascimento) {
-      idade = String(calcularIdade(dataNascimento));
-    } else {
-      idade = '-';
-    }
-    const peso = resultado?.aluno?.peso && resultado.aluno.peso > 0 ? String(resultado.aluno.peso) : '-';
-    const altura = resultado?.aluno?.altura && resultado.aluno.altura > 0 ? String(resultado.aluno.altura) : '-';
-    setDadosPessoais(prev => ({
-      ...prev,
-      dataNascimento: dataNascimento ?? '-',
-      nome: resultado?.aluno?.name ?? '-',
-      genero,
-      image: resultado?.aluno?.image ?? '-',
-      idade,
-      peso,
-      altura
-    }));
-  };
 
   // Carregar protocolos disponíveis apenas uma vez ao montar o componente
   useEffect(() => {
@@ -271,8 +240,10 @@ export function DobrasCutaneasModernas({
 
   // Validar dados pessoais
   const dadosValidos = () => {
-    if (dadosPessoais.peso === '-' || Number(dadosPessoais.peso) <= 0) return false;
-    if (protocoloInfo?.requerIdade && (dadosPessoais.idade === '-' || Number(dadosPessoais.idade) <= 0)) return false;
+    if (!dadosPessoais.genero || !dadosPessoais.peso || !dadosPessoais.altura || !dadosPessoais.idade) return false;
+    if (Number(dadosPessoais.peso) <= 0) return false;
+    if (Number(dadosPessoais.altura) <= 0) return false;
+    if (protocoloInfo?.requerIdade && Number(dadosPessoais.idade) <= 0) return false;
     return true;
   };
 
@@ -286,38 +257,16 @@ export function DobrasCutaneasModernas({
     setErrors([]);
   };
 
-  // Função para montar dados pessoais - prioriza aluno selecionado
-  function montarDadosPessoais() {
-    if (resultado?.aluno?.id) {
-      const pesoStr = resultado.aluno.peso && resultado.aluno.peso > 0 ? String(resultado.aluno.peso) : '-';
-      const alturaStr = resultado.aluno.altura && resultado.aluno.altura > 0 ? String(resultado.aluno.altura) : '-';
-      const generoStr = getGeneroValido(resultado.aluno.genero ?? undefined, generoApi ?? undefined);
-      const dataNasc = resultado.aluno.dataNascimento ?? '-';
-      const idadeNum = dataNasc && dataNasc !== '-' ? calcularIdade(dataNasc) : 0;
-      return {
-        genero: generoStr,
-        idade: idadeNum > 0 ? String(idadeNum) : undefined,
-        peso: pesoStr,
-        altura: alturaStr,
-        dataNascimento: dataNasc,
-        nome: resultado.aluno.name ?? undefined,
-        image: resultado.aluno.image ?? undefined
-      };
-    }
-    // fallback para dadosMedidas ou vazio
-    const pesoStr = resultado?.aluno?.peso ? String(resultado.aluno.peso) : '-';
-    const alturaStr = resultado?.aluno?.altura ? String(resultado.aluno.altura) : '-';
-    const generoStr = getGeneroValido(resultado?.aluno?.genero ?? undefined, profile?.genero ?? undefined, generoApi ?? undefined);
-    const dataNasc = resultado?.aluno?.dataNascimento ?? '-';
-    const idadeNum = dataNasc && dataNasc !== '-' ? calcularIdade(dataNasc) : 0;
+  // Função para montar dados pessoais - sempre do aluno selecionado
+  function montarDadosPessoais(): DadosPessoais {
     return {
-      genero: generoStr,
-      idade: idadeNum > 0 ? String(idadeNum) : undefined,
-      peso: pesoStr,
-      altura: alturaStr,
-      dataNascimento: dataNasc,
-      nome: resultado?.aluno?.name ?? undefined,
-      image: resultado?.aluno?.image ?? undefined
+      genero: getGeneroValido(resultado?.aluno?.genero),
+      idade: idade ? String(idade) : undefined,
+      peso: peso ? String(peso) : undefined,
+      altura: altura ? String(altura) : undefined,
+      dataNascimento,
+      nome: resultado?.aluno?.name,
+      image: resultado?.aluno?.image
     };
   }
 
@@ -403,16 +352,16 @@ export function DobrasCutaneasModernas({
   }
 
   // Bloqueio se não houver dados do aluno selecionado
-  if (!resultado?.aluno || !resultado?.aluno?.id || !resultado?.aluno?.dataNascimento) {
+  if (!resultado?.aluno || !resultado?.aluno?.id || !resultado?.aluno?.genero || !resultado?.aluno?.peso || !resultado?.aluno?.altura || !resultado?.aluno?.dataNascimento) {
     // Identificar campos ausentes
     const camposFaltando: string[] = [];
     if (!resultado?.aluno) camposFaltando.push('aluno');
     if (!resultado?.aluno?.id) camposFaltando.push('id');
-    if (!resultado?.aluno?.dataNascimento) camposFaltando.push('dataNascimento');
-    if (!resultado?.aluno?.name) camposFaltando.push('name');
     if (!resultado?.aluno?.genero) camposFaltando.push('genero');
     if (!resultado?.aluno?.peso) camposFaltando.push('peso');
     if (!resultado?.aluno?.altura) camposFaltando.push('altura');
+    if (!resultado?.aluno?.dataNascimento) camposFaltando.push('dataNascimento');
+    if (!resultado?.aluno?.name) camposFaltando.push('name');
     return (
       <Alert variant="destructive" className="mb-4">
         <AlertCircle className="h-4 w-4" />
@@ -426,7 +375,7 @@ export function DobrasCutaneasModernas({
               </li>
             ))}
           </ul>
-          Selecione um aluno válido para realizar a avaliação física.
+          Selecione um aluno válido e com todos os dados pessoais preenchidos para realizar a avaliação física.
         </AlertDescription>
       </Alert>
     );
@@ -508,19 +457,19 @@ export function DobrasCutaneasModernas({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <Label>Gênero</Label>
-              <div className="text-sm text-gray-700">{dadosPessoais.genero === 'M' ? 'Masculino' : dadosPessoais.genero === 'F' ? 'Feminino' : '-'}</div>
+                <div className="text-sm text-gray-700">{dadosPessoais.genero === 'masculino' ? 'Masculino' : dadosPessoais.genero === 'feminino' ? 'Feminino' : <span className="text-red-500">Faltando</span>}</div>
               </div>
               <div>
                 <Label>Peso</Label>
-              <div className="text-sm text-gray-700">{dadosPessoais.peso !== '-' ? `${dadosPessoais.peso} kg` : '-'}</div>
+                <div className="text-sm text-gray-700">{dadosPessoais.peso ? `${dadosPessoais.peso} kg` : <span className="text-red-500">Faltando</span>}</div>
               </div>
               <div>
                 <Label>Idade</Label>
-              <div className="text-sm text-gray-700">{dadosPessoais.idade !== '-' ? dadosPessoais.idade : '-'}</div>
+                <div className="text-sm text-gray-700">{dadosPessoais.idade ? dadosPessoais.idade : <span className="text-red-500">Faltando</span>}</div>
               </div>
               <div>
                 <Label>Altura</Label>
-              <div className="text-sm text-gray-700">{dadosPessoais.altura !== '-' ? `${dadosPessoais.altura} cm` : '-'}</div>
+                <div className="text-sm text-gray-700">{dadosPessoais.altura ? `${dadosPessoais.altura} cm` : <span className="text-red-500">Faltando</span>}</div>
               </div>
             </div>
           </CardContent>

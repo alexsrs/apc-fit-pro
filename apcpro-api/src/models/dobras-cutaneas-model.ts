@@ -6,7 +6,7 @@
 import { ProtocoloDisponivel } from '../utils/protocolos-dobras';
 
 // Tipos base
-export type GeneroType = 'M' | 'F';
+export type GeneroType = 'masculino' | 'feminino';
 export type StatusAvaliacao = 'pendente' | 'aprovada' | 'reprovada' | 'cancelada';
 
 // Interface para dados de entrada
@@ -17,6 +17,7 @@ export interface DobrasCutaneasInput {
     genero: GeneroType;
     idade?: number; // Opcional - nem todos protocolos precisam
     peso: number;
+    altura?: number; // Opcional para protocolos que exigem altura
   };
   medidas: {
     // Dobras comuns
@@ -54,6 +55,7 @@ export interface AvaliacaoDobrasCutaneas {
     genero: GeneroType;
     idade?: number;
     peso: number;
+    altura?: number;
   };
   medidas: {
     triceps?: number;
