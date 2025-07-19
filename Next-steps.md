@@ -13,6 +13,7 @@ O APC FIT PRO possui uma base sólida implementada com **autenticação completa
 - ⏳ **Validação em Staging** - Deploy em ambiente de homologação
 - ⏳ **Documentação de Usuário** - Guias para professores e alunos
 - ⏳ **Correções de UX** - Melhorias baseadas em feedback inicial
+- ⏳ **Upload de 4 Fotos Corporais (Azure Blob Storage)** - Obrigatório para finalizar avaliações
 
 ### **✅ CONCLUÍDO RECENTEMENTE (6 de Julho)**
 - ✅ **Sistema de Avaliações Completo** - Fluxo unificado para alunos e professores
@@ -28,6 +29,7 @@ O APC FIT PRO possui uma base sólida implementada com **autenticação completa
 - Completar **Relatórios em PDF** das avaliações
 - Adicionar **Testes Físicos e Funcionais**
 - Implementar **Biblioteca de Exercícios**
+- Implementar **Upload de 4 Fotos Corporais (Azure Blob Storage)**
 
 ### **Médio Prazo (3-6 meses)**
 - Desenvolver **Sistema de Pagamentos**
@@ -317,6 +319,81 @@ apcpro-api/src/
 
 Integrações: OpenAI GPT-4, TensorFlow.js
 ```
+
+---
+
+### 📸 NOVA FEATURE: Upload de 4 Fotos Corporais (Azure Blob Storage)
+> **Prazo:** 14 dias (URGENTE) | **Complexidade:** Média | **Status:** EM DESENVOLVIMENTO
+
+#### Descrição
+Permitir que o usuário (aluno) envie 4 fotos: frente, costas, perfil esquerdo e perfil direito. As imagens serão salvas em uma Azure Storage Account (Blob Storage), usando instâncias gratuitas ou de baixo custo. As fotos servirão para comparativos de evolução, análise visual do professor e futuras análises por IA.
+
+#### Roadmap e Checklist
+
+##### 1. Provisionamento Azure Blob Storage
+- [ ] Criar Storage Account (preferencialmente SKU gratuito ou de baixo custo)
+- [ ] Criar container específico para fotos de avaliação (ex: `fotos-avaliacao`)
+- [ ] Gerar chave de acesso segura (armazenar em `.env`)
+
+##### 2. Backend (apcpro-api)
+- [ ] Instalar SDK Azure Blob Storage (`@azure/storage-blob`)
+- [ ] Criar service para upload e listagem de fotos (`services/fotos-service.ts`)
+- [ ] Criar controller para endpoints de upload e consulta (`controllers/fotos-controller.ts`)
+- [ ] Middleware de autenticação e validação de tipo/tamanho de arquivo
+- [ ] Salvar metadados das fotos (URL, tipo, data) no banco (tabela `fotoAvaliacao` ou campo JSON em `avaliacao`)
+
+##### 3. Frontend (apcpro-web)
+- [ ] Componente de upload com preview para as 4 fotos (`components/UploadFotosAvaliacao.tsx`)
+- [ ] Integração com API para upload e exibição das fotos
+- [ ] Validação de formato (JPEG/PNG), tamanho e orientação
+- [ ] UI acessível e responsiva
+
+##### 4. Documentação
+- [ ] Atualizar README e guias de usuário
+- [ ] Documentar variáveis de ambiente e fluxo de upload
+
+##### 5. Testes
+- [ ] Testes unitários e de integração para upload/listagem
+- [ ] Teste manual do fluxo completo
+
+##### Provisionamento Azure Blob Storage (Exemplo Powershell)
+
+```powershell
+# Criar grupo de recursos (se necessário)
+az group create --name apc-fit-pro-rg --location brazilsouth
+
+# Criar Storage Account (SKU gratuito ou de baixo custo)
+az storage account create `
+  --name apcfitprostorage `
+  --resource-group apc-fit-pro-rg `
+  --location brazilsouth `
+  --sku Standard_LRS
+
+# Criar container para fotos
+az storage container create `
+  --account-name apcfitprostorage `
+  --name fotos-avaliacao `
+  --public-access off
+```
+
+##### Sugestão de Estrutura de Diretórios/Arquivos
+
+```
+apcpro-api/src/
+├── controllers/fotos-controller.ts         # NOVO
+├── services/fotos-service.ts               # NOVO
+├── models/foto-avaliacao-model.ts          # NOVO (ou campo em avaliacao)
+├── utils/azure-blob.ts                     # NOVO (helper para Azure SDK)
+└── middlewares/upload-middleware.ts        # NOVO
+
+apcpro-web/src/
+├── components/UploadFotosAvaliacao.tsx     # NOVO
+└── services/fotos-service.ts               # NOVO
+```
+
+##### Resumo para o Roadmap
+
+> **Upload de Fotos Corporais:** Permitir upload de 4 fotos (frente, costas, perfil esquerdo e direito) por aluno, salvas em Azure Blob Storage. Usar instâncias gratuitas/de baixo custo. Fotos servirão para comparativos, análise visual e futura IA. Provisionar Storage Account, criar endpoints de upload/listagem, UI acessível e testes completos.
 
 ---
 
