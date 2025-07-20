@@ -5,6 +5,7 @@ import { useEffect, Suspense } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { ModalPadrao } from "@/components/ui/ModalPadrao";
 import FormularioCadastroAluno from "@/components/FormularioCadastroAluno";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 function ConviteAlunoPage() {
   const searchParams = useSearchParams();
@@ -22,20 +23,22 @@ function ConviteAlunoPage() {
     return null;
   }
 
-  // Sempre renderiza o formulário de cadastro de aluno, independente da role
+  // Agora a página está envolvida pelo SidebarProvider
   return (
-    <DashboardLayout>
-      <ModalPadrao
-        open={true}
-        onClose={() => router.push('/')}
-        title="Cadastro de Aluno"
-        description="Complete o cadastro para se tornar aluno e começar seus treinos personalizados."
-        maxWidth="lg"
-        showScrollArea={false}
-      >
-        <FormularioCadastroAluno professorId={professorId} />
-      </ModalPadrao>
-    </DashboardLayout>
+    <SidebarProvider>
+      <DashboardLayout>
+        <ModalPadrao
+          open={true}
+          onClose={() => router.push('/')}
+          title="Cadastro de Aluno"
+          description="Complete o cadastro para se tornar aluno e começar seus treinos personalizados."
+          maxWidth="lg"
+          showScrollArea={false}
+        >
+          <FormularioCadastroAluno professorId={professorId} />
+        </ModalPadrao>
+      </DashboardLayout>
+    </SidebarProvider>
   );
 }
 
