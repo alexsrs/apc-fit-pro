@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { calcularIdade } from '@/utils/idade';
-import { formatarDataValidade, formatarDataNascimentoBR } from '@/utils/idade';
+import { formatarDataValidade } from '@/utils/idade';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Calculator, Save, Users, Target, Clock } from 'lucide-react';
+import { AlertCircle, Calculator, Users, Target, Clock } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import type { 
@@ -99,14 +99,7 @@ export function DobrasCutaneasModernas({
   const { profile } = useUserProfile();
   // Verificação de role: só permite avaliação se não for aluno
   const isAluno = profile?.role === 'aluno';
-  // Debug visual e console
-  console.log('[DEBUG] DobrasCutaneasModernas resultado:', resultado);
-  const debugAluno = (
-    <div className="mb-4 p-2 bg-yellow-50 border border-yellow-300 rounded">
-      <strong>Debug Dados do Resultado:</strong>
-      <pre className="text-xs text-yellow-800">{JSON.stringify(resultado, null, 2)}</pre>
-    </div>
-  );
+  // Debug visual removido
 
   // Função utilitária para garantir que o gênero seja sempre 'masculino' ou 'feminino'
   function getGeneroValido(genero?: string): 'masculino' | 'feminino' | undefined {
@@ -117,30 +110,7 @@ export function DobrasCutaneasModernas({
     return undefined;
   }
 
-  // Estado para gênero buscado via API
-  const [generoApi, setGeneroApi] = useState<string | undefined>(undefined);
-
-  // Efeito para buscar gênero do aluno se não vier nas props
-  useEffect(() => {
-    async function buscarGeneroAluno() {
-      if (!resultado?.aluno?.id) return;
-      // Se já temos um gênero válido, não busca
-        const generoAtual = getGeneroValido(
-        resultado?.aluno?.genero ?? profile?.genero ?? undefined
-      );
-      if (generoAtual !== undefined) return;
-      try {
-        const resp = await apiClient.get(`/api/alunos/${resultado.aluno.id}`);
-        const genero = resp.data?.genero;
-        if (genero && genero.trim() !== '') {
-          setGeneroApi(genero);
-        }
-      } catch (err) {
-        console.warn('[DEBUG] Falha ao buscar gênero do aluno via API', err);
-      }
-    }
-    buscarGeneroAluno();
-  }, [resultado?.aluno?.id, resultado?.aluno?.genero, profile?.genero]);
+  // Estado para gênero via API removido (não utilizado)
 
   const peso = resultado?.aluno?.peso;
   const altura = resultado?.aluno?.altura;
@@ -151,15 +121,7 @@ export function DobrasCutaneasModernas({
   const genero = getGeneroValido(resultado?.aluno?.genero);
   const dataNascimento = dataNascimentoValida;
 
-  const infoAluno = (
-    <div className="mb-4 p-2 bg-blue-50 border border-blue-300 rounded flex flex-wrap gap-4">
-      <div><strong>Peso:</strong> {peso} kg</div>
-      <div><strong>Altura:</strong> {altura} cm</div>
-      <div><strong>Idade:</strong> {idade}</div>
-      <div><strong>Gênero:</strong> {genero}</div>
-      <div><strong>Nascimento:</strong> {dataNascimento && dataNascimento !== '-' ? formatarDataNascimentoBR(dataNascimento) : '-'}</div>
-    </div>
-  );
+  // infoAluno removido (não utilizado)
 
   const [protocolos, setProtocolos] = useState<ProtocoloInfo[]>([]);
   const [protocoloSelecionado, setProtocoloSelecionado] = useState<string>(resultado?.protocolo ?? '');
@@ -177,7 +139,7 @@ export function DobrasCutaneasModernas({
   const [loading, setLoading] = useState(false);
   const [loadingProtocolos, setLoadingProtocolos] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
-  const [dobraAtiva, setDobraAtiva] = useState<string>('');
+  // dobraAtiva removido (não utilizado)
 
   useEffect(() => {
     // Se faltar qualquer dado pessoal, exibe erro e bloqueia
@@ -196,7 +158,7 @@ export function DobrasCutaneasModernas({
       image: resultado?.aluno?.image
     });
     setErrors([]);
-  }, [resultado]);
+  }, [resultado, idade, peso, altura, dataNascimento]);
 
   // Carregar protocolos disponíveis apenas uma vez ao montar o componente
   useEffect(() => {
@@ -315,7 +277,7 @@ export function DobrasCutaneasModernas({
     setMedidas({});
     setResultadoState(null);
     setErrors([]);
-    setDobraAtiva('');
+    // setDobraAtiva removido
   };
 
   // Debug extra para idade

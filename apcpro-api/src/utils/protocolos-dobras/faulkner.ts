@@ -5,10 +5,10 @@
  */
 
 export interface MedidasFaulkner {
-  triceps: number;
   subescapular: number;
+  triceps: number;
+  abdominal: number;
   suprailiaca: number;
-  bicipital: number;
 }
 
 export interface ResultadoFaulkner {
@@ -31,22 +31,24 @@ export function calcularFaulkner(
   genero: 'M' | 'F',
   peso: number
 ): ResultadoFaulkner {
-  const { triceps, subescapular, suprailiaca, bicipital } = medidas;
-  
+  const { subescapular, triceps, abdominal, suprailiaca } = medidas;
+
   // Validação das medidas (3-50mm típico para dobras cutâneas)
-  if (triceps < 3 || triceps > 50 || 
-      subescapular < 3 || subescapular > 50 || 
-      suprailiaca < 3 || suprailiaca > 50 ||
-      bicipital < 3 || bicipital > 50) {
+  if (
+    subescapular < 3 || subescapular > 50 ||
+    triceps < 3 || triceps > 50 ||
+    abdominal < 3 || abdominal > 50 ||
+    suprailiaca < 3 || suprailiaca > 50
+  ) {
     throw new Error('Medidas de dobras cutâneas devem estar entre 3-50mm');
   }
 
   // Soma das 4 dobras
-  const somaTotal = triceps + subescapular + suprailiaca + bicipital;
-  
+  const somaTotal = subescapular + triceps + abdominal + suprailiaca;
+
   // Fórmulas de Faulkner específicas por gênero
   let percentualGordura: number;
-  
+
   if (genero === 'M') {
     // Fórmula para homens
     percentualGordura = 0.153 * somaTotal + 5.783;
@@ -54,14 +56,14 @@ export function calcularFaulkner(
     // Fórmula para mulheres
     percentualGordura = 0.154 * somaTotal + 5.045;
   }
-  
+
   // Cálculos derivados
   const massaGorda = (percentualGordura / 100) * peso;
   const massaMagra = peso - massaGorda;
-  
+
   // Classificação baseada no percentual de gordura
   const classificacao = classificarGorduraFaulkner(percentualGordura, genero);
-  
+
   return {
     somaTotal: Math.round(somaTotal * 10) / 10,
     percentualGordura: Math.round(percentualGordura * 10) / 10,
@@ -96,10 +98,10 @@ function classificarGorduraFaulkner(percentual: number, genero: 'M' | 'F'): stri
  * Valida se as medidas estão dentro dos ranges aceitáveis
  */
 export function validarMedidasFaulkner(medidas: MedidasFaulkner): boolean {
-  const { triceps, subescapular, suprailiaca, bicipital } = medidas;
+  const { triceps, subescapular, suprailiaca, abdominal } = medidas;
   
   return triceps >= 3 && triceps <= 50 &&
          subescapular >= 3 && subescapular <= 50 &&
          suprailiaca >= 3 && suprailiaca <= 50 &&
-         bicipital >= 3 && bicipital <= 50;
+         abdominal >= 3 && abdominal <= 50;
 }

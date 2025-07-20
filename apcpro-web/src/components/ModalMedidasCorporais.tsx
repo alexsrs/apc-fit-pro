@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 import apiClient from "@/lib/api-client";
 import {
   avaliarCA,
   CircunferenciaAbdominalResultado,
 } from "@/services/ca-service";
-import { formatarDataValidade } from "@/utils/idade";
+// import { formatarDataValidade } from "@/utils/idade";
 import { formatarDataNascimentoBR } from "@/utils/idade";
 import { CaInfo } from "./CaInfo";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -144,9 +144,9 @@ export function ModalMedidasCorporais({
 }: ModalMedidasCorporaisProps) {
   const [form, setForm] = useState<MedidasForm>({});
   const [loading, setLoading] = useState(false);
-  const [resultadoCA] = useState<CircunferenciaAbdominalResultado | null>(null);
+  // resultadoCA removido (não utilizado)
   const [activeTab, setActiveTab] = useState("medidas");
-  const { profile } = useUserProfile();43
+  // profile removido (não utilizado)
   
   // Estado para data de nascimento e idade do aluno SEM valor default (sempre busca da API, ignora props)
   const [dataNascimentoAluno, setDataNascimentoAluno] = useState<string | undefined>(undefined);
@@ -159,7 +159,7 @@ export function ModalMedidasCorporais({
         const res = await apiClient.get(`alunos/${userPerfilId}/profile`);
         const perfil = res?.data;
         if (perfil?.dataNascimento) {
-          let dataNasc = perfil.dataNascimento;
+          const dataNasc = perfil.dataNascimento;
           if (typeof dataNasc === "string") {
             setDataNascimentoAluno(dataNasc);
             setIdadeAluno(calcularIdade(dataNasc));
@@ -172,7 +172,7 @@ export function ModalMedidasCorporais({
           setDataNascimentoAluno(undefined);
           setIdadeAluno(undefined);
         }
-      } catch (err) {
+      } catch {
         setDataNascimentoAluno(undefined);
         setIdadeAluno(undefined);
       }
@@ -183,7 +183,7 @@ export function ModalMedidasCorporais({
   // ...existing code...
 
   // Verifica se o usuário é professor
-  const isUserProfessor = profile?.role === "professor";
+  // isUserProfessor removido (não utilizado)
 
   // Função para trocar aba (apenas medidas corporais)
   function handleTabChange(value: string) {
@@ -565,14 +565,8 @@ export default function PaginaAluno() {
     ? alunoSelecionado.id
     : profile?.id;
   // dataNascimento pode ser string ou Date
-  let dataNascimento: string | undefined = isProfessor
-    ? alunoSelecionado.dataNascimento
-    : (typeof profile?.dataNascimento === "string"
-        ? profile?.dataNascimento
-        : profile?.dataNascimento instanceof Date
-          ? profile?.dataNascimento.toISOString().split("T")[0]
-          : undefined);
-  const idadeAluno = dataNascimento ? calcularIdade(dataNascimento) : undefined;
+  // dataNascimento removido (não utilizado)
+  // idadeAluno removido (não utilizado)
 
   function handleAbrirModal() {
     if (!userPerfilId) {

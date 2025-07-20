@@ -80,7 +80,7 @@ function calcularPollock9(medidas, genero, idade, peso) {
     percentualGordura: Math.round(percentualGordura * 10) / 10,
     massaGorda: Math.round(massaGorda * 10) / 10,
     massaMagra: Math.round(massaMagra * 10) / 10,
-    protocolo: 'pollock-9'
+    // protocolo: 'pollock-9' // Removido do padrão
   };
 }
 

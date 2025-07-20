@@ -43,17 +43,17 @@ export default function AlunosDashboard() {
   const USER_PERFIL_ID = "cmd3ljqn50001vnmo55vckhta";
   const { profile } = useUserProfile();
   const [alunoProfile, setAlunoProfile] = useState<{ dataNascimento?: string; nome?: string } | null>(null);
-  const [loadingAluno, setLoadingAluno] = useState(true);
+  // loadingAluno removido (não utilizado)
   useEffect(() => {
     async function fetchAlunoProfile() {
-      setLoadingAluno(true);
+      // setLoadingAluno removido
       try {
         const { data } = await fetch(`/api/alunos/${USER_PERFIL_ID}/profile`).then(r => r.json());
         setAlunoProfile(data);
       } catch {
         setAlunoProfile(null);
       }
-      setLoadingAluno(false);
+      // setLoadingAluno removido
     }
     fetchAlunoProfile();
   }, []);

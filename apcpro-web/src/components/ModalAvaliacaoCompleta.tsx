@@ -96,9 +96,9 @@ export function ModalAvaliacaoCompleta({
       try {
         const resp = await apiClient.get(`/api/alunos/${userPerfilId}/profile`);
         setAlunoSelecionado(resp.data);
-      } catch (error) {
-        setAlunoSelecionado(null);
-      }
+  } catch {
+    setAlunoSelecionado(null);
+  }
     }
     buscarAluno();
   }, [userPerfilId]);
@@ -124,8 +124,8 @@ export function ModalAvaliacaoCompleta({
   const [dadosDobras, setDadosDobras] = useState<any>(null);
   
   // Dados do usuário para medidas corporais
-  const [idadeUsuario, setIdadeUsuario] = useState<number | undefined>(undefined);
-  const [dataNascimentoUsuario, setDataNascimentoUsuario] = useState<string>('');
+  // const [idadeUsuario, setIdadeUsuario] = useState<number | undefined>(undefined);
+  // const [dataNascimentoUsuario, setDataNascimentoUsuario] = useState<string>('');
 
   // Definição das etapas
   const etapas: AvaliacaoEtapa[] = [
@@ -228,30 +228,30 @@ export function ModalAvaliacaoCompleta({
           const perfilResponse = await apiClient.get(`alunos/${userId}/profile`);
           if (perfilResponse?.data?.dataNascimento) {
             dataNascimentoApi = perfilResponse.data.dataNascimento;
-            setDataNascimentoUsuario(dataNascimentoApi);
+            // setDataNascimentoUsuario(dataNascimentoApi);
             // Calcular idade
             const today = new Date();
             const birthDate = new Date(dataNascimentoApi);
-            let age = today.getFullYear() - birthDate.getFullYear();
+            // age removido (não utilizado)
             const monthDiff = today.getMonth() - birthDate.getMonth();
             if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-              age--;
+              // linha removida: age-- (variável removida)
             }
-            setIdadeUsuario(age);
+            // setIdadeUsuario(age);
           } else {
             setErro('Data de nascimento não encontrada no perfil do aluno.');
-            setDataNascimentoUsuario('');
-            setIdadeUsuario(0);
+            // setDataNascimentoUsuario('');
+            // setIdadeUsuario(0);
           }
-        } catch (err) {
+        } catch {
           setErro('Erro ao buscar perfil do aluno para data de nascimento.');
-          setDataNascimentoUsuario('');
-          setIdadeUsuario(0);
+          // setDataNascimentoUsuario('');
+          // setIdadeUsuario(0);
         }
       } else {
         setErro('Não foi possível identificar o userId do aluno. Dados de perfil não serão exibidos.');
-        setDataNascimentoUsuario('');
-        setIdadeUsuario(0);
+        // setDataNascimentoUsuario('');
+        // setIdadeUsuario(0);
       }
 
     } catch (error) {

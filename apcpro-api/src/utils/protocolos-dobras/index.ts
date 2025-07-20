@@ -29,10 +29,13 @@ export {
 
 // Guedes (3 dobras)
 export {
-  type MedidasGuedes,
+  type MedidasGuedesMulher,
+  type MedidasGuedesHomem,
   type ResultadoGuedes,
-  calcularGuedes,
-  validarMedidasGuedes
+  calcularGuedesMulher,
+  calcularGuedesHomem,
+  validarMedidasGuedesMulher,
+  validarMedidasGuedesHomem
 } from './guedes';
 
 // Tipos unificados para seleção de protocolo
@@ -41,8 +44,8 @@ export type ProtocoloDisponivel =
   | 'pollock-3-homens'   // 3 dobras (homens)
   | 'pollock-3-mulheres' // 3 dobras (mulheres)
   | 'pollock-7'          // 7 dobras
-  | 'pollock-9'          // 9 dobras (atletas)
-  | 'guedes';            // 3 dobras
+  | 'guedes-3-mulher'    // 3 dobras (mulher)
+  | 'guedes-3-homem';    // 3 dobras (homem)
 
 export interface InfoProtocolo {
   nome: string;
@@ -59,7 +62,7 @@ export const PROTOCOLOS_INFO: Record<ProtocoloDisponivel, InfoProtocolo> = {
     nome: 'Faulkner',
     descricao: 'Protocolo de 4 dobras cutâneas',
     numDobras: 4,
-    pontos: ['Tríceps', 'Subescapular', 'Supra-ilíaca', 'Bicipital'],
+    pontos: ['Subescapular', 'Tríceps', 'Abdominal', 'Supra-ilíaca'],
     indicacao: 'População geral, adultos ativos',
     requerIdade: false,
     sexoEspecifico: false
@@ -68,7 +71,7 @@ export const PROTOCOLOS_INFO: Record<ProtocoloDisponivel, InfoProtocolo> = {
     nome: 'Pollock 3 Dobras (Homens)',
     descricao: 'Protocolo simplificado para homens',
     numDobras: 3,
-    pontos: ['Peitoral', 'Abdominal', 'Coxa'],
+    pontos: ['Tórax', 'Abdominal', 'Coxa'],
     indicacao: 'Homens, avaliação rápida',
     requerIdade: true,
     sexoEspecifico: true
@@ -86,28 +89,28 @@ export const PROTOCOLOS_INFO: Record<ProtocoloDisponivel, InfoProtocolo> = {
     nome: 'Pollock 7 Dobras',
     descricao: 'Protocolo mais preciso para ambos os sexos',
     numDobras: 7,
-    pontos: ['Tríceps', 'Subescapular', 'Supra-ilíaca', 'Abdominal', 'Peitoral', 'Axilar Média', 'Coxa'],
+    pontos: ['Tórax', 'Axiliar Média', 'Subescapular', 'Tríceps', 'Abdominal', 'Supra-ilíaca', 'Coxa'],
     indicacao: 'Maior precisão, população geral',
     requerIdade: true,
     sexoEspecifico: false
   },
-  'pollock-9': {
-    nome: 'Pollock 9 Dobras (Atletas)',
-    descricao: 'Protocolo completo para atletas com registro detalhado',
-    numDobras: 9,
-    pontos: ['Tríceps', 'Subescapular', 'Supra-ilíaca', 'Abdominal', 'Peitoral', 'Axilar Média', 'Coxa', 'Bíceps*', 'Panturrilha*'],
-    indicacao: 'Atletas e esportistas',
-    requerIdade: true,
-    sexoEspecifico: false
-  },
-  'guedes': {
-    nome: 'Guedes',
-    descricao: 'Protocolo específico para brasileiros',
+  'guedes-3-mulher': {
+    nome: 'Guedes 3 Dobras (Mulher)',
+    descricao: 'Protocolo Guedes para mulheres',
     numDobras: 3,
-    pontos: ['Tríceps', 'Subescapular', 'Supra-ilíaca'],
-    indicacao: 'População brasileira, crianças e adolescentes',
-    requerIdade: false,
-    sexoEspecifico: false
+    pontos: ['Subescapular', 'Supra-ilíaca', 'Coxa'],
+    indicacao: 'Mulheres, população brasileira',
+    requerIdade: true,
+    sexoEspecifico: true
+  },
+  'guedes-3-homem': {
+    nome: 'Guedes 3 Dobras (Homem)',
+    descricao: 'Protocolo Guedes para homens',
+    numDobras: 3,
+    pontos: ['Tríceps', 'Abdominal', 'Supra-ilíaca'],
+    indicacao: 'Homens, população brasileira',
+    requerIdade: true,
+    sexoEspecifico: true
   }
 };
 

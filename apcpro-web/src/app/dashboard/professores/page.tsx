@@ -34,7 +34,7 @@ import { ModalDetalhesAluno } from "@/components/ModalDetalhesAluno";
 import { AvaliacoesPendentes } from "@/components/AvaliacoesPendentes";
 import apiClient from "@/lib/api-client";
 import { formatDisplayName, formatDisplayEmail } from "@/utils/name-utils";
-import { calcularIdade, formatarDataValidade } from "@/utils/idade";
+import { calcularIdade } from "@/utils/idade";
 import { formatarDataNascimentoBR } from "@/utils/idade";
 
 type Aluno = {

@@ -111,6 +111,7 @@ export default function DobrasCutaneasPage() {
           <TabsContent value="avaliacao" className="space-y-6">
             <DobrasCutaneasModernas
               userPerfilId="demo-user-123"
+              resultado={resultadoAtual}
               onResultado={handleNovoResultado}
               modoCalculoApenas={false}
             />
@@ -239,39 +240,38 @@ export default function DobrasCutaneasPage() {
                 </CardContent>
               </Card>
 
-              {/* Pollock 9 */}
+
+              {/* Guedes 3 Dobras */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Pollock 9 dobras</CardTitle>
-                  <Badge variant="outline">9 dobras</Badge>
+                  <CardTitle className="text-lg">Guedes 3 dobras (Mulher)</CardTitle>
+                  <Badge variant="outline">3 dobras</Badge>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Protocolo especial para atletas e esportistas de alto nível.
+                    Protocolo validado para mulheres brasileiras.
                   </p>
                   <div className="space-y-2 text-sm">
-                    <div><strong>Dobras:</strong> 7 padrão + Bíceps + Panturrilha</div>
-                    <div><strong>Público:</strong> Atletas</div>
-                    <div><strong>Gênero:</strong> Ambos</div>
-                    <div><strong>Tempo:</strong> ~12 minutos</div>
+                    <div><strong>Dobras:</strong> Subescapular, Supra-ilíaca, Coxa</div>
+                    <div><strong>Idade:</strong> Obrigatória</div>
+                    <div><strong>Gênero:</strong> Feminino</div>
+                    <div><strong>Tempo:</strong> ~4 minutos</div>
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Guedes */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Guedes</CardTitle>
-                  <Badge variant="outline">7 dobras</Badge>
+                  <CardTitle className="text-lg">Guedes 3 dobras (Homem)</CardTitle>
+                  <Badge variant="outline">3 dobras</Badge>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Desenvolvido especificamente para população brasileira.
+                    Protocolo validado para homens brasileiros.
                   </p>
                   <div className="space-y-2 text-sm">
-                    <div><strong>População:</strong> Brasileira</div>
+                    <div><strong>Dobras:</strong> Tríceps, Abdominal, Supra-ilíaca</div>
                     <div><strong>Idade:</strong> Obrigatória</div>
-                    <div><strong>Gênero:</strong> Ambos</div>
+                    <div><strong>Gênero:</strong> Masculino</div>
                     <div><strong>Tempo:</strong> ~4 minutos</div>
                   </div>
                 </CardContent>

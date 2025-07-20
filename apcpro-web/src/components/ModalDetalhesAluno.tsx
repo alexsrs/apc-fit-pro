@@ -1,5 +1,5 @@
 import React from "react";
-import { formatarDataValidade } from "@/utils/idade";
+// import removido: formatarDataValidade não utilizado
 import { formatarDataNascimentoBR, calcularIdade } from "@/utils/idade";
 import { ModalPadrao } from "@/components/ui/ModalPadrao";
 import { ListaAvaliacoes } from "@/components/ListaAvaliacoes";
@@ -48,9 +48,6 @@ export function ModalDetalhesAluno({
   const calcularIdadeSafe = (dataNascimento?: string | null) => {
     if (!dataNascimento) return 'Idade não informada';
     return `${calcularIdade(dataNascimento)} anos`;
-  };
-  const formatarData = (data: string) => {
-    return formatarDataValidade(data);
   };
 
   return (

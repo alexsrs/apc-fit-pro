@@ -147,12 +147,12 @@ export const PROTOCOLOS_RESUMO = {
     tempoMedio: '8 min',
     recomendado: 'Padrão científico'
   },
-  'pollock-9': {
-    nome: 'Pollock 9',
-    pontos: 9,
-    tempoMedio: '12 min',
-    recomendado: 'Atletas e esportistas'
-  },
+  // 'pollock-9': { // Removido do padrão
+  //   nome: 'Pollock 9',
+  //   pontos: 9,
+  //   tempoMedio: '12 min',
+  //   recomendado: 'Atletas e esportistas'
+  // },
   'guedes': {
     nome: 'Guedes',
     pontos: 3,

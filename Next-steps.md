@@ -606,6 +606,7 @@ O APC FIT PRO possui uma **base tecnológica sólida** e um **diferencial compet
 **👨‍💻 Responsável:** Tifurico (GitHub Copilot)  
 **✅ Status:** Testes automatizados concluídos com sucesso
 
+
 **✅ CONCLUÍDO RECENTEMENTE (Julho 2025):**
 - ✅ **Sistema de Avaliações Físicas Completo** - Fluxo unificado para todos os tipos de avaliação
 - ✅ **Implementação de Dobras Cutâneas** - Protocolos Faulkner, Pollock e Guedes funcionais
@@ -620,6 +621,9 @@ O APC FIT PRO possui uma **base tecnológica sólida** e um **diferencial compet
 - 🧪 **Testes Físicos e Funcionais** - Expansão para novos tipos de avaliação
 - 📊 **Dashboard Analytics** - Métricas avançadas para professores e alunos
 - 🚀 **Deploy em Produção** - Preparação para lançamento público
+
+**🚨 URGENTE:**
+- 📸 **Upload de 4 Fotos Corporais (Azure Blob Storage)** - Obrigatório para finalizar avaliações
 
 ---
 

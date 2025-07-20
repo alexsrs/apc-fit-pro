@@ -44,13 +44,12 @@ export interface MedidasPollock9 {
 
 export interface ResultadoPollock {
   somaTotal: number;
-  somaEquacao: number; // Soma usada na equação (sem bíceps/panturrilha para versão 9)
+  somaEquacao: number; // Soma usada na equação
   densidadeCorporal: number;
   percentualGordura: number;
   massaGorda: number;
   massaMagra: number;
   classificacao: string;
-  protocolo: 'pollock-3' | 'pollock-7' | 'pollock-9';
 }
 
 /**
@@ -122,8 +121,7 @@ export function calcularPollock3(
     percentualGordura: Math.round(percentualGordura * 10) / 10,
     massaGorda: Math.round(massaGorda * 10) / 10,
     massaMagra: Math.round(massaMagra * 10) / 10,
-    classificacao,
-    protocolo: 'pollock-3'
+    classificacao
   };
 }
 
@@ -189,8 +187,7 @@ export function calcularPollock7(
     percentualGordura: Math.round(percentualGordura * 10) / 10,
     massaGorda: Math.round(massaGorda * 10) / 10,
     massaMagra: Math.round(massaMagra * 10) / 10,
-    classificacao,
-    protocolo: 'pollock-7'
+    classificacao
   };
 }
 
@@ -259,8 +256,7 @@ export function calcularPollock9(
     percentualGordura: Math.round(percentualGordura * 10) / 10,
     massaGorda: Math.round(massaGorda * 10) / 10,
     massaMagra: Math.round(massaMagra * 10) / 10,
-    classificacao,
-    protocolo: 'pollock-9'
+    classificacao
   };
 }
 
