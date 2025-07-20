@@ -21,6 +21,7 @@ import {
   FileText,
   Clock
 } from 'lucide-react';
+import { formatarDataValidade } from '@/utils/idade';
 
 // Tipos para props do modal
 interface AvaliacaoDetalhes {
@@ -94,10 +95,8 @@ export function ModalDetalhesAvaliacao({
   // Função para renderizar o resultado usando o componente ResultadoAvaliacao
   const renderResultadoAmigavel = (resultado: any, tipo: string) => {
     if (!resultado) return 'Nenhum dado disponível';
-    
     try {
       const dados = typeof resultado === 'string' ? JSON.parse(resultado) : resultado;
-      
       return (
         <ResultadoAvaliacao
           resultado={dados}
@@ -116,6 +115,7 @@ export function ModalDetalhesAvaliacao({
     }
   };
 
+  // ...existing code...
   return (
     <ModalPadrao
       open={open}
@@ -128,7 +128,7 @@ export function ModalDetalhesAvaliacao({
       }
       maxWidth="2xl"
       description={
-        avaliacao.userPerfil 
+        avaliacao.userPerfil
           ? `${formatarTipo(avaliacao.tipo)} de ${avaliacao.userPerfil.user.name}`
           : undefined
       }
@@ -154,7 +154,7 @@ export function ModalDetalhesAvaliacao({
               </div>
             </>
           )}
-          
+
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-gray-500" />
             <div>
@@ -162,13 +162,13 @@ export function ModalDetalhesAvaliacao({
               <p className="text-sm">{formatarTipo(avaliacao.tipo)}</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-500" />
             <div>
               <Label className="text-sm font-medium text-gray-700">Data</Label>
               <p className="text-sm">
-                {new Date(avaliacao.data).toLocaleDateString('pt-BR')}
+                {avaliacao.data ? formatarDataValidade(avaliacao.data) : 'Não informada'}
               </p>
             </div>
           </div>
@@ -210,7 +210,7 @@ export function ModalDetalhesAvaliacao({
 
       {/* Ações do modal */}
       <div className="flex justify-between mt-6 pt-4 border-t">
-        {mostrarAcoes && (avaliacao.status === 'pendente') && (
+        {mostrarAcoes && avaliacao.status === 'pendente' && (
           <div className="flex gap-2">
             {onAprovar && (
               <Button
@@ -222,7 +222,7 @@ export function ModalDetalhesAvaliacao({
                 Aprovar
               </Button>
             )}
-            
+
             {onReprovar && (
               <Button
                 variant="outline"
@@ -245,7 +245,7 @@ export function ModalDetalhesAvaliacao({
               Editar
             </Button>
           )}
-          
+
           <Button variant="outline" onClick={onClose}>
             Fechar
           </Button>

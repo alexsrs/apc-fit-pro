@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 import apiClient from "@/lib/api-client";
 import {
   avaliarCA,
   CircunferenciaAbdominalResultado,
 } from "@/services/ca-service";
+// import { formatarDataValidade } from "@/utils/idade";
+import { formatarDataNascimentoBR } from "@/utils/idade";
 import { CaInfo } from "./CaInfo";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 
@@ -128,10 +130,8 @@ const bodyParts = [
 type ModalMedidasCorporaisProps = {
   open: boolean;
   onClose: () => void;
-  userPerfilId: string;
+  userPerfilId: string; // id do aluno selecionado
   onSuccess: () => void;
-  idade: number;
-  dataNascimento: string;
 };
 
 type MedidasForm = Record<string, string>;
@@ -141,24 +141,52 @@ export function ModalMedidasCorporais({
   onClose,
   userPerfilId,
   onSuccess,
-  idade,
-  dataNascimento,
 }: ModalMedidasCorporaisProps) {
   const [form, setForm] = useState<MedidasForm>({});
   const [loading, setLoading] = useState(false);
-  const [resultadoCA] = useState<CircunferenciaAbdominalResultado | null>(null);
+  // resultadoCA removido (não utilizado)
   const [activeTab, setActiveTab] = useState("medidas");
-  const { profile } = useUserProfile();
+  // profile removido (não utilizado)
+  
+  // Estado para data de nascimento e idade do aluno SEM valor default (sempre busca da API, ignora props)
+  const [dataNascimentoAluno, setDataNascimentoAluno] = useState<string | undefined>(undefined);
+  const [idadeAluno, setIdadeAluno] = useState<number | undefined>(undefined);
+
+  // Sempre busca da API ao abrir o modal, ignorando props para garantir dados do aluno selecionado
+  React.useEffect(() => {
+    async function buscarPerfilAluno() {
+      try {
+        const res = await apiClient.get(`alunos/${userPerfilId}/profile`);
+        const perfil = res?.data;
+        if (perfil?.dataNascimento) {
+          const dataNasc = perfil.dataNascimento;
+          if (typeof dataNasc === "string") {
+            setDataNascimentoAluno(dataNasc);
+            setIdadeAluno(calcularIdade(dataNasc));
+          } else if (dataNasc instanceof Date) {
+            const str = dataNasc.toISOString().split("T")[0];
+            setDataNascimentoAluno(str);
+            setIdadeAluno(calcularIdade(str));
+          }
+        } else {
+          setDataNascimentoAluno(undefined);
+          setIdadeAluno(undefined);
+        }
+      } catch {
+        setDataNascimentoAluno(undefined);
+        setIdadeAluno(undefined);
+      }
+    }
+    buscarPerfilAluno();
+  }, [userPerfilId]);
+
+  // ...existing code...
 
   // Verifica se o usuário é professor
-  const isUserProfessor = profile?.role === "professor";
+  // isUserProfessor removido (não utilizado)
 
-  // Função para lidar com a tentativa de acesso à aba de dobras cutâneas
+  // Função para trocar aba (apenas medidas corporais)
   function handleTabChange(value: string) {
-    if (value === "dobras" && !isUserProfessor) {
-      alert("⚠️ Acesso Restrito: Apenas professores podem avaliar dobras cutâneas. Esta funcionalidade requer conhecimento técnico especializado e equipamentos adequados para medições precisas.");
-      return; // Não permite a mudança de aba
-    }
     setActiveTab(value);
   }
 
@@ -170,8 +198,16 @@ export function ModalMedidasCorporais({
     e.preventDefault();
     setLoading(true);
 
-    if (!idade || isNaN(idade)) {
-      alert("Idade não encontrada ou inválida!");
+    // Validação: sempre use idadeAluno
+    if (!idadeAluno || isNaN(idadeAluno)) {
+      alert("Idade não encontrada ou inválida para o aluno selecionado!");
+      setLoading(false);
+      return;
+    }
+
+    // Checar se dados do perfil do aluno estão presentes
+    if (!dataNascimentoAluno || typeof idadeAluno !== "number" || idadeAluno <= 0) {
+      alert("Dados do perfil do aluno (data de nascimento/idade) não encontrados. Atualize o cadastro do aluno antes de registrar medidas corporais.");
       setLoading(false);
       return;
     }
@@ -184,16 +220,17 @@ export function ModalMedidasCorporais({
     ];
     const missingFields = requiredFields.filter((field) => !form[field]);
     if (missingFields.length > 0) {
-      alert("Preencha todos os campos obrigatórios de medidas corporais.");
+      alert("Preencha todos os campos obrigatórios de medidas corporais antes de salvar.");
       setLoading(false);
       return;
     }
 
+    // Monta o objeto resultado apenas com medidas corporais
     const resultado = {
       peso: form.peso ? Number(form.peso) : undefined,
       altura: form.altura ? Number(form.altura) : undefined,
-      idade: typeof idade === "number" && !isNaN(idade) ? idade : undefined,
-      dataNascimento,
+      idade: idadeAluno,
+      dataNascimento: dataNascimentoAluno,
       membrosSuperiores: {
         biceps_d: form.biceps_d ? Number(form.biceps_d) : undefined,
         biceps_e: form.biceps_e ? Number(form.biceps_e) : undefined,
@@ -216,13 +253,8 @@ export function ModalMedidasCorporais({
         panturrilha_e: form.panturrilha_e
           ? Number(form.panturrilha_e)
           : undefined,
-      },
-      // Adiciona os resultados das dobras cutâneas se disponíveis
-      dobrasCutaneas: undefined,
+      }
     };
-
-    // Chama a API que já retorna todos os índices, inclusive CA
-    // Não é necessário chamar avaliarMedidas aqui, pois a API já calcula e persiste o valor de CA junto com as demais medidas.
 
     await apiClient.post(`alunos/${userPerfilId}/avaliacoes`, {
       tipo: "medidas",
@@ -275,6 +307,15 @@ export function ModalMedidasCorporais({
       description="Complete a avaliação física do aluno com medidas corporais e dobras cutâneas."
       maxWidth="lg"
     >
+      {/* Exibe idade e data de nascimento do aluno selecionado ou buscado da API */}
+      <div className="flex flex-col md:flex-row gap-4 mb-4 p-2 bg-muted rounded">
+        <div>
+          <span className="font-semibold">Idade:</span> {typeof idadeAluno === "number" && !isNaN(idadeAluno) && idadeAluno > 0 ? idadeAluno : <span className="text-red-600">Não encontrada</span>}
+        </div>
+        <div>
+          <span className="font-semibold">Data de Nascimento:</span> {dataNascimentoAluno && dataNascimentoAluno.trim() !== "" ? formatarDataNascimentoBR(dataNascimentoAluno) : <span className="text-red-600">Não informada</span>}
+        </div>
+      </div>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="medidas">Medidas Corporais</TabsTrigger>
@@ -484,10 +525,9 @@ export function ModalMedidasCorporais({
               </Button>
             </div>
           </form>
-          {/* Exibe o resultado do CA se existir */}
-          {resultadoCA && <CaInfo resultado={resultadoCA} />}
+          {/* ...existing code... */}
         </TabsContent>
-        {/* Removido: TabsContent de Dobras Cutâneas */}
+        {/* ...existing code... */}
       </Tabs>
     </ModalPadrao>
   );
@@ -508,32 +548,29 @@ function calcularIdade(dataNascimento?: string): number | undefined {
 }
 
 export default function PaginaAluno() {
-  const { data: session } = useSession();
-  const [modalAberto, setModalAberto] = useState(false);
-
-  // Defina um tipo que inclua dataNascimento
-  type UsuarioComDataNascimento = {
-    id: string;
-    email: string;
-    role?: string;
-    dataNascimento: string;
+  // Obter perfil do usuário logado
+  const { profile } = useUserProfile();
+  // Simulação de aluno selecionado (quando professor)
+  const alunoSelecionado = {
+    id: "cmd3ljqn50001vnmo55vckhta",
+    nome: "Aluno Teste",
+    dataNascimento: "2000-05-10",
   };
 
-  // Faça o cast do usuário para o novo tipo
-  const profile = session?.user as UsuarioComDataNascimento | undefined;
-  const dataNascimento = profile?.dataNascimento;
-  const idade = dataNascimento ? calcularIdade(dataNascimento) : undefined;
+  const [modalAberto, setModalAberto] = useState(false);
+  // Se for professor, pega dados do aluno selecionado; se for aluno, pega do próprio perfil
+  const isProfessor = profile?.role === "professor";
+  // userPerfilId pode estar em profile.id ou profile.userPerfilId dependendo do backend/contexto
+  const userPerfilId = isProfessor
+    ? alunoSelecionado.id
+    : profile?.id;
+  // dataNascimento pode ser string ou Date
+  // dataNascimento removido (não utilizado)
+  // idadeAluno removido (não utilizado)
 
   function handleAbrirModal() {
-    if (
-      !dataNascimento ||
-      typeof idade !== "number" ||
-      isNaN(idade) ||
-      idade <= 0
-    ) {
-      alert(
-        "Data de nascimento não encontrada ou inválida no seu perfil. Atualize seu cadastro para registrar medidas."
-      );
+    if (!userPerfilId) {
+      alert("Aluno selecionado inválido. Selecione um aluno válido para registrar medidas.");
       return;
     }
     setModalAberto(true);
@@ -542,19 +579,14 @@ export default function PaginaAluno() {
   return (
     <>
       <button onClick={handleAbrirModal}>Registrar minhas medidas</button>
-      {modalAberto &&
-        dataNascimento &&
-        typeof idade === "number" &&
-        idade > 0 && (
-          <ModalMedidasCorporais
-            open={modalAberto}
-            onClose={() => setModalAberto(false)}
-            userPerfilId={profile.id}
-            onSuccess={() => setModalAberto(false)}
-            idade={idade}
-            dataNascimento={dataNascimento}
-          />
-        )}
+      {modalAberto && userPerfilId && (
+        <ModalMedidasCorporais
+          open={modalAberto}
+          onClose={() => setModalAberto(false)}
+          userPerfilId={userPerfilId}
+          onSuccess={() => setModalAberto(false)}
+        />
+      )}
     </>
   );
 }

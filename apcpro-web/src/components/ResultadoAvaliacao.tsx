@@ -93,6 +93,7 @@ export interface ResultadoAvaliacaoProps {
   generoUsuario?: string; // Novo prop opcional para garantir o gênero correto
   tipo?: string; // Tipo da avaliação para determinar qual componente usar
   objetivoClassificado?: string; // Objetivo classificado automaticamente
+  status?: string; // Status explícito da avaliação
 }
 
 // Componente principal que exibe os resultados de avaliação
@@ -102,6 +103,7 @@ export function ResultadoAvaliacao({
   generoUsuario,
   tipo,
   objetivoClassificado,
+  status,
 }: ResultadoAvaliacaoProps) {
   // Busca o gênero do contexto caso não venha por prop
   const { profile } = useUserProfile();
@@ -225,11 +227,7 @@ export function ResultadoAvaliacao({
       <div>
         {renderInfoGeral()}
         <MedidasCorporaisInfo
-          resultado={
-            resultado as unknown as Parameters<
-              typeof MedidasCorporaisInfo
-            >[0]["resultado"]
-          }
+          resultado={{ ...resultado, status: status ?? resultado.status }}
         />
       </div>
     );
@@ -266,6 +264,7 @@ export function ResultadoAvaliacao({
         <MedidasCorporaisInfo
           resultado={{
             ...resultado,
+            status: status ?? resultado.status,
             indices: {
               imc,
               classificacaoIMC: classificacaoImc,

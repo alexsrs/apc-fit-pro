@@ -3,29 +3,47 @@
  * Integrado com a nova API de protocolos independentes
  */
 
-'use client';
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { calcularIdade } from '@/utils/idade';
+import { formatarDataValidade } from '@/utils/idade';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Calculator, Save, Users, Target, Clock } from 'lucide-react';
+import { AlertCircle, Calculator, Users, Target, Clock } from 'lucide-react';
 import apiClient from '@/lib/api-client';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 import type { 
   AvaliacaoCompleta, 
-  DadosPessoais, 
   Medidas, 
   ProtocoloInfo 
 } from '@/types/dobras-cutaneas';
 
-interface DobrasCutaneasModernasProps {
-  userPerfilId?: string;
-  onResultado?: (resultado: AvaliacaoCompleta) => void;
-  modoCalculoApenas?: boolean; // Se true, não salva no banco
+// Unificação: garantir que DadosPessoais tenha todos os campos necessários
+// ...existing code...
+
+// Unificação: garantir que DadosPessoais tenha todos os campos necessários
+interface DadosPessoais {
+  genero?: 'masculino' | 'feminino';
+  peso?: string;
+  idade?: string;
+  altura?: string;
+  dataNascimento?: string;
+  nome?: string;
+  image?: string;
+}
+
+
+
+export interface DobrasCutaneasModernasProps {
+  userPerfilId: string;
+  resultado: AvaliacaoCompleta | null;
+  onResultado: (resultado: any) => void;
+  modoCalculoApenas?: boolean;
   className?: string;
 }
 
@@ -72,29 +90,77 @@ const dobrasInfo = {
   }
 };
 
-export function DobrasCutaneasModernas({ 
-  userPerfilId, 
-  onResultado, 
+export function DobrasCutaneasModernas({
+  resultado,
+  onResultado,
   modoCalculoApenas = false,
-  className 
+  className
 }: DobrasCutaneasModernasProps) {
-  // Estados principais
+  const { profile } = useUserProfile();
+  // Verificação de role: só permite avaliação se não for aluno
+  const isAluno = profile?.role === 'aluno';
+  // Debug visual removido
+
+  // Função utilitária para garantir que o gênero seja sempre 'masculino' ou 'feminino'
+  function getGeneroValido(genero?: string): 'masculino' | 'feminino' | undefined {
+    if (!genero) return undefined;
+    const lower = genero.trim().toLowerCase();
+    if (lower === 'masculino' || lower === 'm') return 'masculino';
+    if (lower === 'feminino' || lower === 'f') return 'feminino';
+    return undefined;
+  }
+
+  // Estado para gênero via API removido (não utilizado)
+
+  const peso = resultado?.aluno?.peso;
+  const altura = resultado?.aluno?.altura;
+  const dataNascimentoValida = resultado?.aluno?.dataNascimento;
+  const idadeCalculada = dataNascimentoValida ? calcularIdade(dataNascimentoValida) : undefined;
+  const idade = idadeCalculada && idadeCalculada > 0 ? idadeCalculada : undefined;
+
+  const genero = getGeneroValido(resultado?.aluno?.genero);
+  const dataNascimento = dataNascimentoValida;
+
+  // infoAluno removido (não utilizado)
+
   const [protocolos, setProtocolos] = useState<ProtocoloInfo[]>([]);
-  const [protocoloSelecionado, setProtocoloSelecionado] = useState<string>('');
+  const [protocoloSelecionado, setProtocoloSelecionado] = useState<string>(resultado?.protocolo ?? '');
   const [dadosPessoais, setDadosPessoais] = useState<DadosPessoais>({
-    genero: 'M',
-    peso: 70
+    genero,
+    idade: idade ? String(idade) : undefined,
+    peso: peso ? String(peso) : undefined,
+    altura: altura ? String(altura) : undefined,
+    dataNascimento,
+    nome: resultado?.aluno?.name,
+    image: resultado?.aluno?.image
   });
   const [medidas, setMedidas] = useState<Medidas>({});
-  const [resultado, setResultado] = useState<AvaliacaoCompleta | null>(null);
-  
-  // Estados de controle
+  const [resultadoState, setResultadoState] = useState<AvaliacaoCompleta | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingProtocolos, setLoadingProtocolos] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
-  const [dobraAtiva, setDobraAtiva] = useState<string>('');
+  // dobraAtiva removido (não utilizado)
 
-  // Carregar protocolos disponíveis
+  useEffect(() => {
+    // Se faltar qualquer dado pessoal, exibe erro e bloqueia
+    if (!resultado?.aluno?.id || !resultado?.aluno?.genero || !resultado?.aluno?.peso || !resultado?.aluno?.altura || !resultado?.aluno?.dataNascimento) {
+      setErrors(["Selecione um aluno válido e com todos os dados pessoais preenchidos (gênero, peso, altura, data de nascimento) para realizar a avaliação física."]);
+      setDadosPessoais({});
+      return;
+    }
+    setDadosPessoais({
+      genero: getGeneroValido(resultado?.aluno?.genero),
+      idade: idade ? String(idade) : undefined,
+      peso: peso ? String(peso) : undefined,
+      altura: altura ? String(altura) : undefined,
+      dataNascimento,
+      nome: resultado?.aluno?.name,
+      image: resultado?.aluno?.image
+    });
+    setErrors([]);
+  }, [resultado, idade, peso, altura, dataNascimento]);
+
+  // Carregar protocolos disponíveis apenas uma vez ao montar o componente
   useEffect(() => {
     carregarProtocolos();
   }, []);
@@ -136,8 +202,10 @@ export function DobrasCutaneasModernas({
 
   // Validar dados pessoais
   const dadosValidos = () => {
-    if (!dadosPessoais.peso || dadosPessoais.peso <= 0) return false;
-    if (protocoloInfo?.requerIdade && (!dadosPessoais.idade || dadosPessoais.idade <= 0)) return false;
+    if (!dadosPessoais.genero || !dadosPessoais.peso || !dadosPessoais.altura || !dadosPessoais.idade) return false;
+    if (Number(dadosPessoais.peso) <= 0) return false;
+    if (Number(dadosPessoais.altura) <= 0) return false;
+    if (protocoloInfo?.requerIdade && Number(dadosPessoais.idade) <= 0) return false;
     return true;
   };
 
@@ -151,6 +219,19 @@ export function DobrasCutaneasModernas({
     setErrors([]);
   };
 
+  // Função para montar dados pessoais - sempre do aluno selecionado
+  function montarDadosPessoais(): DadosPessoais {
+    return {
+      genero: getGeneroValido(resultado?.aluno?.genero),
+      idade: idade ? String(idade) : undefined,
+      peso: peso ? String(peso) : undefined,
+      altura: altura ? String(altura) : undefined,
+      dataNascimento,
+      nome: resultado?.aluno?.name,
+      image: resultado?.aluno?.image
+    };
+  }
+
   // Calcular protocolo
   const calcular = async () => {
     if (!protocoloSelecionado || !dadosValidos() || !medidasCompletas()) {
@@ -163,9 +244,9 @@ export function DobrasCutaneasModernas({
 
     try {
       const payload = {
-        userPerfilId: userPerfilId || 'temp-user',
+        ...resultado,
         protocolo: protocoloSelecionado,
-        dadosPessoais,
+        dadosPessoais: montarDadosPessoais(),
         medidas,
         observacoes: `Avaliação realizada em ${new Date().toLocaleDateString()}`
       };
@@ -174,7 +255,7 @@ export function DobrasCutaneasModernas({
       const response = await apiClient.post(endpoint, payload);
 
       const avaliacaoCompleta = response.data.data;
-      setResultado(avaliacaoCompleta);
+      setResultadoState(avaliacaoCompleta);
       
       if (onResultado) {
         onResultado(avaliacaoCompleta);
@@ -194,10 +275,20 @@ export function DobrasCutaneasModernas({
   // Limpar formulário
   const limpar = () => {
     setMedidas({});
-    setResultado(null);
+    setResultadoState(null);
     setErrors([]);
-    setDobraAtiva('');
+    // setDobraAtiva removido
   };
+
+  // Debug extra para idade
+  console.log('[DEBUG] Data de nascimento recebida:', resultado?.aluno?.dataNascimento);
+  const debugIdade = (
+    <div className="mb-2 p-2 bg-orange-50 border border-orange-300 rounded">
+      <strong>Debug Idade:</strong>
+      <div>Data de nascimento: <span className="font-mono">{resultado?.aluno?.dataNascimento ?? '-'}</span></div>
+      <div>Idade calculada: <span className="font-mono">{idade}</span></div>
+    </div>
+  );
 
   if (loadingProtocolos) {
     return (
@@ -210,8 +301,53 @@ export function DobrasCutaneasModernas({
     );
   }
 
+  // Bloqueio para role aluno
+  if (isAluno) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Alunos não podem realizar avaliações físicas. Selecione um perfil de professor ou personal trainer para acessar este formulário.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Bloqueio se não houver dados do aluno selecionado
+  if (!resultado?.aluno || !resultado?.aluno?.id || !resultado?.aluno?.genero || !resultado?.aluno?.peso || !resultado?.aluno?.altura || !resultado?.aluno?.dataNascimento) {
+    // Identificar campos ausentes
+    const camposFaltando: string[] = [];
+    if (!resultado?.aluno) camposFaltando.push('aluno');
+    if (!resultado?.aluno?.id) camposFaltando.push('id');
+    if (!resultado?.aluno?.genero) camposFaltando.push('genero');
+    if (!resultado?.aluno?.peso) camposFaltando.push('peso');
+    if (!resultado?.aluno?.altura) camposFaltando.push('altura');
+    if (!resultado?.aluno?.dataNascimento) camposFaltando.push('dataNascimento');
+    if (!resultado?.aluno?.name) camposFaltando.push('name');
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Nenhum aluno selecionado ou dados incompletos.<br />
+          <span className="font-semibold">Campos ausentes:</span>
+          <ul className="mt-2 mb-2 ml-2 list-disc text-red-700 text-sm">
+            {camposFaltando.map((campo) => (
+              <li key={campo} className="flex items-center gap-1">
+                <AlertCircle className="h-3 w-3 text-red-500" /> {campo}
+              </li>
+            ))}
+          </ul>
+          Selecione um aluno válido e com todos os dados pessoais preenchidos para realizar a avaliação física.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* Debug visual de idade */}
+      {debugIdade}
+      {/* Alerta idade inválida */}
       {/* Seleção do Protocolo */}
       <Card>
         <CardHeader>
@@ -270,68 +406,33 @@ export function DobrasCutaneasModernas({
         </CardContent>
       </Card>
 
-      {/* Dados Pessoais */}
+      {/* Dados Pessoais do Aluno */}
       {protocoloSelecionado && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Dados Pessoais
+              Dados do Aluno
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="genero">Gênero</Label>
-                <Select 
-                  value={dadosPessoais.genero} 
-                  onValueChange={(value: 'M' | 'F') => 
-                    setDadosPessoais(prev => ({ ...prev, genero: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="M">Masculino</SelectItem>
-                    <SelectItem value="F">Feminino</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label>Gênero</Label>
+                <div className="text-sm text-gray-700">{dadosPessoais.genero === 'masculino' ? 'Masculino' : dadosPessoais.genero === 'feminino' ? 'Feminino' : <span className="text-red-500">Faltando</span>}</div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="peso">Peso (kg)</Label>
-                <Input
-                  id="peso"
-                  type="number"
-                  step="0.1"
-                  min="1"
-                  max="300"
-                  value={dadosPessoais.peso || ''}
-                  onChange={(e) => 
-                    setDadosPessoais(prev => ({ ...prev, peso: parseFloat(e.target.value) || 0 }))
-                  }
-                  placeholder="Ex: 70.5"
-                />
+              <div>
+                <Label>Peso</Label>
+                <div className="text-sm text-gray-700">{dadosPessoais.peso ? `${dadosPessoais.peso} kg` : <span className="text-red-500">Faltando</span>}</div>
               </div>
-
-              {protocoloInfo?.requerIdade && (
-                <div className="space-y-2">
-                  <Label htmlFor="idade">Idade (anos)</Label>
-                  <Input
-                    id="idade"
-                    type="number"
-                    min="1"
-                    max="120"
-                    value={dadosPessoais.idade || ''}
-                    onChange={(e) => 
-                      setDadosPessoais(prev => ({ ...prev, idade: parseInt(e.target.value) || undefined }))
-                    }
-                    placeholder="Ex: 25"
-                    required
-                  />
-                </div>
-              )}
+              <div>
+                <Label>Idade</Label>
+                <div className="text-sm text-gray-700">{dadosPessoais.idade ? dadosPessoais.idade : <span className="text-red-500">Faltando</span>}</div>
+              </div>
+              <div>
+                <Label>Altura</Label>
+                <div className="text-sm text-gray-700">{dadosPessoais.altura ? `${dadosPessoais.altura} cm` : <span className="text-red-500">Faltando</span>}</div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -351,114 +452,42 @@ export function DobrasCutaneasModernas({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {protocoloInfo && protocoloInfo.dobrasNecessarias && protocoloInfo.dobrasNecessarias.length > 0 ? 
-                protocoloInfo.dobrasNecessarias.map(dobra => {
-                  const info = dobrasInfo[dobra as keyof typeof dobrasInfo];
-                  const valor = medidas[dobra as keyof Medidas];
-                  
-                  if (!info) {
-                    console.warn(`Informação não encontrada para dobra: ${dobra}`);
-                    return null;
-                  }
-                  
-                  return (
-                    <div key={dobra} className="space-y-2">
-                      <Label htmlFor={`medida-${dobra}`} className="flex items-center gap-2">
-                        {info.nome}
-                        <span className="text-xs text-muted-foreground">(mm)</span>
-                        {valor && (
-                          <Badge variant="outline" className="text-green-600 ml-auto">
-                            {valor} mm
-                          </Badge>
-                        )}
-                      </Label>
-                      <Input
-                        id={`medida-${dobra}`}
-                        type="number"
-                        step="0.1"
-                        min="3"
-                        max="50"
-                        value={medidas[dobra as keyof Medidas] || ''}
-                        onChange={(e) => atualizarMedida(dobra, e.target.value)}
-                        onFocus={() => setDobraAtiva(dobra)}
-                        onBlur={() => setDobraAtiva('')}
-                        placeholder="3.0 - 50.0"
-                        className={`transition-all ${dobraAtiva === dobra ? 'ring-2 ring-blue-500' : ''} ${valor ? 'border-green-300' : ''}`}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {info.descricao}
-                      </p>
-                    </div>
-                  );
-                }).filter(Boolean) : (
-                  <div className="col-span-full text-center p-8 text-muted-foreground">
-                    Selecione um protocolo para visualizar as medidas necessárias
-                  </div>
-                )
-              }
+              {protocoloInfo && protocoloInfo.dobrasNecessarias && protocoloInfo.dobrasNecessarias.length > 0 && (
+                <>
+                  {protocoloInfo.dobrasNecessarias.map(dobra => {
+                    const info = dobrasInfo[dobra as keyof typeof dobrasInfo];
+                    const valor = medidas[dobra as keyof Medidas];
+                    if (!info) {
+                      console.warn(`Informação não encontrada para dobra: ${dobra}`);
+                      return null;
+                    }
+                    return (
+                      <div key={dobra} className="space-y-2">
+                        <Label htmlFor={dobra}>{info.nome}</Label>
+                        <div className="text-xs text-muted-foreground mb-1">{info.descricao}</div>
+                        <Input
+                          id={dobra}
+                          type="number"
+                          min={0}
+                          step={0.1}
+                          value={valor ?? ''}
+                          onChange={e => atualizarMedida(dobra, e.target.value)}
+                          placeholder="mm"
+                          className="w-full"
+                          aria-label={`Valor da dobra ${info.nome}`}
+                        />
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Erros */}
-      {errors && errors.length > 0 && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <ul className="list-disc list-inside space-y-1">
-              {errors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Ações */}
-      {protocoloSelecionado && (
-        <Card>
-          <CardContent className="flex justify-between items-center p-4">
-            <div className="text-sm text-muted-foreground">
-              {medidasCompletas() && dadosValidos() 
-                ? '✅ Pronto para calcular' 
-                : 'Preencha todos os campos obrigatórios'
-              }
-            </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={limpar}
-                disabled={loading}
-              >
-                Limpar
-              </Button>
-              
-              <Button 
-                onClick={calcular}
-                disabled={loading || !medidasCompletas() || !dadosValidos()}
-                className="min-w-[120px]"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Calculando...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {modoCalculoApenas ? <Calculator className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-                    <span>{modoCalculoApenas ? 'Calcular' : 'Calcular e Salvar'}</span>
-                  </div>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Resultados */}
-      {resultado && (
+      {/* Resultado */}
+      {resultadoState && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -470,48 +499,44 @@ export function DobrasCutaneasModernas({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {resultado.resultados.percentualGordura.toFixed(1)}%
+                  {resultadoState.resultados.percentualGordura?.toFixed(1)}%
                 </div>
                 <div className="text-sm text-blue-700">Percentual de Gordura</div>
               </div>
-              
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {resultado.resultados.massaMagra.toFixed(1)}kg
+                  {resultadoState.resultados.massaMagra?.toFixed(1)}kg
                 </div>
                 <div className="text-sm text-green-700">Massa Magra</div>
               </div>
-              
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
-                  {resultado.resultados.massaGorda.toFixed(1)}kg
+                  {resultadoState.resultados.massaGorda?.toFixed(1)}kg
                 </div>
                 <div className="text-sm text-orange-700">Massa Gorda</div>
               </div>
-              
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-lg font-bold text-purple-600">
-                  {resultado.resultados.classificacao}
+                  {resultadoState.resultados.classificacao}
                 </div>
                 <div className="text-sm text-purple-700">Classificação</div>
               </div>
             </div>
-
             <div className="p-4 bg-gray-50 rounded-lg">
               <h4 className="font-medium mb-2">Detalhes da Avaliação</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <strong>Protocolo:</strong> {resultado.metadata.validadeFormula}
+                  <strong>Protocolo:</strong> {resultadoState.metadata.validadeFormula}
                 </div>
                 <div>
-                  <strong>Data:</strong> {new Date(resultado.metadata.dataAvaliacao).toLocaleDateString()}
+                  <strong>Data:</strong> {resultadoState.metadata.dataAvaliacao ? formatarDataValidade(resultadoState.metadata.dataAvaliacao) : '-'}
                 </div>
                 <div>
-                  <strong>Soma das dobras:</strong> {resultado.resultados.somaTotal.toFixed(1)}mm
+                  <strong>Soma das dobras:</strong> {resultadoState.resultados.somaTotal?.toFixed(1)}mm
                 </div>
-                {resultado.resultados.densidadeCorporal && (
+                {resultadoState.resultados.densidadeCorporal && (
                   <div>
-                    <strong>Densidade corporal:</strong> {resultado.resultados.densidadeCorporal.toFixed(4)}g/cm³
+                    <strong>Densidade corporal:</strong> {resultadoState.resultados.densidadeCorporal?.toFixed(4)}g/cm³
                   </div>
                 )}
               </div>
@@ -519,6 +544,34 @@ export function DobrasCutaneasModernas({
           </CardContent>
         </Card>
       )}
+
+      {/* Exibição de erro */}
+      {errors.length > 0 && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errors.join(' | ')}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Botões de ação */}
+      <div className="flex justify-between">
+        <Button
+          onClick={calcular}
+          disabled={loading || !protocoloSelecionado}
+          variant="outline"
+        >
+          <Calculator className="h-4 w-4 mr-2" />
+          {loading ? "Calculando..." : "Calcular"}
+        </Button>
+        <Button
+          onClick={limpar}
+          disabled={loading}
+          variant="ghost"
+        >
+          Limpar
+        </Button>
+      </div>
     </div>
   );
 }
+

@@ -6,7 +6,7 @@
 import { ProtocoloDisponivel } from '../utils/protocolos-dobras';
 
 // Tipos base
-export type GeneroType = 'M' | 'F';
+export type GeneroType = 'masculino' | 'feminino';
 export type StatusAvaliacao = 'pendente' | 'aprovada' | 'reprovada' | 'cancelada';
 
 // Interface para dados de entrada
@@ -17,6 +17,7 @@ export interface DobrasCutaneasInput {
     genero: GeneroType;
     idade?: number; // Opcional - nem todos protocolos precisam
     peso: number;
+    altura?: number; // Opcional para protocolos que exigem altura
   };
   medidas: {
     // Dobras comuns
@@ -54,6 +55,7 @@ export interface AvaliacaoDobrasCutaneas {
     genero: GeneroType;
     idade?: number;
     peso: number;
+    altura?: number;
   };
   medidas: {
     triceps?: number;
@@ -145,12 +147,12 @@ export const PROTOCOLOS_RESUMO = {
     tempoMedio: '8 min',
     recomendado: 'Padrão científico'
   },
-  'pollock-9': {
-    nome: 'Pollock 9',
-    pontos: 9,
-    tempoMedio: '12 min',
-    recomendado: 'Atletas e esportistas'
-  },
+  // 'pollock-9': { // Removido do padrão
+  //   nome: 'Pollock 9',
+  //   pontos: 9,
+  //   tempoMedio: '12 min',
+  //   recomendado: 'Atletas e esportistas'
+  // },
   'guedes': {
     nome: 'Guedes',
     pontos: 3,

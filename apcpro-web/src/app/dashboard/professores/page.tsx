@@ -34,6 +34,8 @@ import { ModalDetalhesAluno } from "@/components/ModalDetalhesAluno";
 import { AvaliacoesPendentes } from "@/components/AvaliacoesPendentes";
 import apiClient from "@/lib/api-client";
 import { formatDisplayName, formatDisplayEmail } from "@/utils/name-utils";
+import { calcularIdade } from "@/utils/idade";
+import { formatarDataNascimentoBR } from "@/utils/idade";
 
 type Aluno = {
   id: string;
@@ -131,16 +133,8 @@ export default function ProfessoresDashboard() {
   if (!profile) return <Loading />;
 
   // Função para calcular idade
-  const calcularIdade = (dataNascimento: string): number => {
-    const nascimento = new Date(dataNascimento);
-    const hoje = new Date();
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
-    const m = hoje.getMonth() - nascimento.getMonth();
-    if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
-      idade--;
-    }
-    return idade;
-  };
+  // Função centralizada, já corrigida, importada do utilitário
+  // Função centralizada, já corrigida, importada do utilitário
 
   // Filtros simulados para tabs (ajuste conforme regras reais)
   let alunosParaFiltrar = alunos;
@@ -175,11 +169,9 @@ export default function ProfessoresDashboard() {
     // Filtro por idade
     if (aluno.dataNascimento) {
       const idade = calcularIdade(aluno.dataNascimento);
-      
       if (filtros.idadeMin && idade < parseInt(filtros.idadeMin)) {
         return false;
       }
-      
       if (filtros.idadeMax && idade > parseInt(filtros.idadeMax)) {
         return false;
       }
@@ -386,12 +378,7 @@ export default function ProfessoresDashboard() {
                     )}
                     {aluno.dataNascimento && (
                       <p className="text-xs text-gray-500 text-center w-full">
-                        Data de nascimento:{" "}
-                        {new Date(aluno.dataNascimento).toLocaleDateString(
-                          "pt-BR",
-                          { day: "2-digit", month: "2-digit", year: "numeric" }
-                        )}{" "}
-                        ({calcularIdade(aluno.dataNascimento)} anos)
+                        Data de nascimento: {formatarDataNascimentoBR(aluno.dataNascimento)} ({calcularIdade(aluno.dataNascimento)} anos)
                       </p>
                     )}
                     {aluno.grupos && aluno.grupos.length > 0 && (

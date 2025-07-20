@@ -33,8 +33,18 @@ import { ModalAnamnese } from './ModalAnamnese';
 import { DobrasCutaneasModernas } from './DobrasCutaneasModernas';
 import { ModalDetalhesAvaliacao } from './ModalDetalhesAvaliacao';
 import { ModalMedidasCorporais } from './ModalMedidasCorporais';
+import { calcularIdade } from '@/utils/idade';
 
 // Tipos
+interface Aluno {
+  id: string;
+  name: string;
+  dataNascimento?: string;
+  genero?: string;
+  peso?: number;
+  altura?: number;
+}
+
 interface AvaliacaoEtapa {
   id: string;
   nome: string;
@@ -77,6 +87,22 @@ export function ModalAvaliacaoCompleta({
   // Dados coletados nas etapas anteriores para evitar repetição
   const [dadosColetados, setDadosColetados] = useState<DadosColetados>({});
 
+  // Estado para aluno selecionado
+  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+
+  useEffect(() => {
+    async function buscarAluno() {
+      if (!userPerfilId) return;
+      try {
+        const resp = await apiClient.get(`/api/alunos/${userPerfilId}/profile`);
+        setAlunoSelecionado(resp.data);
+  } catch {
+    setAlunoSelecionado(null);
+  }
+    }
+    buscarAluno();
+  }, [userPerfilId]);
+
   // Estados dos modais das etapas
   const [modalTriagemOpen, setModalTriagemOpen] = useState(false);
   const [modalAnamneseOpen, setModalAnamneseOpen] = useState(false);
@@ -98,8 +124,8 @@ export function ModalAvaliacaoCompleta({
   const [dadosDobras, setDadosDobras] = useState<any>(null);
   
   // Dados do usuário para medidas corporais
-  const [idadeUsuario, setIdadeUsuario] = useState<number>(25); // valor padrão
-  const [dataNascimentoUsuario, setDataNascimentoUsuario] = useState<string>('1999-01-01'); // valor padrão
+  // const [idadeUsuario, setIdadeUsuario] = useState<number | undefined>(undefined);
+  // const [dataNascimentoUsuario, setDataNascimentoUsuario] = useState<string>('');
 
   // Definição das etapas
   const etapas: AvaliacaoEtapa[] = [
@@ -144,61 +170,27 @@ export function ModalAvaliacaoCompleta({
   const buscarAvaliacoesExistentes = useCallback(async () => {
     setCarregandoDados(true);
     try {
-      // Buscar dados do usuário (idade e data de nascimento)
-      try {
-        const userResponse = await apiClient.get(`alunos/${userPerfilId}`);
-        const userData = userResponse.data;
-        
-        if (userData.dataNascimento) {
-          setDataNascimentoUsuario(userData.dataNascimento);
-          
-          // Calcular idade
-          const today = new Date();
-          const birthDate = new Date(userData.dataNascimento);
-          let age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          
-          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-          }
-          
-          setIdadeUsuario(age);
-        }
-      } catch (userError) {
-        console.warn('Erro ao buscar dados do usuário, usando valores padrão:', userError);
-      }
-
+      // Buscar avaliações do aluno
       const response = await apiClient.get(`alunos/${userPerfilId}/avaliacoes`);
       const avaliacoes = response.data || [];
-
-      // Filtrar apenas avaliações pendentes ou aprovadas (ignorar reprovadas)
-      const avaliacoesValidas = avaliacoes.filter((a: any) => 
-        a.status === 'pendente' || a.status === 'aprovada'
-      );
+      const avaliacoesValidas = avaliacoes;
 
       // Separar avaliações por tipo (pegar a mais recente de cada tipo válido)
       const triagem = avaliacoesValidas
         .filter((a: any) => a.tipo === 'triagem')
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      
       const anamnese = avaliacoesValidas
         .filter((a: any) => a.tipo === 'anamnese')
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      
       const altoRendimento = avaliacoesValidas
         .filter((a: any) => a.tipo === 'alto-rendimento')
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      
       const medidas = avaliacoesValidas
         .filter((a: any) => a.tipo === 'medidas')
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
 
-      // Para professores, sempre carregar dados existentes (independente de quem criou)
-      // Para alunos, apenas se não for professor atual
       if (triagem) {
         setDadosTriagem(triagem.resultado);
-        
-        // Definir tipo de avaliação baseado na triagem existente
         const objetivo = triagem.resultado?.bloco4?.objetivo || triagem.resultado?.atleta?.objetivo;
         if (objetivo === 'Alto rendimento esportivo') {
           setTipoAvaliacao('alto-rendimento');
@@ -210,7 +202,6 @@ export function ModalAvaliacaoCompleta({
       if (altoRendimento) setDadosAltoRendimento(altoRendimento.resultado);
       if (medidas) {
         setDadosMedidas(medidas.resultado);
-        // Extrair peso e altura para evitar perguntar novamente
         if (medidas.resultado?.peso || medidas.resultado?.altura) {
           setDadosColetados(prev => ({
             ...prev,
@@ -218,6 +209,49 @@ export function ModalAvaliacaoCompleta({
             ...(medidas.resultado?.altura && { altura: medidas.resultado.altura })
           }));
         }
+      }
+
+      // Extrair userId do aluno das avaliações (campo alunoId)
+      let userId = '';
+      for (const avaliacao of avaliacoesValidas) {
+        if (avaliacao.alunoId && typeof avaliacao.alunoId === 'string') {
+          userId = avaliacao.alunoId;
+          break;
+        }
+      }
+
+      // Buscar data de nascimento via endpoint de perfil do aluno usando userId
+      if (userId) {
+        let dataNascimentoApi = '';
+        try {
+          // Busca o perfil do aluno usando o userId correto (não o userPerfilId)
+          const perfilResponse = await apiClient.get(`alunos/${userId}/profile`);
+          if (perfilResponse?.data?.dataNascimento) {
+            dataNascimentoApi = perfilResponse.data.dataNascimento;
+            // setDataNascimentoUsuario(dataNascimentoApi);
+            // Calcular idade
+            const today = new Date();
+            const birthDate = new Date(dataNascimentoApi);
+            // age removido (não utilizado)
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+              // linha removida: age-- (variável removida)
+            }
+            // setIdadeUsuario(age);
+          } else {
+            setErro('Data de nascimento não encontrada no perfil do aluno.');
+            // setDataNascimentoUsuario('');
+            // setIdadeUsuario(0);
+          }
+        } catch {
+          setErro('Erro ao buscar perfil do aluno para data de nascimento.');
+          // setDataNascimentoUsuario('');
+          // setIdadeUsuario(0);
+        }
+      } else {
+        setErro('Não foi possível identificar o userId do aluno. Dados de perfil não serão exibidos.');
+        // setDataNascimentoUsuario('');
+        // setIdadeUsuario(0);
       }
 
     } catch (error) {
@@ -230,21 +264,34 @@ export function ModalAvaliacaoCompleta({
   // Função para aprovar automaticamente a última avaliação criada
   const aprovarUltimaAvaliacao = async (tipoAvaliacao: string) => {
     try {
-      // Buscar a avaliação mais recente do tipo especificado
+      // Buscar avaliações para extrair o id real do aluno
       const response = await apiClient.get(`alunos/${userPerfilId}/avaliacoes`);
       const avaliacoes = response.data || [];
-      
-      const avaliacaoMaisRecente = avaliacoes
+      // Filtrar avaliações válidas (pendente ou aprovada)
+      const avaliacoesValidas = avaliacoes.filter((a: any) =>
+        a.status === 'pendente' || a.status === 'aprovada'
+      );
+      // Extrair id real do aluno
+      let alunoIdParaPerfil = userPerfilId;
+      if (avaliacoesValidas.length > 0 && avaliacoesValidas[0].alunoId) {
+        alunoIdParaPerfil = avaliacoesValidas[0].alunoId;
+      }
+      // Buscar novamente as avaliações usando o id real do aluno
+      const responseAluno = await apiClient.get(`alunos/${alunoIdParaPerfil}/avaliacoes`);
+      const avaliacoesAluno = responseAluno.data || [];
+      const avaliacaoMaisRecente = avaliacoesAluno
         .filter((a: any) => a.tipo === tipoAvaliacao)
         .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      
-      if (avaliacaoMaisRecente && avaliacaoMaisRecente.status === 'pendente') {
-        // Aprovar a avaliação
-        await apiClient.put(`avaliacoes/${avaliacaoMaisRecente.id}/aprovar`, {
-          observacoes: 'Aprovada automaticamente pelo professor responsável'
-        });
-        
-        console.log(`Avaliação ${tipoAvaliacao} aprovada automaticamente`);
+      if (avaliacaoMaisRecente && avaliacaoMaisRecente.id) {
+        // Buscar detalhes da avaliação pelo id correto
+        const avaliacaoDetalhada = await apiClient.get(`avaliacoes/${avaliacaoMaisRecente.id}`);
+        if (avaliacaoDetalhada?.data?.status === 'pendente') {
+          // Aprovar a avaliação
+          await apiClient.put(`avaliacoes/${avaliacaoMaisRecente.id}/aprovar`, {
+            observacoes: 'Aprovada automaticamente pelo professor responsável'
+          });
+          console.log(`Avaliação ${tipoAvaliacao} aprovada automaticamente`);
+        }
       }
     } catch (error) {
       console.error(`Erro ao aprovar avaliação ${tipoAvaliacao}:`, error);
@@ -576,13 +623,57 @@ export function ModalAvaliacaoCompleta({
         );
       case 'dobras':
         // Etapa exclusiva para professor
+        // Função utilitária para montar dados pessoais corretos
+        function montarDadosPessoaisDobras() {
+          // Prioriza dados do aluno da API, sempre retorna 'M' ou 'F'
+          let genero: 'M' | 'F' = 'M';
+          if (alunoSelecionado?.genero) {
+            const g = alunoSelecionado.genero.trim().toLowerCase();
+            if (g === 'f' || g === 'feminino' || g.startsWith('fem') || g.startsWith('f')) genero = 'F';
+            else if (g === 'm' || g === 'masculino' || g.startsWith('masc') || g.startsWith('m')) genero = 'M';
+          }
+          // Peso e altura das últimas medidas salvas
+          const peso = dadosMedidas?.peso !== undefined ? dadosMedidas.peso : alunoSelecionado?.peso || 0;
+          const altura = dadosMedidas?.altura !== undefined ? dadosMedidas.altura : alunoSelecionado?.altura || undefined;
+          // Idade calculada pela data de nascimento do aluno
+          const idade = alunoSelecionado?.dataNascimento ? calcularIdade(alunoSelecionado.dataNascimento) : undefined;
+          return {
+            genero,
+            peso,
+            altura,
+            idade
+          };
+        }
+
         return (
           <div className="space-y-4">
             <DobrasCutaneasModernas
               userPerfilId={userPerfilId}
-              onResultado={(resultado) => {
-                setDadosDobras(resultado);
+              resultado={{
+                protocolo: '',
+                dadosPessoais: montarDadosPessoaisDobras(),
+                medidas: {},
+                resultados: {
+                  somaTotal: 0,
+                  percentualGordura: 0,
+                  massaGorda: 0,
+                  massaMagra: 0,
+                  classificacao: '',
+                },
+                metadata: {
+                  dataAvaliacao: new Date().toISOString(),
+                  validadeFormula: "true"
+                },
+                aluno: {
+                  id: alunoSelecionado?.id || userPerfilId,
+                  name: alunoSelecionado?.name || nomeAluno,
+                  dataNascimento: alunoSelecionado?.dataNascimento || '',
+                  genero: alunoSelecionado?.genero || undefined,
+                  peso: dadosMedidas?.peso !== undefined ? dadosMedidas.peso : alunoSelecionado?.peso || undefined,
+                  altura: dadosMedidas?.altura !== undefined ? dadosMedidas.altura : alunoSelecionado?.altura || undefined
+                }
               }}
+              onResultado={setDadosDobras}
               modoCalculoApenas={false}
               className="space-y-4"
             />
@@ -749,8 +840,6 @@ export function ModalAvaliacaoCompleta({
         onClose={() => setModalMedidasCorporaisOpen(false)}
         userPerfilId={userPerfilId}
         onSuccess={handleMedidasSuccess}
-        idade={idadeUsuario}
-        dataNascimento={dataNascimentoUsuario}
       />
 
       {/* Modal Alto Rendimento - usar ModalTriagem com modo diferente se necessário */}
@@ -937,12 +1026,8 @@ function MedidasCorporaisInline({
           )}
         </AlertDescription>
       </Alert>
-      
       <Button 
-        onClick={() => {
-          console.log('Realizar medidas para usuário:', userPerfilId);
-          onOpenMedidasModal();
-        }}
+        onClick={onOpenMedidasModal}
         className="w-full"
         size="lg"
       >

@@ -44,6 +44,7 @@ interface MedidasCorporaisResultado {
   percentualGC?: number;
   classificacaoGC?: string;
   observacoes?: string;
+  status?: string; // Adiciona status opcional
 }
 
 interface MedidasCorporaisInfoProps {
@@ -91,6 +92,7 @@ export function MedidasCorporaisInfo({ resultado }: MedidasCorporaisInfoProps) {
    * Renderiza dados antropométricos básicos
    */
   const renderDadosBasicos = () => {
+    // Exibe todos os dados disponíveis, independente do status
     const dados = [
       { label: "Peso", valor: peso, unidade: "kg", icon: Weight },
       { label: "Altura", valor: altura, unidade: "cm", icon: Ruler },

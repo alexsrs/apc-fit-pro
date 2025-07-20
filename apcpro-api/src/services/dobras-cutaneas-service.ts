@@ -9,20 +9,20 @@ import {
   calcularFaulkner,
   calcularPollock3,
   calcularPollock7,
-  calcularPollock9,
-  calcularGuedes,
+  calcularGuedesMulher,
+  calcularGuedesHomem,
   validarMedidasFaulkner,
   validarMedidasPollock3Homens,
   validarMedidasPollock3Mulheres,
   validarMedidasPollock7,
-  validarMedidasPollock9,
-  validarMedidasGuedes,
+  validarMedidasGuedesMulher,
+  validarMedidasGuedesHomem,
   type MedidasFaulkner,
   type MedidasPollock3Homens,
   type MedidasPollock3Mulheres,
   type MedidasPollock7,
-  type MedidasPollock9,
-  type MedidasGuedes,
+  type MedidasGuedesMulher,
+  type MedidasGuedesHomem,
   type ResultadoFaulkner,
   type ResultadoPollock,
   type ResultadoGuedes
@@ -60,10 +60,11 @@ export class DobrasCutaneasService {
     
     // Validar gênero para protocolos específicos
     if (info.sexoEspecifico) {
-      if (protocolo === 'pollock-3-homens' && genero !== 'M') {
+      const generoProtocolo = genero === 'masculino' ? 'M' : genero === 'feminino' ? 'F' : genero;
+      if (protocolo === 'pollock-3-homens' && generoProtocolo !== 'M') {
         throw new Error('Protocolo Pollock 3 dobras (homens) requer gênero masculino');
       }
-      if (protocolo === 'pollock-3-mulheres' && genero !== 'F') {
+      if (protocolo === 'pollock-3-mulheres' && generoProtocolo !== 'F') {
         throw new Error('Protocolo Pollock 3 dobras (mulheres) requer gênero feminino');
       }
     }
@@ -80,12 +81,11 @@ export class DobrasCutaneasService {
       switch (protocolo) {
         case 'faulkner':
           const medidasFaulkner: MedidasFaulkner = {
-            triceps: medidas.triceps,
             subescapular: medidas.subescapular,
-            suprailiaca: medidas.suprailiaca,
-            bicipital: medidas.bicipital
+            triceps: medidas.triceps,
+            abdominal: medidas.abdominal,
+            suprailiaca: medidas.suprailiaca
           };
-          
           if (!validarMedidasFaulkner(medidasFaulkner)) {
             erros.push('Medidas do protocolo Faulkner inválidas (devem estar entre 3-50mm)');
             valida = false;
@@ -135,41 +135,31 @@ export class DobrasCutaneasService {
           }
           break;
 
-        case 'pollock-9':
-          const medidasP9: MedidasPollock9 = {
-            triceps: medidas.triceps,
-            subescapular: medidas.subescapular,
-            suprailiaca: medidas.suprailiaca,
-            abdominal: medidas.abdominal,
-            peitoral: medidas.peitoral,
-            axilarMedia: medidas.axilarMedia,
-            coxa: medidas.coxa,
-            biceps: medidas.biceps,
-            panturrilha: medidas.panturrilha
-          };
-          
-          if (!validarMedidasPollock9(medidasP9)) {
-            erros.push('Medidas do protocolo Pollock 9 dobras inválidas');
-            valida = false;
-          }
-          break;
 
-        case 'guedes':
-          const medidasGuedes: MedidasGuedes = {
-            triceps: medidas.triceps,
+        case 'guedes-3-mulher': {
+          const medidasGuedesMulher: MedidasGuedesMulher = {
             subescapular: medidas.subescapular,
             suprailiaca: medidas.suprailiaca,
-            abdominal: medidas.abdominal,
-            coxa: medidas.coxa,
-            peito: medidas.peitoral,
-            axilarMedia: medidas.axilarMedia
+            coxa: medidas.coxa
           };
-          
-          if (!validarMedidasGuedes(medidasGuedes)) {
-            erros.push('Medidas do protocolo Guedes inválidas');
+          if (!validarMedidasGuedesMulher(medidasGuedesMulher)) {
+            erros.push('Medidas do protocolo Guedes 3 dobras (mulher) inválidas');
             valida = false;
           }
           break;
+        }
+        case 'guedes-3-homem': {
+          const medidasGuedesHomem: MedidasGuedesHomem = {
+            triceps: medidas.triceps,
+            abdominal: medidas.abdominal,
+            suprailiaca: medidas.suprailiaca
+          };
+          if (!validarMedidasGuedesHomem(medidasGuedesHomem)) {
+            erros.push('Medidas do protocolo Guedes 3 dobras (homem) inválidas');
+            valida = false;
+          }
+          break;
+        }
 
         default:
           erros.push(`Protocolo ${protocolo} não reconhecido`);
@@ -193,33 +183,35 @@ export class DobrasCutaneasService {
     peso: number, 
     idade?: number
   ): any {
+    // Conversão de gênero para 'M' | 'F'
+    const generoProtocolo = genero === 'masculino' ? 'M' : 'F';
     switch (protocolo) {
-      case 'faulkner':
+      case 'faulkner': {
         const medidasFaulkner: MedidasFaulkner = {
-          triceps: medidas.triceps,
           subescapular: medidas.subescapular,
-          suprailiaca: medidas.suprailiaca,
-          bicipital: medidas.bicipital
+          triceps: medidas.triceps,
+          abdominal: medidas.abdominal,
+          suprailiaca: medidas.suprailiaca
         };
-        return calcularFaulkner(medidasFaulkner, genero, peso);
-
-      case 'pollock-3-homens':
+        return calcularFaulkner(medidasFaulkner, generoProtocolo, peso);
+      }
+      case 'pollock-3-homens': {
         const medidasP3H: MedidasPollock3Homens = {
           peitoral: medidas.peitoral,
           abdominal: medidas.abdominal,
           coxa: medidas.coxa
         };
-        return calcularPollock3(medidasP3H, genero, idade!, peso);
-
-      case 'pollock-3-mulheres':
+        return calcularPollock3(medidasP3H, generoProtocolo, idade!, peso);
+      }
+      case 'pollock-3-mulheres': {
         const medidasP3M: MedidasPollock3Mulheres = {
           triceps: medidas.triceps,
           suprailiaca: medidas.suprailiaca,
           coxa: medidas.coxa
         };
-        return calcularPollock3(medidasP3M, genero, idade!, peso);
-
-      case 'pollock-7':
+        return calcularPollock3(medidasP3M, generoProtocolo, idade!, peso);
+      }
+      case 'pollock-7': {
         const medidasP7: MedidasPollock7 = {
           triceps: medidas.triceps,
           subescapular: medidas.subescapular,
@@ -229,34 +221,24 @@ export class DobrasCutaneasService {
           axilarMedia: medidas.axilarMedia,
           coxa: medidas.coxa
         };
-        return calcularPollock7(medidasP7, genero, idade!, peso);
-
-      case 'pollock-9':
-        const medidasP9: MedidasPollock9 = {
-          triceps: medidas.triceps,
+        return calcularPollock7(medidasP7, generoProtocolo, idade!, peso);
+      }
+      case 'guedes-3-mulher': {
+        const medidasGuedesMulher: MedidasGuedesMulher = {
           subescapular: medidas.subescapular,
           suprailiaca: medidas.suprailiaca,
-          abdominal: medidas.abdominal,
-          peitoral: medidas.peitoral,
-          axilarMedia: medidas.axilarMedia,
-          coxa: medidas.coxa,
-          biceps: medidas.biceps,
-          panturrilha: medidas.panturrilha
+          coxa: medidas.coxa
         };
-        return calcularPollock9(medidasP9, genero, idade!, peso);
-
-      case 'guedes':
-        const medidasGuedes: MedidasGuedes = {
+        return calcularGuedesMulher(medidasGuedesMulher, idade!, peso);
+      }
+      case 'guedes-3-homem': {
+        const medidasGuedesHomem: MedidasGuedesHomem = {
           triceps: medidas.triceps,
-          subescapular: medidas.subescapular,
-          suprailiaca: medidas.suprailiaca,
           abdominal: medidas.abdominal,
-          coxa: medidas.coxa,
-          peito: medidas.peitoral,
-          axilarMedia: medidas.axilarMedia
+          suprailiaca: medidas.suprailiaca
         };
-        return calcularGuedes(medidasGuedes, genero, idade!, peso);
-
+        return calcularGuedesHomem(medidasGuedesHomem, idade!, peso);
+      }
       default:
         throw new Error(`Protocolo ${protocolo} não implementado`);
     }
@@ -411,8 +393,8 @@ export class DobrasCutaneasService {
       'pollock-3-homens',
       'pollock-3-mulheres', 
       'pollock-7',
-      'pollock-9',
-      'guedes'
+      'guedes-3-mulher',
+      'guedes-3-homem'
     ];
 
     // Mapear tempos médios estimados por número de dobras

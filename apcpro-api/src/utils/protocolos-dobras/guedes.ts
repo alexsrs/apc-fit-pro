@@ -1,17 +1,20 @@
 /**
- * Protocolo de Guedes para Dobras Cutâneas (7 pontos)
+ * Protocolo de Guedes para Dobras Cutâneas (3 dobras)
  * Referência: Guedes & Guedes (1998) - Literatura Brasileira
- * Pontos: Tríceps, Subescapular, Supra-ilíaca, Abdominal, Coxa, Peito, Axilar Média
+ * Mulher: Subescapular, Supra-ilíaca, Coxa
+ * Homem: Tríceps, Abdominal, Supra-ilíaca
  */
 
-export interface MedidasGuedes {
-  triceps: number;
+export interface MedidasGuedesMulher {
   subescapular: number;
   suprailiaca: number;
-  abdominal: number;
   coxa: number;
-  peito: number;
-  axilarMedia: number;
+}
+
+export interface MedidasGuedesHomem {
+  triceps: number;
+  abdominal: number;
+  suprailiaca: number;
 }
 
 export interface ResultadoGuedes {
@@ -22,61 +25,69 @@ export interface ResultadoGuedes {
   classificacao: string;
 }
 
+
 /**
- * Calcula percentual de gordura pelo protocolo Guedes
+ * Calcula percentual de gordura pelo protocolo Guedes 3 dobras - Mulher
  * @param medidas Medidas das dobras cutâneas em mm
- * @param genero genero do avaliado ('M' ou 'F')
  * @param idade Idade em anos
  * @param peso Peso corporal em kg
  * @returns Resultado dos cálculos
  */
-export function calcularGuedes(
-  medidas: MedidasGuedes,
-  genero: 'M' | 'F',
+export function calcularGuedesMulher(
+  medidas: MedidasGuedesMulher,
   idade: number,
   peso: number
 ): ResultadoGuedes {
-  const { triceps, subescapular, suprailiaca, abdominal, coxa, peito, axilarMedia } = medidas;
-  
+  const { subescapular, suprailiaca, coxa } = medidas;
   // Validação das medidas
-  const medidasArray = [triceps, subescapular, suprailiaca, abdominal, coxa, peito, axilarMedia];
-  if (medidasArray.some(medida => medida < 3 || medida > 50)) {
+  if ([subescapular, suprailiaca, coxa].some(m => m < 3 || m > 50)) {
     throw new Error('Medidas de dobras cutâneas devem estar entre 3-50mm');
   }
-
-  // Validação da idade
   if (idade < 15 || idade > 65) {
     throw new Error('Protocolo Guedes válido para idades entre 15-65 anos');
   }
-
-  // Soma das 7 dobras
-  const somaTotal = triceps + subescapular + suprailiaca + abdominal + coxa + peito + axilarMedia;
-  
-  // Fórmulas de Guedes específicas por genero e idade (Literatura Brasileira)
-  let percentualGordura: number;
-  
-  if (genero === 'M') {
-    // Fórmula Guedes para homens
-    percentualGordura = 0.11077 * somaTotal - 
-                       0.00006 * somaTotal * somaTotal + 
-                       0.14354 * idade - 5.92;
-  } else {
-    // Fórmula Guedes para mulheres
-    percentualGordura = 0.11187 * somaTotal - 
-                       0.00058 * somaTotal * somaTotal + 
-                       0.11683 * idade - 7.39;
-  }
-  
-  // Garantir que o percentual não seja negativo
+  const somaTotal = subescapular + suprailiaca + coxa;
+  // Fórmula Guedes 3 dobras - Mulher
+  let percentualGordura = 0.610 * somaTotal + 0.163 * idade - 5.4;
   percentualGordura = Math.max(percentualGordura, 3);
-  
-  // Cálculos derivados
   const massaGorda = (percentualGordura / 100) * peso;
   const massaMagra = peso - massaGorda;
-  
-  // Classificação baseada no percentual de gordura
-  const classificacao = classificarGorduraGuedes(percentualGordura, genero);
-  
+  const classificacao = classificarGorduraGuedes(percentualGordura, 'F');
+  return {
+    somaTotal: Math.round(somaTotal * 10) / 10,
+    percentualGordura: Math.round(percentualGordura * 10) / 10,
+    massaGorda: Math.round(massaGorda * 10) / 10,
+    massaMagra: Math.round(massaMagra * 10) / 10,
+    classificacao
+  };
+}
+
+/**
+ * Calcula percentual de gordura pelo protocolo Guedes 3 dobras - Homem
+ * @param medidas Medidas das dobras cutâneas em mm
+ * @param idade Idade em anos
+ * @param peso Peso corporal em kg
+ * @returns Resultado dos cálculos
+ */
+export function calcularGuedesHomem(
+  medidas: MedidasGuedesHomem,
+  idade: number,
+  peso: number
+): ResultadoGuedes {
+  const { triceps, abdominal, suprailiaca } = medidas;
+  if ([triceps, abdominal, suprailiaca].some(m => m < 3 || m > 50)) {
+    throw new Error('Medidas de dobras cutâneas devem estar entre 3-50mm');
+  }
+  if (idade < 15 || idade > 65) {
+    throw new Error('Protocolo Guedes válido para idades entre 15-65 anos');
+  }
+  const somaTotal = triceps + abdominal + suprailiaca;
+  // Fórmula Guedes 3 dobras - Homem
+  let percentualGordura = 0.614 * somaTotal + 0.151 * idade - 5.2;
+  percentualGordura = Math.max(percentualGordura, 3);
+  const massaGorda = (percentualGordura / 100) * peso;
+  const massaMagra = peso - massaGorda;
+  const classificacao = classificarGorduraGuedes(percentualGordura, 'M');
   return {
     somaTotal: Math.round(somaTotal * 10) / 10,
     percentualGordura: Math.round(percentualGordura * 10) / 10,
@@ -110,24 +121,33 @@ function classificarGorduraGuedes(percentual: number, genero: 'M' | 'F'): string
 /**
  * Valida se as medidas estão dentro dos ranges aceitáveis
  */
-export function validarMedidasGuedes(medidas: MedidasGuedes): boolean {
-  const { triceps, subescapular, suprailiaca, abdominal, coxa, peito, axilarMedia } = medidas;
-  
-  const medidasArray = [triceps, subescapular, suprailiaca, abdominal, coxa, peito, axilarMedia];
-  return medidasArray.every(medida => medida >= 3 && medida <= 50);
+
+export function validarMedidasGuedesMulher(medidas: MedidasGuedesMulher): boolean {
+  const { subescapular, suprailiaca, coxa } = medidas;
+  return [subescapular, suprailiaca, coxa].every(m => m >= 3 && m <= 50);
+}
+
+export function validarMedidasGuedesHomem(medidas: MedidasGuedesHomem): boolean {
+  const { triceps, abdominal, suprailiaca } = medidas;
+  return [triceps, abdominal, suprailiaca].every(m => m >= 3 && m <= 50);
 }
 
 /**
  * Retorna os pontos de medição para o protocolo Guedes
  */
-export function getPontosGuedes(): string[] {
+
+export function getPontosGuedesMulher(): string[] {
   return [
-    'Tríceps',
     'Subescapular',
     'Supra-ilíaca',
+    'Coxa'
+  ];
+}
+
+export function getPontosGuedesHomem(): string[] {
+  return [
+    'Tríceps',
     'Abdominal',
-    'Coxa',
-    'Peito',
-    'Axilar Média'
+    'Supra-ilíaca'
   ];
 }
