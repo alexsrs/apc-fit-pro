@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
@@ -14,6 +15,7 @@ export default function FormularioCadastroAluno({
   professorId,
   conviteUrl,
 }: FormularioCadastroAlunoProps) {
+  const { setProfile } = useUserProfile();
   const { data: session } = useSession();
   const router = useRouter();
   const [telefone, setTelefone] = useState("");
@@ -57,6 +59,19 @@ export default function FormularioCadastroAluno({
       }
 
       setSucesso(true);
+
+      // Atualiza o contexto de perfil imediatamente após cadastro
+      setProfile({
+        nome,
+        name: nome,
+        id: userId,
+        userId,
+        role: "aluno",
+        genero: genero as "masculino" | "feminino" | null,
+        dataNascimento: dataNascimento ? new Date(dataNascimento) : null,
+        professorId,
+        email,
+      });
 
       // Aguarda um pequeno tempo para mostrar a mensagem de sucesso, depois redireciona para o convite (mantendo contexto)
       setTimeout(() => {

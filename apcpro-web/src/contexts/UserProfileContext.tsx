@@ -9,6 +9,8 @@ type Profile = {
   role?: string;
   dataNascimento?: Date | null;
   genero?: "masculino" | "feminino" | null;
+  professorId?: string;
+  email?: string;
   // ...outros campos do perfil
 } | null;
 
