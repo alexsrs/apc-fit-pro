@@ -10,7 +10,12 @@ jest.mock('../../src/prisma', () => mockPrisma);
 
 import { calcularFaulkner, type MedidasFaulkner } from '../../src/utils/protocolos-dobras/faulkner';
 import { calcularPollock7, type MedidasPollock7 } from '../../src/utils/protocolos-dobras/pollock';
-import { calcularGuedes, type MedidasGuedes } from '../../src/utils/protocolos-dobras/guedes';
+import {
+  calcularGuedesHomem,
+  calcularGuedesMulher,
+  type MedidasGuedesHomem,
+  type MedidasGuedesMulher
+} from '../../src/utils/protocolos-dobras/guedes';
 import { requireProfessor } from '../../src/middlewares/auth-middleware';
 import { Request, Response, NextFunction } from 'express';
 
@@ -18,7 +23,7 @@ import { Request, Response, NextFunction } from 'express';
 describe('Dobras Cutâneas - Protocolos', () => {
   describe('Protocolo Faulkner', () => {
     test('deve calcular percentual de gordura para homem', () => {
-      const medidas: MedidasFaulkner = { triceps: 12.5, subescapular: 15.2, suprailiaca: 18.1, bicipital: 10.0 };
+      const medidas: MedidasFaulkner = { triceps: 12.5, subescapular: 15.2, suprailiaca: 18.1, abdominal: 10.0 };
       const genero = 'M' as const;
       const peso = 75.0;
       const resultado = calcularFaulkner(medidas, genero, peso);
@@ -27,7 +32,24 @@ describe('Dobras Cutâneas - Protocolos', () => {
     });
     // ...outros testes do protocolo...
   });
-  // ...outros protocolos...
+  describe('Protocolo Guedes', () => {
+    test('deve calcular percentual de gordura para mulher', () => {
+      const medidas: MedidasGuedesMulher = { subescapular: 15, suprailiaca: 18, coxa: 20 };
+      const idade = 30;
+      const peso = 60;
+      const resultado = calcularGuedesMulher(medidas, idade, peso);
+      expect(resultado).toBeDefined();
+      expect(resultado.percentualGordura).toBeGreaterThan(0);
+    });
+    test('deve calcular percentual de gordura para homem', () => {
+      const medidas: MedidasGuedesHomem = { triceps: 12, abdominal: 15, suprailiaca: 18 };
+      const idade = 28;
+      const peso = 75;
+      const resultado = calcularGuedesHomem(medidas, idade, peso);
+      expect(resultado).toBeDefined();
+      expect(resultado.percentualGordura).toBeGreaterThan(0);
+    });
+  });
 });
 
 // --- Testes de Auth ---

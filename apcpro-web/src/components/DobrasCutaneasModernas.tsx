@@ -47,13 +47,31 @@ export interface DobrasCutaneasModernasProps {
   className?: string;
 }
 
+/**
+ * Normaliza o nome da dobra para o formato esperado pelo backend.
+ * Corrige especificamente o caso de "Axilar Média" para "axilarmedia".
+ */
+function normalizarDobra(nome: string): string {
+  let normalizado = nome
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .replace(/[^a-zA-Z0-9]/g, '')    // remove espaços e caracteres especiais
+    .toLowerCase();
+
+  // Corrige especificamente o caso da axilar média
+  if (normalizado === "axiliarmedia") {
+    normalizado = "axilarmedia";
+  }
+  return normalizado;
+}
+
 const dobrasInfo = {
   triceps: {
     nome: 'Tríceps',
     descricao: 'Dobra vertical na face posterior do braço, no ponto médio entre o acrômio e o olécrano'
   },
   subescapular: {
-    nome: 'Subescapular', 
+    nome: 'Subescapular',
     descricao: 'Dobra oblíqua logo abaixo do ângulo inferior da escápula'
   },
   suprailiaca: {
@@ -72,7 +90,7 @@ const dobrasInfo = {
     nome: 'Abdominal',
     descricao: 'Dobra vertical ao lado do umbigo, aproximadamente 2 cm lateralmente'
   },
-  axilarMedia: {
+  axilarmedia: {
     nome: 'Axilar Média',
     descricao: 'Dobra vertical na linha axilar média, ao nível do processo xifoide'
   },
@@ -87,6 +105,10 @@ const dobrasInfo = {
   panturrilha: {
     nome: 'Panturrilha',
     descricao: 'Dobra vertical na face medial da panturrilha, no nível de maior circunferência'
+  },
+  torax: {
+    nome: 'Tórax',
+    descricao: 'Dobra diagonal no peito, entre a linha axilar anterior e o mamilo'
   }
 };
 
@@ -139,6 +161,7 @@ export function DobrasCutaneasModernas({
   const [loading, setLoading] = useState(false);
   const [loadingProtocolos, setLoadingProtocolos] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
+  const [debugPayload, setDebugPayload] = useState<any>(null);
   // dobraAtiva removido (não utilizado)
 
   useEffect(() => {
@@ -169,8 +192,6 @@ export function DobrasCutaneasModernas({
     try {
       const response = await apiClient.get('/api/dobras-cutaneas/protocolos');
       const data = response.data?.data || [];
-      
-      // Verificar se os dados são válidos
       if (Array.isArray(data)) {
         setProtocolos(data);
       } else {
@@ -190,15 +211,22 @@ export function DobrasCutaneasModernas({
   // Obter informações do protocolo selecionado
   const protocoloInfo = protocolos.find(p => p.id === protocoloSelecionado);
 
-  // Validar se todas as medidas necessárias foram preenchidas
+  // Validar se todas as medidas necessárias foram preenchidas (usando chaves normalizadas)
+  const dobrasFaltando: string[] = [];
   const medidasCompletas = () => {
     if (!protocoloInfo) return false;
-    
-    return protocoloInfo.dobrasNecessarias.every(dobra => {
-      const valor = medidas[dobra as keyof Medidas];
-      return valor && valor > 0;
+    let completo = true;
+    dobrasFaltando.length = 0;
+    protocoloInfo.dobrasNecessarias.forEach(dobra => {
+      const chave = normalizarDobra(dobra);
+      const valor = medidas[chave as keyof Medidas];
+      if (!valor || valor <= 0) {
+        completo = false;
+        dobrasFaltando.push(dobra);
+      }
     });
-  };
+    return completo;
+  } 
 
   // Validar dados pessoais
   const dadosValidos = () => {
@@ -212,9 +240,10 @@ export function DobrasCutaneasModernas({
   // Atualizar medida
   const atualizarMedida = (dobra: string, valor: string) => {
     const numeroValor = valor ? parseFloat(valor) : undefined;
+    const chaveNormalizada = normalizarDobra(dobra);
     setMedidas(prev => ({
       ...prev,
-      [dobra]: numeroValor
+      [chaveNormalizada]: numeroValor
     }));
     setErrors([]);
   };
@@ -232,35 +261,79 @@ export function DobrasCutaneasModernas({
     };
   }
 
-  // Calcular protocolo
+  // Calcular protocolo com validação de compatibilidade de gênero
   const calcular = async () => {
     if (!protocoloSelecionado || !dadosValidos() || !medidasCompletas()) {
-      setErrors(['Preencha todos os dados obrigatórios antes de calcular']);
+      let mensagem = 'Preencha todos os dados obrigatórios antes de calcular';
+      if (!medidasCompletas() && protocoloInfo) {
+        mensagem += `\nDobras faltando: ${dobrasFaltando.join(', ')}`;
+      }
+      setErrors([mensagem]);
       return;
+    }
+
+    // Validação de compatibilidade de gênero com o protocolo
+    if (protocoloInfo) {
+      // Exemplo: se o nome do protocolo contém "(homens)" ou "(mulheres)", valida o gênero
+      const nomeProt = protocoloInfo.nome.toLowerCase();
+      if (nomeProt.includes('homem') && dadosPessoais.genero !== 'masculino') {
+        setErrors([`O protocolo selecionado é exclusivo para homens. Altere o protocolo ou o gênero do aluno.`]);
+        return;
+      }
+      if (nomeProt.includes('mulher') && dadosPessoais.genero !== 'feminino') {
+        setErrors([`O protocolo selecionado é exclusivo para mulheres. Altere o protocolo ou o gênero do aluno.`]);
+        return;
+      }
+    }
+
+    // LOG DETALHADO PARA DEBUG
+    if (protocoloInfo) {
+      const dobrasEsperadas = protocoloInfo.dobrasNecessarias;
+      const dobrasPresentes = Object.keys(medidas).filter(k => medidas[k as keyof Medidas] && medidas[k as keyof Medidas]! > 0);
+      const faltando = dobrasEsperadas.filter(d => !(dobrasPresentes.includes(d)));
+      console.log('[DEBUG][tifurico] Protocolo selecionado:', protocoloSelecionado);
+      console.log('[DEBUG][tifurico] Dobras esperadas:', dobrasEsperadas);
+      console.log('[DEBUG][tifurico] Dobras presentes no payload:', dobrasPresentes);
+      console.log('[DEBUG][tifurico] Dobras faltando:', faltando);
+      console.log('[DEBUG][tifurico] Medidas enviadas:', medidas);
     }
 
     setLoading(true);
     setErrors([]);
 
     try {
+      // Normalizar as chaves das medidas para garantir compatibilidade com o backend
+      const medidasNormalizadas: Record<string, number> = {};
+      Object.entries(medidas).forEach(([chave, valor]) => {
+        if (valor !== undefined && valor !== null && valor > 0) {
+          medidasNormalizadas[normalizarDobra(chave)] = valor;
+        }
+      });
+
       const payload = {
         ...resultado,
         protocolo: protocoloSelecionado,
         dadosPessoais: montarDadosPessoais(),
-        medidas,
-        observacoes: `Avaliação realizada em ${new Date().toLocaleDateString()}`
+        medidas: medidasNormalizadas,
+        observacoes: `Avaliação realizada em ${new Date().toLocaleDateString()}`,
+        userPerfilId: resultado?.aluno?.id // Garante que o id do perfil do aluno vai para o backend
       };
+
+      setDebugPayload(payload); // Salva para debug visual
+      console.log('[DEBUG][tifurico] Payload enviado para API:', payload);
 
       const endpoint = modoCalculoApenas ? '/api/dobras-cutaneas/calcular' : '/api/dobras-cutaneas';
       const response = await apiClient.post(endpoint, payload);
 
       const avaliacaoCompleta = response.data.data;
-      setResultadoState(avaliacaoCompleta);
-      
+      // Se vier um campo resultado, prioriza ele, senão usa o objeto inteiro
+      setResultadoState(avaliacaoCompleta?.resultado ?? avaliacaoCompleta);
+
       if (onResultado) {
-        onResultado(avaliacaoCompleta);
+        onResultado(avaliacaoCompleta?.resultado ?? avaliacaoCompleta);
       }
 
+      setDebugPayload(null); // Limpa debug se sucesso
     } catch (error: unknown) {
       console.error('Erro ao calcular:', error);
       const errorMessage = error instanceof Error 
@@ -455,10 +528,11 @@ export function DobrasCutaneasModernas({
               {protocoloInfo && protocoloInfo.dobrasNecessarias && protocoloInfo.dobrasNecessarias.length > 0 && (
                 <>
                   {protocoloInfo.dobrasNecessarias.map(dobra => {
-                    const info = dobrasInfo[dobra as keyof typeof dobrasInfo];
-                    const valor = medidas[dobra as keyof Medidas];
+                    const chave = normalizarDobra(dobra);
+                    const info = dobrasInfo[chave as keyof typeof dobrasInfo];
+                    const valor = medidas[chave as keyof Medidas];
                     if (!info) {
-                      console.warn(`Informação não encontrada para dobra: ${dobra}`);
+                      console.warn(`Informação não encontrada para dobra: ${dobra} (chave normalizada: ${chave})`);
                       return null;
                     }
                     return (
@@ -499,25 +573,25 @@ export function DobrasCutaneasModernas({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {resultadoState.resultados.percentualGordura?.toFixed(1)}%
+                  {resultadoState.resultados?.percentualGordura?.toFixed(1)}%
                 </div>
                 <div className="text-sm text-blue-700">Percentual de Gordura</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {resultadoState.resultados.massaMagra?.toFixed(1)}kg
+                  {resultadoState.resultados?.massaMagra?.toFixed(1)}kg
                 </div>
                 <div className="text-sm text-green-700">Massa Magra</div>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
-                  {resultadoState.resultados.massaGorda?.toFixed(1)}kg
+                  {resultadoState.resultados?.massaGorda?.toFixed(1)}kg
                 </div>
                 <div className="text-sm text-orange-700">Massa Gorda</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-lg font-bold text-purple-600">
-                  {resultadoState.resultados.classificacao}
+                  {resultadoState.resultados?.classificacao}
                 </div>
                 <div className="text-sm text-purple-700">Classificação</div>
               </div>
@@ -526,17 +600,17 @@ export function DobrasCutaneasModernas({
               <h4 className="font-medium mb-2">Detalhes da Avaliação</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <strong>Protocolo:</strong> {resultadoState.metadata.validadeFormula}
+                  <strong>Protocolo:</strong> {resultadoState.metadata?.validadeFormula ?? '-'}
                 </div>
                 <div>
-                  <strong>Data:</strong> {resultadoState.metadata.dataAvaliacao ? formatarDataValidade(resultadoState.metadata.dataAvaliacao) : '-'}
+                  <strong>Data:</strong> {resultadoState.metadata?.dataAvaliacao ? formatarDataValidade(resultadoState.metadata.dataAvaliacao) : '-'}
                 </div>
                 <div>
-                  <strong>Soma das dobras:</strong> {resultadoState.resultados.somaTotal?.toFixed(1)}mm
+                  <strong>Soma das dobras:</strong> {resultadoState.resultados?.somaTotal?.toFixed(1)}mm
                 </div>
-                {resultadoState.resultados.densidadeCorporal && (
+                {resultadoState.resultados?.densidadeCorporal && (
                   <div>
-                    <strong>Densidade corporal:</strong> {resultadoState.resultados.densidadeCorporal?.toFixed(4)}g/cm³
+                    <strong>Densidade corporal:</strong> {resultadoState.resultados?.densidadeCorporal?.toFixed(4)}g/cm³
                   </div>
                 )}
               </div>
@@ -545,11 +619,22 @@ export function DobrasCutaneasModernas({
         </Card>
       )}
 
-      {/* Exibição de erro */}
+      {/* Exibição de erro + debug do payload */}
       {errors.length > 0 && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errors.join(' | ')}</AlertDescription>
+          <AlertDescription>
+            {errors.join(' | ')}
+            {debugPayload && (
+              <>
+                <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-800">
+                  <strong>Payload enviado:</strong>
+                  <pre className="overflow-x-auto whitespace-pre-wrap">{JSON.stringify(debugPayload, null, 2)}</pre>
+                  <strong>Chaves das medidas:</strong> {Object.keys(debugPayload.medidas || {}).join(', ')}
+                </div>
+              </>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 

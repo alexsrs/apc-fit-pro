@@ -89,7 +89,7 @@ export const PROTOCOLOS_INFO: Record<ProtocoloDisponivel, InfoProtocolo> = {
     nome: 'Pollock 7 Dobras',
     descricao: 'Protocolo mais preciso para ambos os sexos',
     numDobras: 7,
-    pontos: ['Tórax', 'Axiliar Média', 'Subescapular', 'Tríceps', 'Abdominal', 'Supra-ilíaca', 'Coxa'],
+    pontos: ['Tórax', 'Axilar Média', 'Subescapular', 'Tríceps', 'Abdominal', 'Supra-ilíaca', 'Coxa'],
     indicacao: 'Maior precisão, população geral',
     requerIdade: true,
     sexoEspecifico: false
