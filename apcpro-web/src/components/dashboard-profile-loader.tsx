@@ -43,7 +43,7 @@ export function DashboardProfileLoader() {
           "response" in err &&
           (err as { response?: { status?: number } }).response?.status === 404
         ) {
-          // Permite fluxo de convite sem redirecionar para setup-profile
+          // Nunca redireciona para setup-profile se estiver na rota de convite
           const isConviteComProfessor =
             pathname === "/convite" &&
             typeof window !== "undefined" &&
@@ -52,6 +52,7 @@ export function DashboardProfileLoader() {
           if (!isConviteComProfessor) {
             router.replace("/dashboard/setup-profile");
           }
+          // Se for convite, não faz nada (deixa o formulário de aluno aparecer normalmente)
         } else if (err instanceof Error) {
           setError(err.message);
         } else {
@@ -82,7 +83,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Só redireciona se NÃO estiver na rota de convite com professorId
     if (!profile && !isConviteComProfessor) {
-      router.replace("/setup-profile");
+      router.replace("/dashboard/setup-profile");
     }
   }, [profile, pathname, router, isConviteComProfessor]);
 
