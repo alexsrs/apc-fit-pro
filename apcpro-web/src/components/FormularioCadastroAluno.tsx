@@ -2,18 +2,20 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation"; // Importa o hook
-import apiClient from "@/lib/api-client"; // Importa o cliente API
+import { useRouter } from "next/navigation";
+import apiClient from "@/lib/api-client";
 
 type FormularioCadastroAlunoProps = {
   professorId: string;
+  conviteUrl?: string;
 };
 
 export default function FormularioCadastroAluno({
   professorId,
+  conviteUrl,
 }: FormularioCadastroAlunoProps) {
   const { data: session } = useSession();
-  const router = useRouter(); // Instancia o hook
+  const router = useRouter();
   const [telefone, setTelefone] = useState("");
   const [genero, setGenero] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
@@ -56,9 +58,13 @@ export default function FormularioCadastroAluno({
 
       setSucesso(true);
 
-      // Aguarda um pequeno tempo para mostrar a mensagem de sucesso, depois redireciona
+      // Aguarda um pequeno tempo para mostrar a mensagem de sucesso, depois redireciona para o convite (mantendo contexto)
       setTimeout(() => {
-        router.push("/dashboard");
+        if (conviteUrl) {
+          router.replace(conviteUrl);
+        } else {
+          router.push("/dashboard");
+        }
       }, 1500);
     } catch (err: unknown) {
       if (err instanceof Error) {
