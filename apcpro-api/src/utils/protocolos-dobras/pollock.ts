@@ -1,3 +1,24 @@
+// Utilitário para normalizar nomes de dobras igual ao frontend
+function normalizarDobra(nome: string): string {
+  let normalizado = nome
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .replace(/[^a-zA-Z0-9]/g, '')    // remove espaços e caracteres especiais
+    .toLowerCase();
+  if (normalizado === 'axiliarmedia') {
+    normalizado = 'axilarmedia';
+  }
+  return normalizado;
+}
+
+// Função para normalizar todas as chaves do objeto medidas
+export function normalizarChavesMedidas<T extends Record<string, any>>(medidas: T): T {
+  const medidasNormalizadas: Record<string, any> = {};
+  Object.keys(medidas).forEach((key) => {
+    medidasNormalizadas[normalizarDobra(key)] = medidas[key];
+  });
+  return medidasNormalizadas as T;
+}
 /**
  * Protocolo de Pollock para Dobras Cutâneas
  * Referência: Pollock & Jackson (1984)
@@ -18,15 +39,30 @@ export interface MedidasPollock3Mulheres {
   coxa: number;
 }
 
-// Versão 7 dobras - Ambos os gêneros
+// Versão 7 dobras - Ambos os gêneros (padronizado: torax, axilarmedia)
 export interface MedidasPollock7 {
   triceps: number;
   subescapular: number;
   suprailiaca: number;
   abdominal: number;
-  peitoral: number;
-  axilarMedia: number;
+  torax: number;
+  axilarmedia: number;
   coxa: number;
+}
+
+/**
+ * Utilitário para converter um objeto genérico de medidas em MedidasPollock7 padronizado
+ */
+export function parseMedidasPollock7(medidas: Record<string, number>): MedidasPollock7 {
+  return {
+    triceps: medidas.triceps,
+    subescapular: medidas.subescapular,
+    suprailiaca: medidas.suprailiaca,
+    abdominal: medidas.abdominal,
+    torax: medidas.torax,
+    axilarmedia: medidas.axilarmedia,
+    coxa: medidas.coxa
+  };
 }
 
 // Versão 9 dobras - Para atletas (inclui bíceps e panturrilha)
@@ -75,31 +111,32 @@ export function calcularPollock3(
   let densidadeCorporal: number;
 
   if (genero === 'M') {
+    // Conversão robusta para number
     const { peitoral, abdominal, coxa } = medidas as MedidasPollock3Homens;
-    
+    const peitoralNum = Number(peitoral);
+    const abdominalNum = Number(abdominal);
+    const coxaNum = Number(coxa);
     // Validação das medidas
-    if (peitoral < 3 || peitoral > 50 || 
-        abdominal < 3 || abdominal > 50 || 
-        coxa < 3 || coxa > 50) {
+    if (peitoralNum < 3 || peitoralNum > 50 || 
+        abdominalNum < 3 || abdominalNum > 50 || 
+        coxaNum < 3 || coxaNum > 50) {
       throw new Error('Medidas de dobras cutâneas devem estar entre 3-50mm');
     }
-
-    somaTotal = peitoral + abdominal + coxa;
-    
+    somaTotal = peitoralNum + abdominalNum + coxaNum;
     // Fórmula Pollock 3 dobras - Homens
     densidadeCorporal = 1.10938 - (0.0008267 * somaTotal) + (0.0000016 * Math.pow(somaTotal, 2)) - (0.0002574 * idade);
   } else {
     const { triceps, suprailiaca, coxa } = medidas as MedidasPollock3Mulheres;
-    
+    const tricepsNum = Number(triceps);
+    const suprailiacaNum = Number(suprailiaca);
+    const coxaNum = Number(coxa);
     // Validação das medidas
-    if (triceps < 3 || triceps > 50 || 
-        suprailiaca < 3 || suprailiaca > 50 || 
-        coxa < 3 || coxa > 50) {
+    if (tricepsNum < 3 || tricepsNum > 50 || 
+        suprailiacaNum < 3 || suprailiacaNum > 50 || 
+        coxaNum < 3 || coxaNum > 50) {
       throw new Error('Medidas de dobras cutâneas devem estar entre 3-50mm');
     }
-
-    somaTotal = triceps + suprailiaca + coxa;
-    
+    somaTotal = tricepsNum + suprailiacaNum + coxaNum;
     // Fórmula Pollock 3 dobras - Mulheres
     densidadeCorporal = 1.0994921 - (0.0009929 * somaTotal) + (0.0000023 * Math.pow(somaTotal, 2)) - (0.0001392 * idade);
   }
@@ -144,24 +181,27 @@ export function calcularPollock7(
     throw new Error('Protocolo Pollock válido para idades entre 18-61 anos');
   }
 
-  const { triceps, subescapular, suprailiaca, abdominal, peitoral, axilarMedia, coxa } = medidas;
-  
+  // Conversão robusta para number
+  const tricepsNum = Number(medidas.triceps);
+  const subescapularNum = Number(medidas.subescapular);
+  const suprailiacaNum = Number(medidas.suprailiaca);
+  const abdominalNum = Number(medidas.abdominal);
+  const toraxNum = Number(medidas.torax);
+  const axilarmediaNum = Number(medidas.axilarmedia);
+  const coxaNum = Number(medidas.coxa);
   // Validação das medidas
-  if (triceps < 3 || triceps > 50 || 
-      subescapular < 3 || subescapular > 50 || 
-      suprailiaca < 3 || suprailiaca > 50 ||
-      abdominal < 3 || abdominal > 50 ||
-      peitoral < 3 || peitoral > 50 ||
-      axilarMedia < 3 || axilarMedia > 50 ||
-      coxa < 3 || coxa > 50) {
+  if (tricepsNum < 3 || tricepsNum > 50 || 
+      subescapularNum < 3 || subescapularNum > 50 || 
+      suprailiacaNum < 3 || suprailiacaNum > 50 ||
+      abdominalNum < 3 || abdominalNum > 50 ||
+      toraxNum < 3 || toraxNum > 50 ||
+      axilarmediaNum < 3 || axilarmediaNum > 50 ||
+      coxaNum < 3 || coxaNum > 50) {
     throw new Error('Medidas de dobras cutâneas devem estar entre 3-50mm');
   }
-
   // Soma das 7 dobras
-  const somaTotal = triceps + subescapular + suprailiaca + abdominal + peitoral + axilarMedia + coxa;
-  
+  const somaTotal = tricepsNum + subescapularNum + suprailiacaNum + abdominalNum + toraxNum + axilarmediaNum + coxaNum;
   let densidadeCorporal: number;
-  
   if (genero === 'M') {
     // Fórmula Pollock 7 dobras - Homens
     densidadeCorporal = 1.112 - (0.00043499 * somaTotal) + (0.00000055 * Math.pow(somaTotal, 2)) - (0.00028826 * idade);
@@ -307,30 +347,46 @@ export function validarMedidasPollock3Mulheres(medidas: MedidasPollock3Mulheres)
  * Valida se as medidas estão dentro dos ranges aceitáveis - 7 dobras
  */
 export function validarMedidasPollock7(medidas: MedidasPollock7): boolean {
-  const { triceps, subescapular, suprailiaca, abdominal, peitoral, axilarMedia, coxa } = medidas;
-  
-  return triceps >= 3 && triceps <= 50 &&
-         subescapular >= 3 && subescapular <= 50 &&
-         suprailiaca >= 3 && suprailiaca <= 50 &&
-         abdominal >= 3 && abdominal <= 50 &&
-         peitoral >= 3 && peitoral <= 50 &&
-         axilarMedia >= 3 && axilarMedia <= 50 &&
-         coxa >= 3 && coxa <= 50;
+  // DEBUG: logar as chaves e valores recebidos para rastrear problemas de nome ou valor
+  console.log('[DEBUG][Pollock7] Medidas recebidas:', medidas);
+  // Conversão robusta para number
+  const tricepsNum = Number(medidas.triceps);
+  const subescapularNum = Number(medidas.subescapular);
+  const suprailiacaNum = Number(medidas.suprailiaca);
+  const abdominalNum = Number(medidas.abdominal);
+  const toraxNum = Number(medidas.torax);
+  const axilarmediaNum = Number(medidas.axilarmedia);
+  const coxaNum = Number(medidas.coxa);
+  return tricepsNum >= 3 && tricepsNum <= 50 &&
+         subescapularNum >= 3 && subescapularNum <= 50 &&
+         suprailiacaNum >= 3 && suprailiacaNum <= 50 &&
+         abdominalNum >= 3 && abdominalNum <= 50 &&
+         toraxNum >= 3 && toraxNum <= 50 &&
+         axilarmediaNum >= 3 && axilarmediaNum <= 50 &&
+         coxaNum >= 3 && coxaNum <= 50;
 }
 
 /**
  * Valida se as medidas estão dentro dos ranges aceitáveis - 9 dobras
  */
 export function validarMedidasPollock9(medidas: MedidasPollock9): boolean {
-  const { triceps, subescapular, suprailiaca, abdominal, peitoral, axilarMedia, coxa, biceps, panturrilha } = medidas;
-  
-  return triceps >= 3 && triceps <= 50 &&
-         subescapular >= 3 && subescapular <= 50 &&
-         suprailiaca >= 3 && suprailiaca <= 50 &&
-         abdominal >= 3 && abdominal <= 50 &&
-         peitoral >= 3 && peitoral <= 50 &&
-         axilarMedia >= 3 && axilarMedia <= 50 &&
-         coxa >= 3 && coxa <= 50 &&
-         biceps >= 3 && biceps <= 50 &&
-         panturrilha >= 3 && panturrilha <= 50;
+  // Conversão robusta para number
+  const tricepsNum = Number(medidas.triceps);
+  const subescapularNum = Number(medidas.subescapular);
+  const suprailiacaNum = Number(medidas.suprailiaca);
+  const abdominalNum = Number(medidas.abdominal);
+  const peitoralNum = Number(medidas.peitoral);
+  const axilarMediaNum = Number(medidas.axilarMedia);
+  const coxaNum = Number(medidas.coxa);
+  const bicepsNum = Number(medidas.biceps);
+  const panturrilhaNum = Number(medidas.panturrilha);
+  return tricepsNum >= 3 && tricepsNum <= 50 &&
+         subescapularNum >= 3 && subescapularNum <= 50 &&
+         suprailiacaNum >= 3 && suprailiacaNum <= 50 &&
+         abdominalNum >= 3 && abdominalNum <= 50 &&
+         peitoralNum >= 3 && peitoralNum <= 50 &&
+         axilarMediaNum >= 3 && axilarMediaNum <= 50 &&
+         coxaNum >= 3 && coxaNum <= 50 &&
+         bicepsNum >= 3 && bicepsNum <= 50 &&
+         panturrilhaNum >= 3 && panturrilhaNum <= 50;
 }

@@ -26,7 +26,7 @@
 
 ** Pollock 7 dobras
 - Tórax
-- Axiliar Média
+- Axilar Média
 - Subescapular
 - Tríceps
 - Abdominal

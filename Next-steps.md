@@ -145,7 +145,7 @@ apcpro-web/src/
 
 #### Funcionalidades a Implementar:
 - **Biblioteca de Testes:** Catálogo com 15+ testes físicos padronizados
-- **Protocolos Automáticos:** Flexibilidade de braço, 1RM, VO2 máx., agilidade
+- **Protocolos Automáticos:** Flexibilidade de braço, 1RM, VO2 máx., agilidade, salto vertical e VBT 
 - **Registro de Resultados:** Interface para inserção e histórico de testes
 - **Análise Comparativa:** Evolução dos testes ao longo do tempo
 - **Classificações Normativas:** Tabelas por idade, sexo e modalidade
