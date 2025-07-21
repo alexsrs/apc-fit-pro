@@ -82,6 +82,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     (pathname === "/convite" && searchParams?.has("professorId")) ||
     (typeof window !== "undefined" && localStorage.getItem("conviteAtivo") === "1");
 
+  // Redireciona para o fluxo de convite após login, se necessário
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      localStorage.getItem("conviteRedirectUrl") &&
+      (pathname !== "/convite" || !searchParams?.has("professorId"))
+    ) {
+      const url = localStorage.getItem("conviteRedirectUrl");
+      if (url) {
+        localStorage.removeItem("conviteRedirectUrl");
+        router.replace(url);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, router]);
+
   useEffect(() => {
     // Só redireciona se NÃO estiver na rota de convite com professorId
     if (!profile && !isConviteComProfessor) {
