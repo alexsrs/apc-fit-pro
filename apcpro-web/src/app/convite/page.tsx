@@ -16,7 +16,14 @@ function ConviteAlunoPage() {
     // Se não houver professorId, redireciona para home
     if (!professorId) {
       router.replace("/");
+    } else {
+      // Marca flag de convite no localStorage
+      localStorage.setItem("conviteAtivo", "1");
     }
+    // Remove flag ao sair da página
+    return () => {
+      localStorage.removeItem("conviteAtivo");
+    };
   }, [professorId, router]);
 
   if (!professorId) {

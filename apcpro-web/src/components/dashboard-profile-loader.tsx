@@ -77,8 +77,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search)
       : null;
+  // Considera convite ativo se flag no localStorage estiver setada
   const isConviteComProfessor =
-    pathname === "/convite" && searchParams?.has("professorId");
+    (pathname === "/convite" && searchParams?.has("professorId")) ||
+    (typeof window !== "undefined" && localStorage.getItem("conviteAtivo") === "1");
 
   useEffect(() => {
     // Só redireciona se NÃO estiver na rota de convite com professorId

@@ -21,7 +21,12 @@ export default function SetupProfile() {
   }, [profile, router]);
 
   // Sempre renderiza o formulário de perfil se não houver perfil
+  // Se for fluxo de convite, nunca renderiza o setup-profile
   if (!profile || !profile.role) {
+    if (typeof window !== "undefined" && localStorage.getItem("conviteAtivo") === "1") {
+      // Não renderiza nada, deixa o loader/layout redirecionar ou a página de convite assumir
+      return null;
+    }
     return (
       <div className="container p-2 flex items-start min-h-screen">
         <div>
