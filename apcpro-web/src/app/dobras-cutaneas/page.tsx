@@ -110,7 +110,6 @@ export default function DobrasCutaneasPage() {
           {/* Nova Avaliação */}
           <TabsContent value="avaliacao" className="space-y-6">
             <DobrasCutaneasModernas
-              userPerfilId="demo-user-123"
               resultado={resultadoAtual}
               onResultado={handleNovoResultado}
               modoCalculoApenas={false}

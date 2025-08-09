@@ -261,42 +261,13 @@ export function ModalAvaliacaoCompleta({
     }
   }, [userPerfilId]);
 
-  // Função para aprovar automaticamente a última avaliação criada
+  // FUNÇÃO DESABILITADA: aprovarUltimaAvaliacao 
+  // Motivo: Backend agora já cria avaliações de professores com status 'aprovada' automaticamente
   const aprovarUltimaAvaliacao = async (tipoAvaliacao: string) => {
-    try {
-      // Buscar avaliações para extrair o id real do aluno
-      const response = await apiClient.get(`alunos/${userPerfilId}/avaliacoes`);
-      const avaliacoes = response.data || [];
-      // Filtrar avaliações válidas (pendente ou aprovada)
-      const avaliacoesValidas = avaliacoes.filter((a: any) =>
-        a.status === 'pendente' || a.status === 'aprovada'
-      );
-      // Extrair id real do aluno
-      let alunoIdParaPerfil = userPerfilId;
-      if (avaliacoesValidas.length > 0 && avaliacoesValidas[0].alunoId) {
-        alunoIdParaPerfil = avaliacoesValidas[0].alunoId;
-      }
-      // Buscar novamente as avaliações usando o id real do aluno
-      const responseAluno = await apiClient.get(`alunos/${alunoIdParaPerfil}/avaliacoes`);
-      const avaliacoesAluno = responseAluno.data || [];
-      const avaliacaoMaisRecente = avaliacoesAluno
-        .filter((a: any) => a.tipo === tipoAvaliacao)
-        .sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())[0];
-      if (avaliacaoMaisRecente && avaliacaoMaisRecente.id) {
-        // Buscar detalhes da avaliação pelo id correto
-        const avaliacaoDetalhada = await apiClient.get(`avaliacoes/${avaliacaoMaisRecente.id}`);
-        if (avaliacaoDetalhada?.data?.status === 'pendente') {
-          // Aprovar a avaliação
-          await apiClient.put(`avaliacoes/${avaliacaoMaisRecente.id}/aprovar`, {
-            observacoes: 'Aprovada automaticamente pelo professor responsável'
-          });
-          console.log(`Avaliação ${tipoAvaliacao} aprovada automaticamente`);
-        }
-      }
-    } catch (error) {
-      console.error(`Erro ao aprovar avaliação ${tipoAvaliacao}:`, error);
-      // Não bloquear o fluxo se houver erro na aprovação
-    }
+    // Esta função não é mais necessária pois o backend já salva 
+    // avaliações de professores como 'aprovada' direto na criação
+    console.log(`[DESABILITADO] aprovarUltimaAvaliacao para ${tipoAvaliacao} - backend já salva como aprovada`);
+    return;
   };
 
   useEffect(() => {
@@ -385,10 +356,7 @@ export function ModalAvaliacaoCompleta({
     
     setModalTriagemOpen(false);
     
-    // Se é professor, aprovar automaticamente a avaliação
-    if (profile?.role === "professor") {
-      await aprovarUltimaAvaliacao('triagem');
-    }
+    // Backend agora já salva avaliações de professores como 'aprovada' automaticamente
     
     buscarAvaliacoesExistentes(); // Recarrega dados
     proximaEtapa(); // Avança automaticamente
@@ -397,9 +365,9 @@ export function ModalAvaliacaoCompleta({
   const handleAnamneseSuccess = async () => {
     setModalAnamneseOpen(false);
     
-    // Se é professor, aprovar automaticamente a avaliação
+    // Backend agora já salva avaliações de professores como 'aprovada' automaticamente
     if (profile?.role === "professor") {
-      await aprovarUltimaAvaliacao('anamnese');
+      // Backend agora já salva avaliações de professores como 'aprovada' automaticamente
     }
     
     buscarAvaliacoesExistentes(); // Recarrega dados
@@ -409,20 +377,14 @@ export function ModalAvaliacaoCompleta({
   const handleAltoRendimentoSuccess = async () => {
     setModalAltoRendimentoOpen(false);
     
-    // Se é professor, aprovar automaticamente a avaliação
-    if (profile?.role === "professor") {
-      await aprovarUltimaAvaliacao('alto-rendimento');
-    }
+    // Backend agora já salva avaliações de professores como 'aprovada' automaticamente
     
     buscarAvaliacoesExistentes(); // Recarrega dados
     proximaEtapa(); // Avança automaticamente
   };
 
   const handleMedidasSuccess = async () => {
-    // Se é professor, aprovar automaticamente a avaliação
-    if (profile?.role === "professor") {
-      await aprovarUltimaAvaliacao('medidas');
-    }
+    // Backend agora já salva avaliações de professores como 'aprovada' automaticamente
     
     buscarAvaliacoesExistentes(); // Recarrega dados
     proximaEtapa(); // Avança automaticamente
@@ -648,7 +610,6 @@ export function ModalAvaliacaoCompleta({
         return (
           <div className="space-y-4">
             <DobrasCutaneasModernas
-              userPerfilId={userPerfilId}
               resultado={{
                 protocolo: '',
                 dadosPessoais: montarDadosPessoaisDobras(),

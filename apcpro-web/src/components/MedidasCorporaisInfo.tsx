@@ -5,11 +5,14 @@ import {
   User,
   TrendingUp,
   Info,
+  BarChart3,
 } from "lucide-react";
 import { ImcInfo } from "./ImcInfo";
 import { CaInfo } from "./CaInfo";
 import { RcqInfo } from "./RcqInfo";
 import { PercentualGorduraInfo } from "./PercentualGorduraInfo";
+import { PieChartAvaliacao } from "./PieChartAvaliacao";
+import { MedidasPorRegiaoCharts } from "./charts/MedidasPorRegiaoCharts";
 
 // Tipagem para o resultado de medidas corporais
 interface MedidasCorporaisResultado {
@@ -19,6 +22,7 @@ interface MedidasCorporaisResultado {
   genero?: string;
   circunferencias?: Record<string, number>;
   diametros?: Record<string, number>;
+  dataAvaliacao?: string; // Data da avaliação
   // Índices calculados usando os componentes específicos
   indices?: {
     imc?: number;
@@ -57,6 +61,7 @@ interface MedidasCorporaisInfoProps {
 export function MedidasCorporaisInfo({ resultado }: MedidasCorporaisInfoProps) {
   // Debug: Log dos dados recebidos
   console.log("🔍 MedidasCorporaisInfo - Dados recebidos:", resultado);
+  console.log("🔍 MedidasCorporaisInfo - dataAvaliacao:", resultado.dataAvaliacao);
 
   const {
     peso,
@@ -65,6 +70,7 @@ export function MedidasCorporaisInfo({ resultado }: MedidasCorporaisInfoProps) {
     genero,
     circunferencias,
     diametros,
+    dataAvaliacao,
     indices,
     // Valores diretos para compatibilidade
     imc: imcDireto,
@@ -278,6 +284,59 @@ export function MedidasCorporaisInfo({ resultado }: MedidasCorporaisInfoProps) {
 
       {/* Índices Calculados - Renderizados como seção independente */}
       {renderIndicesCalculados()}
+
+      {/* Visualização Gráfica - Gráficos estilo FineShape */}
+      {(circunferencias && Object.keys(circunferencias).length >= 4) && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-4">
+            <BarChart3 className="w-5 h-5 text-blue-600" />
+            Análise Visual das Medidas
+          </div>
+          
+          <MedidasPorRegiaoCharts
+            tronco={{
+              torax: circunferencias.torax || circunferencias.peito || 0,
+              cintura: circunferencias.cintura || 0,
+              abdome: circunferencias.abdominal || circunferencias.abdome || 0,
+              quadril: circunferencias.quadril || 0,
+            }}
+            membrosSuperiores={{
+              bracoEsquerdo: circunferencias.bracoEsquerdo || circunferencias.braco || 0,
+              bracoDireito: circunferencias.bracoDireito || circunferencias.braco || 0,
+              anteBracoEsquerdo: circunferencias.anteBracoEsquerdo || circunferencias.antebraco || 0,
+              anteBracoDireito: circunferencias.anteBracoDireito || circunferencias.antebraco || 0,
+            }}
+            membrosInferiores={{
+              coxaEsquerda: circunferencias.coxaEsquerda || circunferencias.coxa || 0,
+              coxaDireita: circunferencias.coxaDireita || circunferencias.coxa || 0,
+              panturrilhaEsquerda: circunferencias.panturrilhaEsquerda || circunferencias.panturrilha || 0,
+              panturrilhaDireita: circunferencias.panturrilhaDireita || circunferencias.panturrilha || 0,
+            }}
+          />
+        </div>
+      )}
+
+      {/* Análise Corporal Básica - Para casos com dados limitados */}
+      {imc && peso && !(circunferencias && Object.keys(circunferencias).length >= 4) && (
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-4">
+            <BarChart3 className="w-5 h-5 text-blue-600" />
+            Análise Corporal
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-600 mb-2">
+              IMC: {imc?.toFixed(1)} kg/m²
+            </div>
+            <div className="text-sm text-gray-600">
+              Peso: {peso} kg
+              {altura && ` | Altura: ${altura} cm`}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Para análise detalhada da composição corporal, realize uma avaliação de dobras cutâneas.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Informação caso não haja dados */}
       {!peso && !altura && !circunferencias && !diametros && !imc && (

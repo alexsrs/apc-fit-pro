@@ -14,8 +14,9 @@ export interface Medidas {
   suprailiaca?: number;
   bicipital?: number;
   peitoral?: number;
+  torax?: number;       // ← Adicionado para Pollock 7
   abdominal?: number;
-  axilarMedia?: number;
+  axilarmedia?: number; // ← Corrigido (sem "l" no meio)
   coxa?: number;
   biceps?: number;
   panturrilha?: number;
@@ -27,6 +28,9 @@ export interface ResultadoCalculo {
   percentualGordura: number;
   massaGorda: number;
   massaMagra: number;
+  // Campos adicionais calculados no frontend (estimativas)
+  massaMuscular?: number;
+  musculoEsqueletico?: number;
   classificacao: string;
   densidadeCorporal?: number;
 }

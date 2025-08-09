@@ -1,0 +1,19 @@
+{
+  "userPerfilId": "test-user",
+  "protocolo": "pollock7",
+  "dadosPessoais": {
+    "genero": "masculino",
+    "idade": 30,
+    "peso": 75
+  },
+  "medidas": {
+    "triceps": 12,
+    "subescapular": 15,
+    "suprailiaca": 18,
+    "abdominal": 20,
+    "peitoral": 10,
+    "axilarmedia": 14,
+    "coxa": 16
+  },
+  "observacoes": "Teste pollock7"
+}

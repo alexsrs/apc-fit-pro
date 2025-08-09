@@ -44,6 +44,7 @@ export type ProtocoloDisponivel =
   | 'pollock-3-homens'   // 3 dobras (homens)
   | 'pollock-3-mulheres' // 3 dobras (mulheres)
   | 'pollock-7'          // 7 dobras
+  | 'pollock-9'          // 9 dobras (atletas)
   | 'guedes-3-mulher'    // 3 dobras (mulher)
   | 'guedes-3-homem';    // 3 dobras (homem)
 
@@ -91,6 +92,15 @@ export const PROTOCOLOS_INFO: Record<ProtocoloDisponivel, InfoProtocolo> = {
     numDobras: 7,
     pontos: ['Tórax', 'Axilar Média', 'Subescapular', 'Tríceps', 'Abdominal', 'Supra-ilíaca', 'Coxa'],
     indicacao: 'Maior precisão, população geral',
+    requerIdade: true,
+    sexoEspecifico: false
+  },
+  'pollock-9': {
+    nome: 'Pollock 9 Dobras (Atletas)',
+    descricao: 'Protocolo extenso para atletas profissionais',
+    numDobras: 9,
+    pontos: ['Tórax', 'Axilar Média', 'Subescapular', 'Tríceps', 'Abdominal', 'Supra-ilíaca', 'Coxa', 'Bíceps', 'Panturrilha'],
+    indicacao: 'Atletas profissionais, máxima precisão',
     requerIdade: true,
     sexoEspecifico: false
   },

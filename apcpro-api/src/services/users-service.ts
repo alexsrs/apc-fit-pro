@@ -525,10 +525,17 @@ export class UsersService {
     }
   }
 
-  async cadastrarAvaliacaoAluno(userPerfilId: string, dados: any) {
+  async cadastrarAvaliacaoAluno(userPerfilId: string, dados: any, usuarioLogado?: any) {
     try {
       let objetivoClassificado: string | null = null;
       let resultado = dados.resultado;
+
+      // Verificar se quem está criando é um professor
+      let isProfessor = false;
+      if (usuarioLogado?.id) {
+        const perfilUsuarioLogado = await this.userRepository.getUserProfileByUserId(usuarioLogado.id);
+        isProfessor = perfilUsuarioLogado?.role === 'professor';
+      }
 
       if (dados.tipo === "medidas" && dados.resultado) {
         let {
@@ -584,13 +591,26 @@ export class UsersService {
         validadeAte.setDate(validadeAte.getDate() + dados.diasValidade);
       }
 
+      // Determinar status da avaliação baseado em quem está criando
+      let statusAvaliacao = 'pendente'; // Padrão para alunos
+      
+      if (isProfessor) {
+        // Se é professor criando, a avaliação já é válida automaticamente
+        statusAvaliacao = 'aprovada';
+      } else if (validadeAte) {
+        // Se especificou validade (era lógica antiga), aprova automaticamente
+        statusAvaliacao = 'aprovada';
+      } else if (dados.status) {
+        // Usa status explícito se fornecido
+        statusAvaliacao = dados.status;
+      }
+
       const avaliacaoParaSalvar = {
         ...dados,
         resultado,
         objetivoClassificado,
         validadeAte,
-        // Se professor especificou validade, status é 'aprovada', senão 'pendente'
-        status: validadeAte ? 'aprovada' : (dados.status || 'pendente')
+        status: statusAvaliacao
       };
 
       // Salva avaliação no banco

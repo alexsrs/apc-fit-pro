@@ -1,12 +1,8 @@
-/**
- * Componente moderno de Dobras Cutâneas
- * Integrado com a nova API de protocolos independentes
- */
-
-import React, { useState, useEffect } from 'react';
-
-import { calcularIdade } from '@/utils/idade';
-import { formatarDataValidade } from '@/utils/idade';
+// Componente modernizado de avaliação de dobras cutâneas (versão reconstruída após corrupção)
+"use client";
+import React, { useState, useEffect, useMemo } from 'react';
+import { PieChartAvaliacao } from './PieChartAvaliacao';
+import { calcularIdade, formatarDataValidade } from '@/utils/idade';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,462 +11,224 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Calculator, Users, Target, Clock } from 'lucide-react';
-import apiClient from '@/lib/api-client';
+import { AvaliacaoCompleta, Medidas, ProtocoloInfo } from '@/types/dobras-cutaneas';
 import { useUserProfile } from '@/contexts/UserProfileContext';
-import type { 
-  AvaliacaoCompleta, 
-  Medidas, 
-  ProtocoloInfo 
-} from '@/types/dobras-cutaneas';
+import apiClient from '@/lib/api-client';
 
-// Unificação: garantir que DadosPessoais tenha todos os campos necessários
-// ...existing code...
-
-// Unificação: garantir que DadosPessoais tenha todos os campos necessários
-interface DadosPessoais {
-  genero?: 'masculino' | 'feminino';
-  peso?: string;
-  idade?: string;
-  altura?: string;
-  dataNascimento?: string;
-  nome?: string;
-  image?: string;
-}
-
-
-
-export interface DobrasCutaneasModernasProps {
-  userPerfilId: string;
-  resultado: AvaliacaoCompleta | null;
-  onResultado: (resultado: any) => void;
+interface Props {
+  resultado: any; // Dados pré-carregados de aluno / avaliação
+  onResultado?: (resultado: AvaliacaoCompleta) => void;
   modoCalculoApenas?: boolean;
   className?: string;
 }
 
-/**
- * Normaliza o nome da dobra para o formato esperado pelo backend.
- * Corrige especificamente o caso de "Axilar Média" para "axilarmedia".
- */
-function normalizarDobra(nome: string): string {
-  let normalizado = nome
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // remove acentos
-    .replace(/[^a-zA-Z0-9]/g, '')    // remove espaços e caracteres especiais
-    .toLowerCase();
-
-  // Corrige especificamente o caso da axilar média
-  if (normalizado === "axiliarmedia") {
-    normalizado = "axilarmedia";
-  }
-  return normalizado;
-}
-
-const dobrasInfo = {
-  triceps: {
-    nome: 'Tríceps',
-    descricao: 'Dobra vertical na face posterior do braço, no ponto médio entre o acrômio e o olécrano'
-  },
-  subescapular: {
-    nome: 'Subescapular',
-    descricao: 'Dobra oblíqua logo abaixo do ângulo inferior da escápula'
-  },
-  suprailiaca: {
-    nome: 'Supra-ilíaca',
-    descricao: 'Dobra oblíqua imediatamente acima da crista ilíaca anterossuperior'
-  },
-  bicipital: {
-    nome: 'Bicipital',
-    descricao: 'Dobra vertical na face anterior do braço, sobre o músculo bíceps'
-  },
-  peitoral: {
-    nome: 'Peitoral',
-    descricao: 'Dobra diagonal no peito, entre a linha axilar anterior e o mamilo'
-  },
-  abdominal: {
-    nome: 'Abdominal',
-    descricao: 'Dobra vertical ao lado do umbigo, aproximadamente 2 cm lateralmente'
-  },
-  axilarmedia: {
-    nome: 'Axilar Média',
-    descricao: 'Dobra vertical na linha axilar média, ao nível do processo xifoide'
-  },
-  coxa: {
-    nome: 'Coxa',
-    descricao: 'Dobra vertical na face anterior da coxa, no ponto médio'
-  },
-  biceps: {
-    nome: 'Bíceps',
-    descricao: 'Dobra vertical sobre o ponto de maior volume do músculo bíceps'
-  },
-  panturrilha: {
-    nome: 'Panturrilha',
-    descricao: 'Dobra vertical na face medial da panturrilha, no nível de maior circunferência'
-  },
-  torax: {
-    nome: 'Tórax',
-    descricao: 'Dobra diagonal no peito, entre a linha axilar anterior e o mamilo'
-  }
+// Mapa de descrição das dobras (chaves normalizadas).
+// Inclui sinônimos normalizados para garantir exibição mesmo se o backend mudar levemente o nome.
+// Ex: "tricipital" vs "triceps"; "axilarMedia" -> normaliza para "axilarmedia".
+const DOBRAS_INFO: Record<string, { nome: string; descricao: string; sinonimos?: string[] }> = {
+  triceps: { nome: 'Tríceps', descricao: 'Face posterior do braço, ponto médio acrômio-olécrano (vertical)', sinonimos: ['tricipital'] },
+  tricipital: { nome: 'Tricipital (Tríceps)', descricao: 'Face posterior do braço, ponto médio acrômio-olécrano (vertical)' },
+  subescapular: { nome: 'Subescapular', descricao: 'Abaixo da escápula, ~2 cm da borda inferior (diagonal)' },
+  suprailiaca: { nome: 'Supra-ilíaca', descricao: 'Logo acima da crista ilíaca, linha axilar média (diagonal)', sinonimos: ['suprailiaca'] },
+  abdominal: { nome: 'Abdominal', descricao: 'Ao lado direito do umbigo (vertical)' },
+  peitoral: { nome: 'Peitoral', descricao: 'Entre axila e mamilo (diagonal, ângulo depende do sexo)' },
+  torax: { nome: 'Tórax', descricao: 'Entre linha axilar anterior e mamilo (oblíqua) - sinônimo de peitoral', sinonimos: ['peitoral'] },
+  axilarmedia: { nome: 'Axilar Média', descricao: 'Linha axilar média ao nível do apêndice xifoide (horizontal)', sinonimos: ['axilarmed', 'axilar', 'axilarmedia'] },
+  coxa: { nome: 'Coxa', descricao: 'Face anterior, ponto médio entre prega inguinal e patela (vertical)' },
+  bicipital: { nome: 'Bicipital', descricao: 'Face anterior do braço sobre o ventre do bíceps (vertical)', sinonimos: ['biceps'] },
+  biceps: { nome: 'Bíceps', descricao: 'Face anterior do braço sobre o ventre do bíceps (vertical)' },
+  panturrilha: { nome: 'Panturrilha', descricao: 'Face medial na maior circunferência (vertical)' }
 };
 
-export function DobrasCutaneasModernas({
-  resultado,
-  onResultado,
-  modoCalculoApenas = false,
-  className
-}: DobrasCutaneasModernasProps) {
-  const { profile } = useUserProfile();
-  // Verificação de role: só permite avaliação se não for aluno
-  const isAluno = profile?.role === 'aluno';
-  // Debug visual removido
-
-  // Função utilitária para garantir que o gênero seja sempre 'masculino' ou 'feminino'
-  function getGeneroValido(genero?: string): 'masculino' | 'feminino' | undefined {
-    if (!genero) return undefined;
-    const lower = genero.trim().toLowerCase();
-    if (lower === 'masculino' || lower === 'm') return 'masculino';
-    if (lower === 'feminino' || lower === 'f') return 'feminino';
-    return undefined;
+function obterInfoDobra(normalizada: string) {
+  // Primeiro, busca direta
+  if (DOBRAS_INFO[normalizada]) return DOBRAS_INFO[normalizada];
+  
+  // Procura em sinônimos
+  for (const key of Object.keys(DOBRAS_INFO)) {
+    const item = DOBRAS_INFO[key];
+    if (item.sinonimos && item.sinonimos.includes(normalizada)) return item;
   }
+  
+  // Tentativas de mapeamento manual para casos específicos
+  const mapeamentos: Record<string, string> = {
+    'axilarmedia': 'axilarmedia',
+    'axilarmédia': 'axilarmedia', 
+    'axilarmédio': 'axilarmedia',
+    'torax': 'torax',
+    'tórax': 'torax',
+    'biceps': 'biceps',
+    'bíceps': 'biceps',
+    'triceps': 'triceps',
+    'tríceps': 'triceps',
+    'suprailíaca': 'suprailiaca',
+    'suprailiaca': 'suprailiaca'
+  };
+  
+  if (mapeamentos[normalizada]) {
+    return DOBRAS_INFO[mapeamentos[normalizada]];
+  }
+  
+  return undefined;
+}
 
-  // Estado para gênero via API removido (não utilizado)
+function normalizarDobra(nome: string) {
+  return nome
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
 
+export function DobrasCutaneasModernas({ resultado, onResultado, modoCalculoApenas = false, className }: Props) {
+  const { profile } = useUserProfile();
+  const isAluno = profile?.role === 'aluno';
+
+  // Dados base do aluno
   const peso = resultado?.aluno?.peso;
   const altura = resultado?.aluno?.altura;
-  const dataNascimentoValida = resultado?.aluno?.dataNascimento;
-  const idadeCalculada = dataNascimentoValida ? calcularIdade(dataNascimentoValida) : undefined;
-  const idade = idadeCalculada && idadeCalculada > 0 ? idadeCalculada : undefined;
-
-  const genero = getGeneroValido(resultado?.aluno?.genero);
-  const dataNascimento = dataNascimentoValida;
-
-  // infoAluno removido (não utilizado)
+  const dataNascimento = resultado?.aluno?.dataNascimento;
+  const idadeCalculada = dataNascimento ? calcularIdade(dataNascimento) : undefined;
+  const genero = resultado?.aluno?.genero; // já vem normalizado backend? manter
 
   const [protocolos, setProtocolos] = useState<ProtocoloInfo[]>([]);
-  const [protocoloSelecionado, setProtocoloSelecionado] = useState<string>(resultado?.protocolo ?? '');
-  const [dadosPessoais, setDadosPessoais] = useState<DadosPessoais>({
-    genero,
-    idade: idade ? String(idade) : undefined,
-    peso: peso ? String(peso) : undefined,
-    altura: altura ? String(altura) : undefined,
-    dataNascimento,
-    nome: resultado?.aluno?.name,
-    image: resultado?.aluno?.image
-  });
+  const [protocoloSelecionado, setProtocoloSelecionado] = useState<string>('');
   const [medidas, setMedidas] = useState<Medidas>({});
   const [resultadoState, setResultadoState] = useState<AvaliacaoCompleta | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingProtocolos, setLoadingProtocolos] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
   const [debugPayload, setDebugPayload] = useState<any>(null);
-  // dobraAtiva removido (não utilizado)
 
-  useEffect(() => {
-    // Se faltar qualquer dado pessoal, exibe erro e bloqueia
-    if (!resultado?.aluno?.id || !resultado?.aluno?.genero || !resultado?.aluno?.peso || !resultado?.aluno?.altura || !resultado?.aluno?.dataNascimento) {
-      setErrors(["Selecione um aluno válido e com todos os dados pessoais preenchidos (gênero, peso, altura, data de nascimento) para realizar a avaliação física."]);
-      setDadosPessoais({});
-      return;
-    }
-    setDadosPessoais({
-      genero: getGeneroValido(resultado?.aluno?.genero),
-      idade: idade ? String(idade) : undefined,
-      peso: peso ? String(peso) : undefined,
-      altura: altura ? String(altura) : undefined,
-      dataNascimento,
-      nome: resultado?.aluno?.name,
-      image: resultado?.aluno?.image
-    });
-    setErrors([]);
-  }, [resultado, idade, peso, altura, dataNascimento]);
-
-  // Carregar protocolos disponíveis apenas uma vez ao montar o componente
-  useEffect(() => {
-    carregarProtocolos();
-  }, []);
-
-  const carregarProtocolos = async () => {
+  // Carregar protocolos
+  useEffect(() => { (async () => {
     try {
-      const response = await apiClient.get('/api/dobras-cutaneas/protocolos');
-      const data = response.data?.data || [];
-      if (Array.isArray(data)) {
-        setProtocolos(data);
-      } else {
-        console.error('Dados de protocolos inválidos:', data);
-        setErrors(['Formato de dados de protocolos inválido']);
-        setProtocolos([]);
+      const resp = await apiClient.get('/api/dobras-cutaneas/protocolos');
+      let data: ProtocoloInfo[] = resp.data?.data || [];
+      if (!data.find(p => p.id === 'pollock9')) {
+        data.push({
+          id: 'pollock9',
+          nome: 'Pollock 9 dobras (atletas)',
+            descricao: 'Usa 9 dobras, % gordura pelas 7 tradicionais, mostra soma das 9.',
+          numDobras: 9,
+          dobrasNecessarias: ['triceps','subescapular','suprailiaca','abdominal','torax','axilarmedia','coxa','biceps','panturrilha'],
+          requerIdade: true,
+          generoEspecifico: false,
+          tempoMedio: '7-10 min',
+          recomendado: 'Atletas'
+        });
       }
-      setLoadingProtocolos(false);
-    } catch (error) {
-      console.error('Erro ao carregar protocolos:', error);
-      setErrors(['Erro ao carregar protocolos disponíveis']);
-      setProtocolos([]);
-      setLoadingProtocolos(false);
-    }
-  };
+      setProtocolos(data);
+    } catch {
+      setErrors(['Erro ao carregar protocolos']);
+    } finally { setLoadingProtocolos(false); }
+  })(); }, []);
 
-  // Obter informações do protocolo selecionado
   const protocoloInfo = protocolos.find(p => p.id === protocoloSelecionado);
 
-  // Validar se todas as medidas necessárias foram preenchidas (usando chaves normalizadas)
-  const dobrasFaltando: string[] = [];
-  const medidasCompletas = () => {
-    if (!protocoloInfo) return false;
-    let completo = true;
-    dobrasFaltando.length = 0;
-    protocoloInfo.dobrasNecessarias.forEach(dobra => {
-      const chave = normalizarDobra(dobra);
+  const medidasFaltando = useMemo(() => {
+    if (!protocoloInfo) return [] as string[];
+    return protocoloInfo.dobrasNecessarias.filter(d => {
+      const chave = normalizarDobra(d);
       const valor = medidas[chave as keyof Medidas];
-      if (!valor || valor <= 0) {
-        completo = false;
-        dobrasFaltando.push(dobra);
-      }
+      return !valor || valor <= 0;
     });
-    return completo;
-  } 
+  }, [protocoloInfo, medidas]);
 
-  // Validar dados pessoais
-  const dadosValidos = () => {
-    if (!dadosPessoais.genero || !dadosPessoais.peso || !dadosPessoais.altura || !dadosPessoais.idade) return false;
-    if (Number(dadosPessoais.peso) <= 0) return false;
-    if (Number(dadosPessoais.altura) <= 0) return false;
-    if (protocoloInfo?.requerIdade && Number(dadosPessoais.idade) <= 0) return false;
-    return true;
-  };
+  const dadosPessoaisValidos = !!(resultado?.aluno?.genero && peso && altura && dataNascimento && idadeCalculada);
 
-  // Atualizar medida
-  const atualizarMedida = (dobra: string, valor: string) => {
-    const numeroValor = valor ? parseFloat(valor) : undefined;
-    const chaveNormalizada = normalizarDobra(dobra);
-    setMedidas(prev => ({
-      ...prev,
-      [chaveNormalizada]: numeroValor
-    }));
-    setErrors([]);
-  };
-
-  // Função para montar dados pessoais - sempre do aluno selecionado
-  function montarDadosPessoais(): DadosPessoais {
-    return {
-      genero: getGeneroValido(resultado?.aluno?.genero),
-      idade: idade ? String(idade) : undefined,
-      peso: peso ? String(peso) : undefined,
-      altura: altura ? String(altura) : undefined,
-      dataNascimento,
-      nome: resultado?.aluno?.name,
-      image: resultado?.aluno?.image
-    };
+  function atualizarMedida(dobraOriginal: string, valor: string) {
+    const chave = normalizarDobra(dobraOriginal);
+    setMedidas(prev => ({ ...prev, [chave]: valor ? parseFloat(valor) : undefined }));
   }
 
-  // Calcular protocolo com validação de compatibilidade de gênero
-  const calcular = async () => {
-    if (!protocoloSelecionado || !dadosValidos() || !medidasCompletas()) {
-      let mensagem = 'Preencha todos os dados obrigatórios antes de calcular';
-      if (!medidasCompletas() && protocoloInfo) {
-        mensagem += `\nDobras faltando: ${dobrasFaltando.join(', ')}`;
-      }
-      setErrors([mensagem]);
-      return;
-    }
+  async function calcular() {
+    if (!protocoloSelecionado || !protocoloInfo) { setErrors(['Selecione um protocolo']); return; }
+    if (!dadosPessoaisValidos) { setErrors(['Dados pessoais incompletos']); return; }
+    if (medidasFaltando.length > 0) { setErrors([`Preencha todas as dobras: faltando ${medidasFaltando.join(', ')}`]); return; }
 
-    // Validação de compatibilidade de gênero com o protocolo
-    if (protocoloInfo) {
-      // Exemplo: se o nome do protocolo contém "(homens)" ou "(mulheres)", valida o gênero
-      const nomeProt = protocoloInfo.nome.toLowerCase();
-      if (nomeProt.includes('homem') && dadosPessoais.genero !== 'masculino') {
-        setErrors([`O protocolo selecionado é exclusivo para homens. Altere o protocolo ou o gênero do aluno.`]);
-        return;
-      }
-      if (nomeProt.includes('mulher') && dadosPessoais.genero !== 'feminino') {
-        setErrors([`O protocolo selecionado é exclusivo para mulheres. Altere o protocolo ou o gênero do aluno.`]);
-        return;
-      }
-    }
-
-    // LOG DETALHADO PARA DEBUG
-    if (protocoloInfo) {
-      const dobrasEsperadas = protocoloInfo.dobrasNecessarias;
-      const dobrasPresentes = Object.keys(medidas).filter(k => medidas[k as keyof Medidas] && medidas[k as keyof Medidas]! > 0);
-      const faltando = dobrasEsperadas.filter(d => !(dobrasPresentes.includes(d)));
-      console.log('[DEBUG][tifurico] Protocolo selecionado:', protocoloSelecionado);
-      console.log('[DEBUG][tifurico] Dobras esperadas:', dobrasEsperadas);
-      console.log('[DEBUG][tifurico] Dobras presentes no payload:', dobrasPresentes);
-      console.log('[DEBUG][tifurico] Dobras faltando:', faltando);
-      console.log('[DEBUG][tifurico] Medidas enviadas:', medidas);
-    }
-
-    setLoading(true);
-    setErrors([]);
-
+    setLoading(true); setErrors([]);
     try {
-      // Normalizar as chaves das medidas para garantir compatibilidade com o backend
-      const medidasNormalizadas: Record<string, number> = {};
-      Object.entries(medidas).forEach(([chave, valor]) => {
-        if (valor !== undefined && valor !== null && valor > 0) {
-          medidasNormalizadas[normalizarDobra(chave)] = valor;
-        }
-      });
-
+      // Normalizar o protocolo para remover hífens (API espera sem hífen)
+      const protocoloNormalizado = protocoloSelecionado.replace(/-/g, '');
+      
       const payload = {
-        ...resultado,
-        protocolo: protocoloSelecionado,
-        dadosPessoais: montarDadosPessoais(),
-        medidas: medidasNormalizadas,
-        observacoes: `Avaliação realizada em ${new Date().toLocaleDateString()}`,
-        userPerfilId: resultado?.aluno?.id // Garante que o id do perfil do aluno vai para o backend
+        protocolo: protocoloNormalizado,
+        dadosPessoais: {
+          genero: genero,
+          idade: idadeCalculada,
+          peso,
+          altura
+        },
+        medidas,
+        aluno: resultado?.aluno
       };
-
-      setDebugPayload(payload); // Salva para debug visual
-      console.log('[DEBUG][tifurico] Payload enviado para API:', payload);
-
+      setDebugPayload(payload);
       const endpoint = modoCalculoApenas ? '/api/dobras-cutaneas/calcular' : '/api/dobras-cutaneas';
-      const response = await apiClient.post(endpoint, payload);
+      const resp = await apiClient.post(endpoint, payload);
+      const data: AvaliacaoCompleta = resp.data.data.resultado ?? resp.data.data;
+      setResultadoState(data);
+      onResultado?.(data);
+      setDebugPayload(null);
+    } catch (e: any) {
+      setErrors([e?.response?.data?.message || 'Falha ao calcular']);
+    } finally { setLoading(false); }
+  }
 
-      const avaliacaoCompleta = response.data.data;
-      // Se vier um campo resultado, prioriza ele, senão usa o objeto inteiro
-      setResultadoState(avaliacaoCompleta?.resultado ?? avaliacaoCompleta);
+  function limpar() {
+    setMedidas({}); setResultadoState(null); setErrors([]);
+  }
 
-      if (onResultado) {
-        onResultado(avaliacaoCompleta?.resultado ?? avaliacaoCompleta);
-      }
-
-      setDebugPayload(null); // Limpa debug se sucesso
-    } catch (error: unknown) {
-      console.error('Erro ao calcular:', error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao realizar cálculo';
-      setErrors([errorMessage]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Limpar formulário
-  const limpar = () => {
-    setMedidas({});
-    setResultadoState(null);
-    setErrors([]);
-    // setDobraAtiva removido
-  };
-
-  // Debug extra para idade
-  console.log('[DEBUG] Data de nascimento recebida:', resultado?.aluno?.dataNascimento);
-  const debugIdade = (
-    <div className="mb-2 p-2 bg-orange-50 border border-orange-300 rounded">
-      <strong>Debug Idade:</strong>
-      <div>Data de nascimento: <span className="font-mono">{resultado?.aluno?.dataNascimento ?? '-'}</span></div>
-      <div>Idade calculada: <span className="font-mono">{idade}</span></div>
-    </div>
-  );
+  // Normalização de resultado para exibição (seguro para null)
+  const resultados = resultadoState?.resultados;
+  const pesoCorporalReferencia = (peso && peso > 0) ? peso : undefined;
+  const pesoSomado = resultados ? (resultados.massaGorda + resultados.massaMagra) : undefined;
+  const massaMuscular = resultados?.massaMuscular;
+  const musculoEsqueletico = resultados?.musculoEsqueletico;
 
   if (loadingProtocolos) {
-    return (
-      <Card className={className}>
-        <CardContent className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2">Carregando protocolos...</span>
-        </CardContent>
-      </Card>
-    );
+    return <Card className={className}><CardContent className="p-6">Carregando protocolos...</CardContent></Card>;
   }
 
-  // Bloqueio para role aluno
   if (isAluno) {
-    return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Alunos não podem realizar avaliações físicas. Selecione um perfil de professor ou personal trainer para acessar este formulário.
-        </AlertDescription>
-      </Alert>
-    );
+    return <Alert variant="destructive" className="mb-4"><AlertCircle className="h-4 w-4" /><AlertDescription>Alunos não podem registrar avaliações.</AlertDescription></Alert>;
   }
 
-  // Bloqueio se não houver dados do aluno selecionado
-  if (!resultado?.aluno || !resultado?.aluno?.id || !resultado?.aluno?.genero || !resultado?.aluno?.peso || !resultado?.aluno?.altura || !resultado?.aluno?.dataNascimento) {
-    // Identificar campos ausentes
-    const camposFaltando: string[] = [];
-    if (!resultado?.aluno) camposFaltando.push('aluno');
-    if (!resultado?.aluno?.id) camposFaltando.push('id');
-    if (!resultado?.aluno?.genero) camposFaltando.push('genero');
-    if (!resultado?.aluno?.peso) camposFaltando.push('peso');
-    if (!resultado?.aluno?.altura) camposFaltando.push('altura');
-    if (!resultado?.aluno?.dataNascimento) camposFaltando.push('dataNascimento');
-    if (!resultado?.aluno?.name) camposFaltando.push('name');
-    return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Nenhum aluno selecionado ou dados incompletos.<br />
-          <span className="font-semibold">Campos ausentes:</span>
-          <ul className="mt-2 mb-2 ml-2 list-disc text-red-700 text-sm">
-            {camposFaltando.map((campo) => (
-              <li key={campo} className="flex items-center gap-1">
-                <AlertCircle className="h-3 w-3 text-red-500" /> {campo}
-              </li>
-            ))}
-          </ul>
-          Selecione um aluno válido e com todos os dados pessoais preenchidos para realizar a avaliação física.
-        </AlertDescription>
-      </Alert>
-    );
+  if (!dadosPessoaisValidos) {
+    return <Alert variant="destructive" className="mb-4"><AlertCircle className="h-4 w-4" /><AlertDescription>Aluno sem dados completos (gênero, peso, altura, data nasc.).</AlertDescription></Alert>;
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Debug visual de idade */}
-      {debugIdade}
-      {/* Alerta idade inválida */}
-      {/* Seleção do Protocolo */}
+    <div className={`space-y-6 ${className ?? ''}`}>
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Protocolo de Avaliação
-          </CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Target className="h-5 w-5" />Protocolo</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="protocolo">Protocolo</Label>
+              <Label>Protocolo</Label>
               <Select value={protocoloSelecionado} onValueChange={setProtocoloSelecionado}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um protocolo" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                 <SelectContent>
-                  {protocolos && protocolos.length > 0 ? protocolos.map(protocolo => (
-                    <SelectItem key={protocolo.id} value={protocolo.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{protocolo.nome}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {protocolo.numDobras} dobras • {protocolo.tempoMedio}
-                        </span>
+                  {protocolos.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      <div className="flex flex-col text-left">
+                        <span className="font-medium">{p.nome}</span>
+                        <span className="text-xs text-muted-foreground">{p.numDobras} dobras • {p.tempoMedio}</span>
                       </div>
                     </SelectItem>
-                  )) : (
-                    <SelectItem value="none" disabled>
-                      Nenhum protocolo disponível
-                    </SelectItem>
-                  )}
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-
             {protocoloInfo && (
               <div className="space-y-2">
-                <Label>Informações do Protocolo</Label>
-                <div className="p-3 bg-blue-50 rounded-lg text-sm">
-                  <p className="font-medium">{protocoloInfo.nome}</p>
-                  <p className="text-blue-700">{protocoloInfo.descricao}</p>
-                  <div className="flex gap-2 mt-2">
-                    <Badge variant="outline">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {protocoloInfo.tempoMedio}
-                    </Badge>
-                    <Badge variant="outline">
-                      <Users className="h-3 w-3 mr-1" />
-                      {protocoloInfo.recomendado}
-                    </Badge>
+                <Label>Info</Label>
+                <div className="p-3 bg-blue-50 rounded-lg text-xs">
+                  <p className="font-medium text-sm mb-1">{protocoloInfo.nome}</p>
+                  <p className="text-blue-700 mb-2">{protocoloInfo.descricao}</p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />{protocoloInfo.tempoMedio}</Badge>
+                    <Badge variant="outline"><Users className="h-3 w-3 mr-1" />{protocoloInfo.recomendado}</Badge>
                   </div>
                 </div>
               </div>
@@ -479,183 +237,96 @@ export function DobrasCutaneasModernas({
         </CardContent>
       </Card>
 
-      {/* Dados Pessoais do Aluno */}
-      {protocoloSelecionado && (
+      {protocoloInfo && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Dados do Aluno
-            </CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Calculator className="h-5 w-5" />Dobras ({protocoloInfo.numDobras})</CardTitle></CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <Label>Gênero</Label>
-                <div className="text-sm text-gray-700">{dadosPessoais.genero === 'masculino' ? 'Masculino' : dadosPessoais.genero === 'feminino' ? 'Feminino' : <span className="text-red-500">Faltando</span>}</div>
-              </div>
-              <div>
-                <Label>Peso</Label>
-                <div className="text-sm text-gray-700">{dadosPessoais.peso ? `${dadosPessoais.peso} kg` : <span className="text-red-500">Faltando</span>}</div>
-              </div>
-              <div>
-                <Label>Idade</Label>
-                <div className="text-sm text-gray-700">{dadosPessoais.idade ? dadosPessoais.idade : <span className="text-red-500">Faltando</span>}</div>
-              </div>
-              <div>
-                <Label>Altura</Label>
-                <div className="text-sm text-gray-700">{dadosPessoais.altura ? `${dadosPessoais.altura} cm` : <span className="text-red-500">Faltando</span>}</div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {protocoloInfo.dobrasNecessarias.map(dobra => {
+                const chave = normalizarDobra(dobra);
+                const info = obterInfoDobra(chave) || obterInfoDobra(normalizarDobra(dobra.replace(/media/i,'média')));
+                
+                // DEBUG: Log para entender o problema
+                console.log(`[DEBUG] Dobra original: "${dobra}", normalizada: "${chave}", info encontrada:`, !!info);
+                
+                return (
+                  <div key={dobra} className="space-y-1">
+                    <Label htmlFor={dobra}>{info?.nome || dobra}</Label>
+                    <div className="text-[11px] text-muted-foreground min-h-[28px]">{info?.descricao || '— Descrição indisponível —'}</div>
+                    <Input id={dobra} type="number" min={0} step={0.5} value={medidas[chave as keyof Medidas] ?? ''} onChange={e => atualizarMedida(dobra, e.target.value)} placeholder="mm" />
+                  </div>
+                );
+              })}
             </div>
+            {medidasFaltando.length > 0 && <p className="text-xs text-red-600 mt-3">Faltando: {medidasFaltando.join(', ')}</p>}
           </CardContent>
         </Card>
       )}
 
-      {/* Medidas das Dobras */}
-      {protocoloSelecionado && protocoloInfo && (
+      {resultadoState && resultados && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5" />
-              Medidas das Dobras Cutâneas
-              <span className="text-sm text-muted-foreground ml-auto">
-                {Object.keys(medidas).filter(k => medidas[k as keyof Medidas]).length}/{protocoloInfo.numDobras}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {protocoloInfo && protocoloInfo.dobrasNecessarias && protocoloInfo.dobrasNecessarias.length > 0 && (
-                <>
-                  {protocoloInfo.dobrasNecessarias.map(dobra => {
-                    const chave = normalizarDobra(dobra);
-                    const info = dobrasInfo[chave as keyof typeof dobrasInfo];
-                    const valor = medidas[chave as keyof Medidas];
-                    if (!info) {
-                      console.warn(`Informação não encontrada para dobra: ${dobra} (chave normalizada: ${chave})`);
-                      return null;
-                    }
-                    return (
-                      <div key={dobra} className="space-y-2">
-                        <Label htmlFor={dobra}>{info.nome}</Label>
-                        <div className="text-xs text-muted-foreground mb-1">{info.descricao}</div>
-                        <Input
-                          id={dobra}
-                          type="number"
-                          min={0}
-                          step={0.1}
-                          value={valor ?? ''}
-                          onChange={e => atualizarMedida(dobra, e.target.value)}
-                          placeholder="mm"
-                          className="w-full"
-                          aria-label={`Valor da dobra ${info.nome}`}
-                        />
-                      </div>
-                    );
-                  })}
-                </>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Target className="h-5 w-5" />Resultado</CardTitle></CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Metric bloco="bg-blue-50" titulo="% Gordura" valor={`${resultados.percentualGordura.toFixed(1)}%`} destaque="text-blue-600" />
+              <Metric bloco="bg-green-50" titulo="Massa Magra" valor={`${resultados.massaMagra.toFixed(1)}kg`} destaque="text-green-600" />
+              <Metric bloco="bg-orange-50" titulo="Massa Gorda" valor={`${resultados.massaGorda.toFixed(1)}kg`} destaque="text-orange-600" />
+              {massaMuscular !== undefined && <Metric bloco="bg-yellow-50" titulo="Massa Muscular" valor={`${massaMuscular.toFixed(1)}kg`} destaque="text-yellow-600" />}
+              {musculoEsqueletico !== undefined && <Metric bloco="bg-pink-50" titulo="Músculo Esquelético" valor={`${musculoEsqueletico.toFixed(1)}kg`} destaque="text-pink-600" />}
+              <Metric bloco="bg-purple-50" titulo="Classificação" valor={resultados.classificacao} destaque="text-purple-600 text-lg" />
+            </div>
+            <PieChartAvaliacao
+              percentualGordura={resultados.percentualGordura}
+              massaMagra={resultados.massaMagra}
+              massaGorda={resultados.massaGorda}
+              massaMuscular={massaMuscular}
+              musculoEsqueletico={musculoEsqueletico}
+            />
+            <div className="p-4 bg-gray-50 rounded-md text-sm grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><strong>Protocolo:</strong> {resultadoState.metadata?.validadeFormula || protocoloInfo?.nome || '-'}</div>
+              <div><strong>Data:</strong> {resultadoState.metadata?.dataAvaliacao ? formatarDataValidade(resultadoState.metadata.dataAvaliacao) : '-'}</div>
+              <div>
+                <strong>Soma total:</strong> {resultados.somaTotal?.toFixed(1)} mm
+                {protocoloInfo?.id === 'pollock9' && resultados.somaEquacao !== undefined && (
+                  <><br /><span className="text-xs text-muted-foreground">Soma 7 equação: {resultados.somaEquacao.toFixed(1)} mm</span></>
+                )}
+              </div>
+              {resultados.densidadeCorporal && <div><strong>Densidade:</strong> {resultados.densidadeCorporal.toFixed(4)}</div>}
+              {pesoCorporalReferencia && (
+                <div className="col-span-1 md:col-span-2 text-xs text-muted-foreground">
+                  Referência de peso usada para estimativas: {pesoCorporalReferencia} kg
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Resultado */}
-      {resultadoState && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Resultado da Avaliação
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
-                  {resultadoState.resultados?.percentualGordura?.toFixed(1)}%
-                </div>
-                <div className="text-sm text-blue-700">Percentual de Gordura</div>
-              </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
-                  {resultadoState.resultados?.massaMagra?.toFixed(1)}kg
-                </div>
-                <div className="text-sm text-green-700">Massa Magra</div>
-              </div>
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">
-                  {resultadoState.resultados?.massaGorda?.toFixed(1)}kg
-                </div>
-                <div className="text-sm text-orange-700">Massa Gorda</div>
-              </div>
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-lg font-bold text-purple-600">
-                  {resultadoState.resultados?.classificacao}
-                </div>
-                <div className="text-sm text-purple-700">Classificação</div>
-              </div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-medium mb-2">Detalhes da Avaliação</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <strong>Protocolo:</strong> {resultadoState.metadata?.validadeFormula ?? '-'}
-                </div>
-                <div>
-                  <strong>Data:</strong> {resultadoState.metadata?.dataAvaliacao ? formatarDataValidade(resultadoState.metadata.dataAvaliacao) : '-'}
-                </div>
-                <div>
-                  <strong>Soma das dobras:</strong> {resultadoState.resultados?.somaTotal?.toFixed(1)}mm
-                </div>
-                {resultadoState.resultados?.densidadeCorporal && (
-                  <div>
-                    <strong>Densidade corporal:</strong> {resultadoState.resultados?.densidadeCorporal?.toFixed(4)}g/cm³
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Exibição de erro + debug do payload */}
       {errors.length > 0 && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {errors.join(' | ')}
-            {debugPayload && (
-              <>
-                <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-800">
-                  <strong>Payload enviado:</strong>
-                  <pre className="overflow-x-auto whitespace-pre-wrap">{JSON.stringify(debugPayload, null, 2)}</pre>
-                  <strong>Chaves das medidas:</strong> {Object.keys(debugPayload.medidas || {}).join(', ')}
-                </div>
-              </>
-            )}
-          </AlertDescription>
-        </Alert>
+        <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertDescription>{errors.join(' | ')}</AlertDescription></Alert>
+      )}
+      {debugPayload && (
+        <div className="p-3 bg-gray-100 rounded text-[11px] font-mono overflow-x-auto">
+          <strong>Payload:</strong> {JSON.stringify(debugPayload, null, 2)}
+        </div>
       )}
 
-      {/* Botões de ação */}
       <div className="flex justify-between">
-        <Button
-          onClick={calcular}
-          disabled={loading || !protocoloSelecionado}
-          variant="outline"
-        >
-          <Calculator className="h-4 w-4 mr-2" />
-          {loading ? "Calculando..." : "Calcular"}
+        <Button onClick={calcular} disabled={loading || !protocoloSelecionado} variant="outline">
+          <Calculator className="h-4 w-4 mr-2" />{loading ? 'Calculando...' : 'Calcular'}
         </Button>
-        <Button
-          onClick={limpar}
-          disabled={loading}
-          variant="ghost"
-        >
-          Limpar
-        </Button>
+        <Button onClick={limpar} disabled={loading} variant="ghost">Limpar</Button>
       </div>
+    </div>
+  );
+}
+
+interface MetricProps { bloco: string; titulo: string; valor: string; destaque: string; }
+function Metric({ bloco, titulo, valor, destaque }: MetricProps) {
+  return (
+    <div className={`text-center p-4 rounded-lg ${bloco}`}>
+      <div className={`font-bold ${destaque}`}>{valor}</div>
+      <div className="text-xs mt-1 text-gray-700 font-medium">{titulo}</div>
     </div>
   );
 }

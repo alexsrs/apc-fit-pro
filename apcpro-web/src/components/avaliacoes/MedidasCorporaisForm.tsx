@@ -25,7 +25,7 @@ interface MedidasCorporaisData {
 
 interface MedidasCorporaisFormProps {
   userId: string;
-  onSuccess?: () => void;
+  onSuccess?: (dados: any) => void;
   initialData?: Partial<MedidasCorporaisData>;
 }
 
@@ -82,7 +82,7 @@ export function MedidasCorporaisForm({
       await apiClient.post('/api/medidas-corporais', payload);
       
       alert("Medidas corporais salvas com sucesso!");
-      onSuccess?.();
+      onSuccess?.(payload);
     } catch (error) {
       console.error('Erro ao salvar medidas:', error);
       setErro("Erro ao salvar medidas corporais. Tente novamente.");

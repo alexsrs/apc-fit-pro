@@ -67,6 +67,8 @@ export interface ResultadoAvaliacaoProps {
       percentualGordura?: number;
       massaGorda?: number;
       massaMagra?: number;
+      massaMuscular?: number;
+      musculoEsqueletico?: number;
       classificacao?: string;
     };
     // Campos específicos para medidas corporais
@@ -197,15 +199,37 @@ export function ResultadoAvaliacao({
     tipo === "dobras_cutaneas" ||
     (resultado.protocolo && resultado.medidas)
   ) {
+    // Debug: verificar dados chegando no resultado
+    console.log("🔍 ResultadoAvaliacao - Dobras Cutâneas - Dados recebidos:", resultado);
+    console.log("🔍 ResultadoAvaliacao - Campos de data disponíveis:", {
+      dataAvaliacao: (resultado as any).dataAvaliacao,
+      data: (resultado as any).data,
+      createdAt: resultado.criadoEm,
+      updatedAt: resultado.atualizadoEm
+    });
+    
+    // Garantir que todos os dados necessários sejam passados para DobrasCutaneasInfo
+    const resultadoCompleto = {
+      ...resultado,
+      // Garantir que a data esteja sempre presente
+      dataAvaliacao: (resultado as any).dataAvaliacao || (resultado as any).data || resultado.criadoEm,
+      // Mapear possíveis variações de campo para garantir compatibilidade
+      resultados: {
+        ...(resultado.resultados || {}),
+        // Garantir que novos campos sejam incluídos se existirem
+        massaMuscular: (resultado.resultados as any)?.massaMuscular,
+        musculoEsqueletico: (resultado.resultados as any)?.musculoEsqueletico,
+        // Mapear possíveis variações de nomes de campos
+        somaDobras: (resultado.resultados as any)?.somaTotal || (resultado.resultados as any)?.somaDobras,
+        densidade: (resultado.resultados as any)?.densidadeCorporal || (resultado.resultados as any)?.densidade,
+      }
+    };
+    
     return (
       <div>
         {renderInfoGeral()}
         <DobrasCutaneasInfo
-          resultado={
-            resultado as unknown as Parameters<
-              typeof DobrasCutaneasInfo
-            >[0]["resultado"]
-          }
+          resultado={resultadoCompleto as Parameters<typeof DobrasCutaneasInfo>[0]["resultado"]}
         />
       </div>
     );
@@ -223,11 +247,24 @@ export function ResultadoAvaliacao({
     !indices.rcq &&
     (resultado.circunferencias || resultado.diametros || (resultado.peso && resultado.altura))
   ) {
+    // Debug: verificar dados chegando no resultado para medidas corporais
+    console.log("🔍 ResultadoAvaliacao - Medidas Corporais - Dados recebidos:", resultado);
+    console.log("🔍 ResultadoAvaliacao - Medidas Corporais - Campos de data disponíveis:", {
+      dataAvaliacao: (resultado as any).dataAvaliacao,
+      data: (resultado as any).data,
+      createdAt: resultado.criadoEm,
+      updatedAt: resultado.atualizadoEm
+    });
+    
     return (
       <div>
         {renderInfoGeral()}
         <MedidasCorporaisInfo
-          resultado={{ ...resultado, status: status ?? resultado.status }}
+          resultado={{ 
+            ...resultado, 
+            status: status ?? resultado.status,
+            dataAvaliacao: (resultado as any).dataAvaliacao || (resultado as any).data || resultado.criadoEm
+          }}
         />
       </div>
     );
@@ -258,6 +295,15 @@ export function ResultadoAvaliacao({
 
   // Se tem índices calculados, usa o componente MedidasCorporaisInfo completo
   if (imc || ca || rcq || percentualGC_Marinha) {
+    // Debug: verificar dados chegando no resultado para medidas corporais com índices
+    console.log("🔍 ResultadoAvaliacao - Medidas Corporais (com índices) - Dados recebidos:", resultado);
+    console.log("🔍 ResultadoAvaliacao - Medidas Corporais (com índices) - Campos de data disponíveis:", {
+      dataAvaliacao: (resultado as any).dataAvaliacao,
+      data: (resultado as any).data,
+      createdAt: resultado.criadoEm,
+      updatedAt: resultado.atualizadoEm
+    });
+    
     return (
       <div className={`space-y-4 ${inModal ? "modal-class" : ""}`}>
         {renderInfoGeral()}
@@ -265,6 +311,7 @@ export function ResultadoAvaliacao({
           resultado={{
             ...resultado,
             status: status ?? resultado.status,
+            dataAvaliacao: (resultado as any).dataAvaliacao || (resultado as any).data || resultado.criadoEm,
             indices: {
               imc,
               classificacaoIMC: classificacaoImc,

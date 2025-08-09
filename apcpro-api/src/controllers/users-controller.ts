@@ -319,10 +319,14 @@ export async function cadastrarAvaliacaoAluno(
     const userPerfilId = req.params.userPerfilId;
     const dados = req.body;
     
+    // Buscar informações do usuário logado para determinar se é professor
+    const usuarioLogado = req.user;
+    
     // Se for um professor salvando, pode incluir validade
     const avaliacao = await usersService.cadastrarAvaliacaoAluno(
       userPerfilId,
-      dados
+      dados,
+      usuarioLogado // Passar informações do usuário logado
     );
     const response = created(avaliacao);
     res.status(response.statusCode).json(response.body);

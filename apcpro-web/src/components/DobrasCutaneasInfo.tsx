@@ -15,15 +15,21 @@ import {
   CheckCircle,
   Info,
 } from "lucide-react";
+import { PieChartAvaliacao } from "./PieChartAvaliacao";
+import { ComposicaoCorporalCharts } from "./charts/ComposicaoCorporalCharts";
+import { DobrasCutaneasChart } from "./charts/DobrasCutaneasChart";
 
 // Tipagem para o resultado de dobras cutâneas
 interface DobrasCutaneasResultado {
   protocolo?: string;
   medidas?: Record<string, number>;
+  dataAvaliacao?: string; // Data da avaliação
   resultados?: {
     percentualGordura?: number;
     massaGorda?: number;
     massaMagra?: number;
+    massaMuscular?: number;
+    musculoEsqueletico?: number;
     classificacao?: string;
     densidade?: number;
     somaDobras?: number;
@@ -41,10 +47,7 @@ interface DobrasCutaneasInfoProps {
  * Componente para exibir resultados de dobras cutâneas de forma organizada
  */
 export function DobrasCutaneasInfo({ resultado }: DobrasCutaneasInfoProps) {
-  // Debug: Log dos dados recebidos
-  console.log("🔍 DobrasCutaneasInfo - Dados recebidos:", resultado);
-
-  const { protocolo, medidas, resultados, pesoAtual } = resultado;
+  const { protocolo, medidas, dataAvaliacao, resultados, pesoAtual } = resultado;
 
   /**
    * Renderiza uma seção de medidas se houver dados
@@ -87,10 +90,21 @@ export function DobrasCutaneasInfo({ resultado }: DobrasCutaneasInfoProps) {
       percentualGordura,
       massaGorda,
       massaMagra,
+      massaMuscular,
+      musculoEsqueletico,
       classificacao,
       densidade,
       somaDobras,
     } = resultados;
+
+    // Debug: verificar valores de composição corporal
+    console.log("🔍 DobrasCutaneasInfo - Dados de composição:", {
+      massaGorda,
+      massaMagra,
+      massaMuscular,
+      musculoEsqueletico,
+      percentualGordura
+    });
 
     return (
       <div className="space-y-4">
@@ -146,6 +160,32 @@ export function DobrasCutaneasInfo({ resultado }: DobrasCutaneasInfoProps) {
             </div>
           )}
 
+          {/* Massa Muscular */}
+          {massaMuscular !== undefined && (
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-4 h-4 text-yellow-600" />
+                <span className="font-medium text-yellow-800">Massa Muscular</span>
+              </div>
+              <div className="text-2xl font-bold text-yellow-900">
+                {massaMuscular.toFixed(2)} kg
+              </div>
+            </div>
+          )}
+
+          {/* Músculo Esquelético */}
+          {musculoEsqueletico !== undefined && (
+            <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-pink-600" />
+                <span className="font-medium text-pink-800">Músculo Esquelético</span>
+              </div>
+              <div className="text-2xl font-bold text-pink-900">
+                {musculoEsqueletico.toFixed(2)} kg
+              </div>
+            </div>
+          )}
+
           {/* Densidade Corporal */}
           {densidade !== undefined && (
             <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
@@ -188,6 +228,38 @@ export function DobrasCutaneasInfo({ resultado }: DobrasCutaneasInfoProps) {
             </div>
           )}
         </div>
+
+        {/* Gráficos estilo FineShape */}
+        {percentualGordura !== undefined && massaMagra !== undefined && massaGorda !== undefined && (
+          <div className="mt-6 space-y-6">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              <span className="text-lg font-semibold text-gray-800">Análise Visual Completa</span>
+            </div>
+            
+            {/* Composição Corporal - Múltiplos gráficos como FineShape */}
+            <ComposicaoCorporalCharts
+              dados={{
+                massaGorda: massaGorda,
+                massaMagra: massaMagra,
+                massaMuscular: massaMuscular || 0,
+                musculoEsqueletico: musculoEsqueletico || 0,
+              }}
+              peso={massaGorda + massaMagra}
+              mostrarTodas={true}
+            />
+          </div>
+        )}
+
+        {/* Gráfico das Dobras Cutâneas */}
+        {medidas && Object.keys(medidas).length > 0 && (
+          <div className="mt-6">
+            <DobrasCutaneasChart
+              dobras={medidas}
+              orientacao="horizontal"
+            />
+          </div>
+        )}
       </div>
     );
   };

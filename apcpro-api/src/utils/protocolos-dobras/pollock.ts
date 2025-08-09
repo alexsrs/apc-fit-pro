@@ -85,6 +85,8 @@ export interface ResultadoPollock {
   percentualGordura: number;
   massaGorda: number;
   massaMagra: number;
+  massaMuscular?: number;
+  musculoEsqueletico?: number;
   classificacao: string;
 }
 
@@ -158,6 +160,8 @@ export function calcularPollock3(
     percentualGordura: Math.round(percentualGordura * 10) / 10,
     massaGorda: Math.round(massaGorda * 10) / 10,
     massaMagra: Math.round(massaMagra * 10) / 10,
+  massaMuscular: Math.round((massaMagra * 0.50) * 10) / 10,
+  musculoEsqueletico: Math.round((massaMagra * 0.40) * 10) / 10,
     classificacao
   };
 }
@@ -227,6 +231,8 @@ export function calcularPollock7(
     percentualGordura: Math.round(percentualGordura * 10) / 10,
     massaGorda: Math.round(massaGorda * 10) / 10,
     massaMagra: Math.round(massaMagra * 10) / 10,
+  massaMuscular: Math.round((massaMagra * 0.50) * 10) / 10,
+  musculoEsqueletico: Math.round((massaMagra * 0.40) * 10) / 10,
     classificacao
   };
 }
@@ -296,6 +302,8 @@ export function calcularPollock9(
     percentualGordura: Math.round(percentualGordura * 10) / 10,
     massaGorda: Math.round(massaGorda * 10) / 10,
     massaMagra: Math.round(massaMagra * 10) / 10,
+  massaMuscular: Math.round((massaMagra * 0.50) * 10) / 10,
+  musculoEsqueletico: Math.round((massaMagra * 0.40) * 10) / 10,
     classificacao
   };
 }
