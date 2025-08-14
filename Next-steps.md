@@ -8,16 +8,17 @@ O APC FIT PRO possui uma base sólida implementada com **autenticação completa
 
 ## 🎯 Objetivos Estratégicos
 
-### **🚨 URGENTE - 20 de Julho (14 dias restantes)**
-- ⏳ **Testes Automatizados** - Implementar testes unitários e integração
-- ⏳ **Validação em Staging** - Deploy em ambiente de homologação
-- ⏳ **Documentação de Usuário** - Guias para professores e alunos
-- ⏳ **Correções de UX** - Melhorias baseadas em feedback inicial
+### **🚨 URGENTE - Agosto/2025 (Sprint 14 dias)**
 - ⏳ **Upload de 4 Fotos Corporais (Azure Blob Storage)** - Obrigatório para finalizar avaliações
+- ⏳ **Testes de Salto (CMJ, Squat Jump, Drop Jump)** - Importação CSV + cálculos e métricas
+- ⏳ **Força 1RM (Epley) e Força Relativa** - Cálculos e exibição no relatório
+- ⏳ **Testes Automatizados** - Unitários e integração (baseline > 80% nos módulos novos)
+- ⏳ **Validação em Staging** - Smoke tests do fluxo de fotos e testes de salto
+- ⏳ **Documentação de Usuário** - Guias rápidos para professor e aluno (upload e testes)
 
 ### **✅ CONCLUÍDO RECENTEMENTE (6 de Julho)**
 - ✅ **Sistema de Avaliações Completo** - Fluxo unificado para alunos e professores
-- ✅ **Dobras Cutâneas Implementadas** - Protocolos Faulkner, Pollock, Guedes e ISAK
+- ✅ **Dobras Cutâneas Implementadas** - Protocolos Faulkner, Jackson & Pollock (3, 7 e 9 dobras) e Guedes
 - ✅ **Padronização de Conversão de Gênero** - Utilitário centralizado backend/frontend
 - ✅ **Modais de Avaliação Refinados** - UX melhorada e validação consistente
 - ✅ **Sistema de Status e Validade** - Controle completo de aprovação/reprovação
@@ -45,7 +46,7 @@ O APC FIT PRO possui uma base sólida implementada com **autenticação completa
 
 ## 🛠️ Roadmap Detalhado por Módulos
 
-### 🧪 **MÓDULO PRIORITÁRIO: Testes e Validação** *(URGENTE - 20 de Julho)*
+### 🧪 **MÓDULO PRIORITÁRIO: Testes e Validação** *(Agosto/2025)*
 > **Prazo:** 14 dias | **Complexidade:** Média | **Status:** PRÓXIMO
 
 #### 🎯 **Objetivo Específico:**
@@ -98,15 +99,17 @@ apcpro-web/src/
 └── app/dashboard/professor/page.tsx                 # MODIFICAR (botão adicionar)
 ```
 
-#### ✅ **Critérios de Aceite (15 de Julho):**
-- [ ] Professor pode selecionar protocolo (Faulkner, Pollock, Guedes)
-- [ ] Interface permite entrada rápida das medidas de dobras
-- [ ] Cálculos são realizados automaticamente e salvos
-- [ ] Resultados são exibidos junto com outras medidas antropométricas
-- [ ] Sistema valida ranges de medidas (3-50mm típico)
-- [ ] Integração funciona com fluxo de avaliação existente
-- [ ] Dados são persistidos no banco PostgreSQL
-- [ ] **TESTE REAL:** Funciona em avaliação de atletas de vôlei
+#### ✅ **Critérios de Aceite:**
+- [x] Professor pode selecionar protocolo (Faulkner, Pollock, Guedes)
+- [x] Interface permite entrada rápida das medidas de dobras
+- [x] Cálculos são realizados automaticamente e salvos
+- [x] Resultados são exibidos junto com outras medidas antropométricas
+- [x] Sistema valida ranges de medidas (3-50mm típico)
+- [x] Integração funciona com fluxo de avaliação existente
+- [x] Dados são persistidos no banco PostgreSQL
+- [x] **TESTE REAL:** Funciona em avaliação de atletas de vôlei
+
+Status: Concluído em Jul/2025.
 
 #### 🔧 **Schema do Banco (SEM ALTERAÇÕES - Usar estrutura existente):**
 ```typescript
@@ -140,26 +143,48 @@ apcpro-web/src/
 
 ---
 
+## 📌 Itens da última reunião (27/Jul/2025) incorporados
+
+Action items e decisões consideradas nesta atualização:
+
+- 9 dobras cutâneas (Jackson & Pollock 9) — concluído
+- Importação de dados de testes de salto via CSV (Drop Jump, CMJ, Squat Jump)
+- Criar utilitário de importação (CSV prioritário; suporte a PDF como backlog)
+- Cálculos e métricas: RSI, IE, IFV, potência e potência relativa
+- Avaliação de força com 1RM (Epley) e força relativa
+- Relatórios e gráficos comparativos por tipo de salto
+
+Dependências externas:
+
+- Planilha Excel com fórmulas e tabelas de referência (Fabiano)
+- Amostras de CSV por tipo de teste (Fabiano)
+
 ### �📊 **MÓDULO 1: Testes Físicos e Funcionais** *(Prioridade: ALTA)*
 > **Prazo:** 3-4 semanas | **Complexidade:** Média
 
 #### Funcionalidades a Implementar:
 - **Biblioteca de Testes:** Catálogo com 15+ testes físicos padronizados
-- **Protocolos Automáticos:** Flexibilidade de braço, 1RM, VO2 máx., agilidade, salto vertical e VBT 
+- **Protocolos Automáticos:** Flexibilidade de braço, 1RM (Epley), VO2 máx., agilidade, salto vertical e VBT 
 - **Registro de Resultados:** Interface para inserção e histórico de testes
 - **Análise Comparativa:** Evolução dos testes ao longo do tempo
 - **Classificações Normativas:** Tabelas por idade, sexo e modalidade
+- **Importação de saltos via CSV:** Drop Jump, CMJ e Squat Jump com 6 tentativas por teste; unipodais; teste contínuo (até 15 saltos)
+- **Métricas calculadas:** RSI, IE, IFV, potência absoluta e relativa
 
 #### Arquivos a Criar/Modificar:
 ```
 apcpro-api/src/
 ├── controllers/testes-controller.ts
+├── controllers/testes-salto-controller.ts
 ├── services/testes-service.ts
+├── services/testes-salto-service.ts
 ├── repositories/testes-repository.ts
+├── utils/importadores/jump-csv.ts
 └── models/teste-model.ts
 
 apcpro-web/src/
 ├── components/ModalTestesFisicos.tsx
+├── components/ImportadorCSVTestesSalto.tsx
 ├── components/BibliotecaTestes.tsx
 └── app/dashboard/testes/page.tsx
 
@@ -171,6 +196,8 @@ prisma/schema.prisma (adicionar tabelas)
 - [ ] Sistema calcula classificações automaticamente
 - [ ] Histórico de testes é exibido graficamente
 - [ ] Integração com o fluxo de avaliação existente
+ - [ ] Importação CSV para Drop Jump, CMJ e Squat Jump
+ - [ ] Métricas RSI/IE/IFV e potência calculadas
 
 ---
 
@@ -601,15 +628,15 @@ O APC FIT PRO possui uma **base tecnológica sólida** e um **diferencial compet
 
 ---
 
-**📅 Última atualização:** 6 de Julho de 2025 - 15:30h  
-**🔄 Próxima revisão:** 20 de Julho de 2025  
+**📅 Última atualização:** 14 de Agosto de 2025  
+**🔄 Próxima revisão:** 28 de Agosto de 2025  
 **👨‍💻 Responsável:** Tifurico (GitHub Copilot)  
 **✅ Status:** Testes automatizados concluídos com sucesso
 
 
 **✅ CONCLUÍDO RECENTEMENTE (Julho 2025):**
 - ✅ **Sistema de Avaliações Físicas Completo** - Fluxo unificado para todos os tipos de avaliação
-- ✅ **Implementação de Dobras Cutâneas** - Protocolos Faulkner, Pollock e Guedes funcionais
+- ✅ **Implementação de Dobras Cutâneas** - Protocolos Faulkner, Jackson & Pollock (3, 7 e 9) e Guedes funcionais
 - ✅ **Padronização de Conversão de Gênero** - Utilitário centralizado eliminando duplicações
 - ✅ **Correção de Warnings de Lint** - Código limpo e sem problemas de qualidade
 - ✅ **Testes Automatizados Implementados** - 80 testes com 100% de aprovação e cobertura 80%+

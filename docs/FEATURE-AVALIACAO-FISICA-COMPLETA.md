@@ -78,7 +78,6 @@ Este documento detalha a implementação completa do sistema de avaliação fís
   - **Jackson & Pollock 3 dobras** (homens e mulheres)
   - **Jackson & Pollock 7 dobras**
   - **Guedes** (específico para brasileiros)
-  - **Petroski** (validado para população brasileira)
   - **Faulkner** (protocolo internacional)
 - Cálculo automático de:
   - Densidade corporal

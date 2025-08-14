@@ -33,7 +33,7 @@
 - Supra-ilíaca
 - Coxa
 
-pollock 9 dobras
+** Pollock 9 dobras (Atletas)
 - Tórax
 - Axilar Média
 - Subescapular
@@ -41,5 +41,5 @@ pollock 9 dobras
 - Abdominal
 - Supra-ilíaca
 - Coxa
-- Perna
-- Panturrilha
+- Bíceps
+- Panturrilha (Medial)

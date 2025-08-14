@@ -78,6 +78,53 @@ Implementar sistema robusto de validação para garantir integridade dos dados d
 - [ ] Error boundaries React
 ```
 
+### 3. Issue #3: Upload de 4 Fotos Corporais (Azure Blob)
+
+```
+Título: feat(api+web): upload e listagem de 4 fotos corporais (Azure Blob Storage)
+
+Labels: feature, backend, frontend, priority-high, azure
+
+Descrição:
+Implementar upload seguro de 4 fotos (frente, costas, perfil esq., perfil dir.) com armazenamento no Azure Blob Storage e metadados persistidos no Postgres.
+
+✅ Critérios de Aceitação:
+- [ ] Endpoints de upload/listagem com autenticação
+- [ ] Validações de tipo (JPEG/PNG), tamanho e dimensões
+- [ ] Armazenamento no container `fotos-avaliacao`
+- [ ] Metadados salvos (URL/SAS, tipo, data, avaliaçãoId)
+- [ ] Componente web com preview e validações
+- [ ] Testes (unit + integração) >80% nos módulos novos
+
+🔧 Tarefas Técnicas:
+- [ ] SDK `@azure/storage-blob`
+- [ ] Service/controller na API
+- [ ] Componente UploadFotosAvaliacao no web
+- [ ] Docs de variáveis .env
+```
+
+### 4. Issue #4: Testes de Salto (CSV + métricas)
+
+```
+Título: feat(api+web): importação CSV de Drop Jump, CMJ e Squat Jump com métricas RSI/IE/IFV
+
+Labels: feature, backend, frontend, priority-high, testing
+
+Descrição:
+Permitir importação de CSV exportado do equipamento e calcular métricas (RSI, IE, IFV, potência absoluta/relativa), incluindo fluxos com 6 tentativas e teste contínuo.
+
+✅ Critérios de Aceitação:
+- [ ] Importador CSV (validação e parsing)
+- [ ] Cálculos e normalização de unidades
+- [ ] UI para importação e visualização
+- [ ] Testes automáticos cobrindo casos felizes e inválidos
+
+🔧 Tarefas Técnicas:
+- [ ] utils/importadores/jump-csv.ts
+- [ ] services/testes-salto-service.ts
+- [ ] components/ImportadorCSVTestesSalto.tsx
+```
+
 ## ⚡ Issues de Média Prioridade (Próxima Sprint)
 
 ### 3. Issue #3: Sistema de Relatórios

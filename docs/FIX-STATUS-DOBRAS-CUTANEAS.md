@@ -95,3 +95,9 @@ Agora as avaliações de dobras cutâneas seguem a mesma lógica das demais aval
 ---
 *Correção aplicada em: 6 de julho de 2025*
 *Arquivos modificados: `dobras-cutaneas-service.ts`, `dobras-cutaneas-model.ts`*
+
+## ℹ️ ISAK vs. Jackson & Pollock — esclarecimento
+
+- ISAK (International Society for the Advancement of Kinanthropometry) define padrões de antropometria (níveis 1/2/3) e conjuntos de pontos que não equivalem diretamente a “9 dobras”. Em geral, perfis ISAK incluem 8 dobras padrão e outras medidas (perímetros, diâmetros), com foco em padronização de coleta.
+- Jackson & Pollock são equações/protocolos específicos para estimar densidade corporal e % de gordura a partir de 3, 7 ou 9 dobras (esta última comumente usada para atletas), não sendo um protocolo ISAK.
+- No APC FIT PRO, “9 dobras” refere-se a Jackson & Pollock 9 (Atletas). Caso futuramente implementemos um perfil ISAK completo, ele será tratado como protocolo distinto com campos e relatórios próprios.

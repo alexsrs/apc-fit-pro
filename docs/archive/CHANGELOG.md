@@ -20,7 +20,6 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - **Jackson & Pollock 3 dobras**: Para homens e mulheres
 - **Jackson & Pollock 7 dobras**: Protocolo mais detalhado
 - **Guedes**: Protocolo específico para população brasileira
-- **Petroski**: Validado para brasileiros adultos
 - **Faulkner**: Protocolo internacional amplamente usado
 
 #### Sistema de Status e Aprovações

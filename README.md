@@ -362,7 +362,7 @@ O APC FIT PRO já possui as seguintes funcionalidades plenamente desenvolvidas e
 - ✅ **Validação em Tempo Real:** Feedback imediato com classificações
 
 ### 5. Dobras Cutâneas e Composição Corporal
-- ✅ **Múltiplos Protocolos:** Jackson & Pollock (3 e 7 dobras), Guedes, Petroski, Faulkner
+- ✅ **Múltiplos Protocolos:** Jackson & Pollock (3, 7 e 9 dobras), Guedes, Faulkner
 - ✅ **Cálculos Automáticos:** Densidade corporal, percentual de gordura, massa gorda/magra
 - ✅ **Classificações por Gênero/Idade:** Referências específicas para cada protocolo
 - ✅ **Interface Moderna:** Componente avançado com validação e feedback
