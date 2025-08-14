@@ -33,14 +33,14 @@ jest.mock('../../src/prisma', () => mockPrisma);
 import { UserRepositoryClass } from '../../src/repositories/users-repository';
 
 // Dados de teste
-const mockProfessor = {
+const _mockProfessor = {
   id: 'prof-123',
   nome: 'Professor Teste',
   email: 'professor@teste.com',
   accountType: 'professor',
 };
 
-const mockGrupo = {
+const _mockGrupo = {
   id: 'grupo-123',
   nome: 'Grupo Teste',
   descricao: 'Grupo para testes',
@@ -50,7 +50,7 @@ const mockGrupo = {
   membros: [],
 };
 
-const mockAluno = {
+const _mockAluno = {
   id: 'aluno-123',
   nome: 'Aluno Teste',
   email: 'aluno@teste.com',

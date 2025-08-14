@@ -1,5 +1,4 @@
 // src/services/rcq-service.ts
-import { Genero } from "../models/genero-model";
 import { RCQInput, RCQResultado } from "../models/rcq-model";
 
 /**

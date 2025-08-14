@@ -9,7 +9,6 @@ import { grupoSchema } from "../validators/group.validator";
 import { classificarObjetivoAnamnese } from "../utils/avaliacaoProcessor";
 import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
 import { Genero, isGenero } from "../models/genero-model";
-import { NovaAvaliacaoMessage } from "../utils/messaging";
 import { converterSexoParaGenero, isSexoValido, SexoInput } from "../utils/genero-converter";
 
 function handleServiceError(error: unknown, message: string): never {
@@ -525,17 +524,24 @@ export class UsersService {
     }
   }
 
-  async cadastrarAvaliacaoAluno(userPerfilId: string, dados: any) {
+  async cadastrarAvaliacaoAluno(userPerfilId: string, dados: any, usuarioLogado?: any) {
     try {
       let objetivoClassificado: string | null = null;
       let resultado = dados.resultado;
+
+      // Verificar se quem está criando é um professor
+      let isProfessor = false;
+      if (usuarioLogado?.id) {
+        const perfilUsuarioLogado = await this.userRepository.getUserProfileByUserId(usuarioLogado.id);
+        isProfessor = perfilUsuarioLogado?.role === 'professor';
+      }
 
       if (dados.tipo === "medidas" && dados.resultado) {
         let {
           membrosSuperiores = {},
           tronco = {},
           membrosInferiores = {},
-          pescoco,
+          pescoco: _pescoco,
           ...principais
         } = dados.resultado;
 
@@ -584,13 +590,26 @@ export class UsersService {
         validadeAte.setDate(validadeAte.getDate() + dados.diasValidade);
       }
 
+      // Determinar status da avaliação baseado em quem está criando
+      let statusAvaliacao = 'pendente'; // Padrão para alunos
+      
+      if (isProfessor) {
+        // Se é professor criando, a avaliação já é válida automaticamente
+        statusAvaliacao = 'aprovada';
+      } else if (validadeAte) {
+        // Se especificou validade (era lógica antiga), aprova automaticamente
+        statusAvaliacao = 'aprovada';
+      } else if (dados.status) {
+        // Usa status explícito se fornecido
+        statusAvaliacao = dados.status;
+      }
+
       const avaliacaoParaSalvar = {
         ...dados,
         resultado,
         objetivoClassificado,
         validadeAte,
-        // Se professor especificou validade, status é 'aprovada', senão 'pendente'
-        status: validadeAte ? 'aprovada' : (dados.status || 'pendente')
+        status: statusAvaliacao
       };
 
       // Salva avaliação no banco
@@ -658,13 +677,13 @@ export class UsersService {
         throw new Error("Avaliações insuficientes");
 
       // Se as medidas estão em resultado (JSON), extraia assim:
-      const medidasRecente = {
+  const _medidasRecente = {
         ...maisRecente,
         ...(typeof maisRecente.resultado === "object"
           ? maisRecente.resultado
           : {}),
       };
-      const medidasAnterior = {
+  const _medidasAnterior = {
         ...anterior,
         ...(typeof anterior.resultado === "object" ? anterior.resultado : {}),
       };
@@ -702,7 +721,7 @@ export class UsersService {
         validadeMeses: 2, // Padrão, já que agora calculamos a validade com base nas datas
         indices,
       };
-    } catch (error) {
+  } catch {
       throw new Error("Erro ao calcular próxima avaliação.");
     }
   }

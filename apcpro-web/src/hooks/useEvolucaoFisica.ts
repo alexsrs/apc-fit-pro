@@ -4,6 +4,8 @@ import { buscarEvolucaoFisica } from "@/services/user-service";
 type EvolucaoFisica = {
   peso: number;
   massaMagra: number;
+  massaMuscular?: number;
+  musculoEsqueletico?: number;
 };
 
 export function useEvolucaoFisica(userPerfilId: string) {

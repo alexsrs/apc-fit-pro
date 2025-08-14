@@ -11,7 +11,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 function ConviteAlunoPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const professorId = searchParams?.get("professorId");
 
   useEffect(() => {

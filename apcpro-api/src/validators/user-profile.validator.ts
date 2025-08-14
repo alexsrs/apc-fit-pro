@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import prisma from "../prisma";
 
 export const userProfileSchema = z.object({
@@ -14,8 +14,8 @@ export const userProfileSchema = z.object({
 
 export async function handleCreateUserProfile(req: Request, res: Response) {
   try {
-    const userIdOrInvite = req.params.userId;
-    const data = req.body;
+  const userIdOrInvite = req.params.userId as string;
+  const data = req.body as any;
 
     // Tenta buscar o usuário pelo ID informado
     let user = await prisma.user.findUnique({ where: { id: userIdOrInvite } });
@@ -48,7 +48,7 @@ export async function handleCreateUserProfile(req: Request, res: Response) {
   }
 }
 
-export async function createUserProfile(userId: string, data: any) {
+export async function createUserProfile(_userId: string, _data: any) {
   // Aqui pode manter a lógica já existente de validação e criação
   // Exemplo:
   // const validatedData = userProfileSchema.parse(data);

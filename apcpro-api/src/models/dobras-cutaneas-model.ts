@@ -44,6 +44,8 @@ export interface ResultadosDobrasCutaneas {
   percentualGordura: number;
   massaGorda: number;
   massaMagra: number;
+  massaMuscular?: number; // Estimativa derivada
+  musculoEsqueletico?: number; // Estimativa derivada
   classificacao: string;
   densidadeCorporal?: number; // Apenas Pollock
 }
@@ -129,30 +131,24 @@ export const PROTOCOLOS_RESUMO = {
     tempoMedio: '5 min',
     recomendado: 'População geral'
   },
-  'pollock-3-homens': {
-    nome: 'Pollock 3 (H)',
+  'pollock3': {
+    nome: 'Pollock 3',
     pontos: 3,
     tempoMedio: '3 min',
-    recomendado: 'Avaliação rápida - homens'
+    recomendado: 'Avaliação rápida - ambos os sexos'
   },
-  'pollock-3-mulheres': {
-    nome: 'Pollock 3 (M)',
-    pontos: 3,
-    tempoMedio: '3 min',
-    recomendado: 'Avaliação rápida - mulheres'
-  },
-  'pollock-7': {
+  'pollock7': {
     nome: 'Pollock 7',
     pontos: 7,
     tempoMedio: '8 min',
     recomendado: 'Padrão científico'
   },
-  // 'pollock-9': { // Removido do padrão
-  //   nome: 'Pollock 9',
-  //   pontos: 9,
-  //   tempoMedio: '12 min',
-  //   recomendado: 'Atletas e esportistas'
-  // },
+  'pollock9': {
+    nome: 'Pollock 9',
+    pontos: 9,
+    tempoMedio: '12 min',
+    recomendado: 'Atletas e esportistas'
+  },
   'guedes': {
     nome: 'Guedes',
     pontos: 3,

@@ -39,9 +39,7 @@ export function generoToNumber(genero: Genero): 0 | 1 {
   return genero === Genero.Masculino ? 1 : 0;
 }
 
-function log10(x: number): number {
-  return Math.log(x) / Math.LN10;
-}
+// Nota: função log10 não utilizada removida para reduzir warnings de lint
 
 // Método da Marinha dos EUA (Navy Method)
 const calcularPercentualGorduraMarinha = (dados: {
@@ -106,7 +104,7 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
   const imc = dados.peso / (alturaM * alturaM);
 
   // %GC Deurenberg
-  const percentualGC_Deurenberg =
+  const _percentualGC_Deurenberg =
     1.2 * imc + 0.23 * dados.idade - 10.8 * sexoNum - 5.4;
 
   // %GC Marinha
@@ -132,7 +130,7 @@ export function calcularIndicesMedidas(dados: MedidasInput) {
           generoParaString(dados.genero)
         );
       }
-    } catch (error) {
+  } catch {
       percentualGC_Marinha = null;
       classificacaoGC_Marinha = null;
     }
@@ -211,20 +209,7 @@ function classificarIMC(imc: number): string {
 
 // Classificação RCQ (OMS/ACSM)
 // Observação: O RCQ é útil para identificar risco cardiovascular, especialmente em adultos e idosos. Pode não ser tão preciso para atletas.
-function classificarRCQ(rcq: number, sexo: Genero): string {
-  const sexoNum = generoToNumber(sexo);
-  if (sexoNum === 1) {
-    // Homem
-    if (rcq < 0.9) return "Baixo risco"; // Indicado para adultos jovens e praticantes de atividade física
-    if (rcq < 0.99) return "Risco moderado"; // Frequente em adultos sedentários ou com leve acúmulo abdominal
-    return "Alto risco"; // Comum em adultos com obesidade central ou idosos
-  } else {
-    // Mulher
-    if (rcq < 0.8) return "Baixo risco"; // Indicado para mulheres jovens e ativas
-    if (rcq < 0.85) return "Risco moderado"; // Frequente em mulheres sedentárias ou com leve acúmulo abdominal
-    return "Alto risco"; // Comum em mulheres com obesidade central ou pós-menopausa
-  }
-}
+// classificarRCQ não utilizado internamente; regras de RCQ centralizadas em services/rcq-service.ts
 
 // Classificação CA (Circunferência Abdominal) - risco metabólico (OMS)
 // Observação: A CA é um bom indicador de risco metabólico, especialmente para adultos e idosos. Pode não ser adequada para atletas.
@@ -242,37 +227,7 @@ export function classificarCA(ca: number, genero: Genero): string {
 
 // Classificação %GC (ACSM/Navy) - exemplo simplificado
 // Observação: O %GC é mais preciso para avaliar composição corporal em atletas, praticantes de atividade física e acompanhamento de emagrecimento.
-function classificarPercentualGC(
-  percentualGC: number | null,
-  sexo: Genero,
-  idade: number
-): string | null {
-  if (percentualGC == null) return null;
-  const sexoNum = generoToNumber(sexo);
-  // Tabela simplificada ACSM (pode ajustar conforme referência desejada)
-  const tabelaHomem = [
-    { maxIdade: 29, limites: [8, 19, 24] },
-    { maxIdade: 39, limites: [11, 21, 26] },
-    { maxIdade: 49, limites: [13, 23, 28] },
-    { maxIdade: 59, limites: [15, 25, 30] },
-    { maxIdade: 150, limites: [17, 27, 32] },
-  ];
-  const tabelaMulher = [
-    { maxIdade: 29, limites: [21, 32, 39] },
-    { maxIdade: 39, limites: [23, 33, 40] },
-    { maxIdade: 49, limites: [24, 34, 41] },
-    { maxIdade: 59, limites: [26, 36, 42] },
-    { maxIdade: 150, limites: [27, 37, 43] },
-  ];
-  const tabela = sexoNum === 1 ? tabelaHomem : tabelaMulher;
-  const faixa =
-    tabela.find((f) => idade <= f.maxIdade) || tabela[tabela.length - 1];
-  const [baixo, adequado, alto] = faixa.limites;
-  if (percentualGC < baixo) return "Abaixo do ideal"; // Mais comum em atletas de alto rendimento ou pessoas com baixo percentual de gordura
-  if (percentualGC < adequado) return "Ideal"; // Indicado para praticantes regulares de atividade física e adultos saudáveis
-  if (percentualGC < alto) return "Acima do ideal"; // Frequente em adultos sedentários ou em processo de emagrecimento
-  return "Muito acima do ideal"; // Comum em pessoas com obesidade ou sedentarismo prolongado
-}
+// classificarPercentualGC removida (sem uso); se necessário, manter tabela em rcq/ca services
 
 // ===== FUNÇÕES PARA CÁLCULO DE DOBRAS CUTÂNEAS =====
 

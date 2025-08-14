@@ -1,5 +1,4 @@
 import { HttpResponse } from "../models/http-response-model";
-import { User } from "../models/user-model";
 
 export const ok = (data: any): HttpResponse => ({
   statusCode: 200,

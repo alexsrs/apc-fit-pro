@@ -19,8 +19,7 @@ model User {
   accounts Account[]
   sessions Session[]
   userPerfil UserPerfil[]
-
-  UserPerfil UserPerfil[] @relation("ProfessorUser")
+  professorDe UserPerfil[] @relation("ProfessorUser")
 }
 
 model Account {

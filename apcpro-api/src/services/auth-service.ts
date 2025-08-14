@@ -1,5 +1,3 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import prisma from "../prisma";
 
 export const authenticateWithGoogle = async ({ email, name, image }: { email: string; name: string; image?: string }) => {

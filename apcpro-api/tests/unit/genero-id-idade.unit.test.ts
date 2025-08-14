@@ -1,6 +1,6 @@
 // Testes unitários unificados para utils de gênero e idade
 
-import { converterSexoParaGenero, generoParaString, generoParaNumero, generoParaLetra, isSexoValido } from '../../src/utils/genero-converter';
+import { converterSexoParaGenero } from '../../src/utils/genero-converter';
 import { Genero } from '../../src/models/genero-model';
 import { calcularIdade } from '../../src/utils/idade';
 

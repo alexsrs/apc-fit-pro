@@ -9,7 +9,6 @@ const mockPrisma: any = {
 jest.mock('../../src/prisma', () => mockPrisma);
 
 import { calcularFaulkner, type MedidasFaulkner } from '../../src/utils/protocolos-dobras/faulkner';
-import { calcularPollock7, type MedidasPollock7 } from '../../src/utils/protocolos-dobras/pollock';
 import {
   calcularGuedesHomem,
   calcularGuedesMulher,
@@ -17,7 +16,7 @@ import {
   type MedidasGuedesMulher
 } from '../../src/utils/protocolos-dobras/guedes';
 import { requireProfessor } from '../../src/middlewares/auth-middleware';
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
 // --- Testes dos Protocolos ---
 describe('Dobras Cutâneas - Protocolos', () => {

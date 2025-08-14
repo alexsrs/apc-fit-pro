@@ -1,5 +1,4 @@
 import type { MedidasInput } from "./avaliacaoMedidas";
-import { Genero } from "../models/genero-model";
 import { converterSexoParaGenero, SexoInput } from "./genero-converter";
 
 interface MedidasJson {

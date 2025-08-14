@@ -33,6 +33,13 @@
 - Supra-ilíaca
 - Coxa
 
-
-
-
+pollock 9 dobras
+- Tórax
+- Axilar Média
+- Subescapular
+- Tríceps
+- Abdominal
+- Supra-ilíaca
+- Coxa
+- Perna
+- Panturrilha
