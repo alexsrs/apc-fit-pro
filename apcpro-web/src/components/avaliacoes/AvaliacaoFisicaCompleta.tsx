@@ -5,13 +5,13 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+// ...existing code...
 import { 
   CheckCircle, 
   Circle, 
@@ -20,7 +20,7 @@ import {
   Save,
   FileText,
   AlertCircle,
-  User,
+// ...existing code...
   Heart,
   Ruler,
   Calculator,
@@ -201,7 +201,7 @@ export function AvaliacaoFisicaCompleta({
       };
 
       onFinalizar(dadosCompletos);
-    } catch (error) {
+    } catch {
       setErrors(['Erro ao finalizar avaliação. Tente novamente.']);
     } finally {
       setLoading(false);
@@ -496,6 +496,22 @@ export function AvaliacaoFisicaCompleta({
         <div className="text-center mt-6">
           <Button variant="ghost" onClick={onCancelar}>
             Cancelar Avaliação
+          </Button>
+        </div>
+      )}
+
+      {/* Botão refazer avaliação para alunos */}
+      {tipoUsuario === 'aluno' && (
+        <div className="text-center mt-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setCurrentStep(0);
+              setDadosEtapas({});
+              setErrors([]);
+            }}
+          >
+            Refazer Avaliação
           </Button>
         </div>
       )}

@@ -52,7 +52,7 @@ export function DobrasCutaneasChart({
 
   // Preparar dados para o gráfico
   const dadosGrafico = Object.entries(dobras)
-    .filter(([_, valor]) => valor > 0) // Filtrar apenas dobras com valores
+  .filter(([, valor]) => valor > 0) // Filtrar apenas dobras com valores
     .map(([nome, valor]) => ({
       nome: nomesdobras[nome] || nome,
       nomeOriginal: nome,
@@ -104,7 +104,7 @@ export function DobrasCutaneasChart({
         </div>
 
         <div className="space-y-3">
-          {dadosGrafico.map((dobra, index) => {
+          {dadosGrafico.map((dobra) => {
             const maxValor = Math.max(...dadosGrafico.map(d => d.valor));
             const larguraPercent = (dobra.valor / maxValor) * 100;
             

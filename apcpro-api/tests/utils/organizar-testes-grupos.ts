@@ -3,7 +3,7 @@
  * Remove arquivos temporários de debug e organiza a estrutura de testes
  */
 
-import { readdir, unlink, stat } from 'fs/promises';
+import { unlink, stat } from 'fs/promises';
 import { join } from 'path';
 
 async function limparArquivosTemporarios() {
@@ -21,7 +21,7 @@ async function limparArquivosTemporarios() {
       await stat(caminhoCompleto);
       await unlink(caminhoCompleto);
       console.log(`✅ Removido: ${arquivo}`);
-    } catch (error) {
+  } catch {
       console.log(`⚠️  Arquivo não encontrado: ${arquivo}`);
     }
   }
@@ -41,7 +41,7 @@ async function organizarTestesGrupos() {
       const caminhoCompleto = join(__dirname, teste);
       await stat(caminhoCompleto);
       console.log(`✅ Teste encontrado: ${teste}`);
-    } catch (error) {
+  } catch {
       console.log(`❌ Teste não encontrado: ${teste}`);
     }
   }

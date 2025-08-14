@@ -11,7 +11,7 @@ import { ImcInfo } from "./ImcInfo";
 import { CaInfo } from "./CaInfo";
 import { RcqInfo } from "./RcqInfo";
 import { PercentualGorduraInfo } from "./PercentualGorduraInfo";
-import { PieChartAvaliacao } from "./PieChartAvaliacao";
+// ...existing code...
 import { MedidasPorRegiaoCharts } from "./charts/MedidasPorRegiaoCharts";
 
 // Tipagem para o resultado de medidas corporais
@@ -20,9 +20,10 @@ interface MedidasCorporaisResultado {
   altura?: number;
   idade?: number;
   genero?: string;
+  dataAvaliacao?: string; // opcional, usado para exibir a data do registro
   circunferencias?: Record<string, number>;
   diametros?: Record<string, number>;
-  dataAvaliacao?: string; // Data da avaliação
+// ...existing code...
   // Índices calculados usando os componentes específicos
   indices?: {
     imc?: number;
@@ -61,7 +62,7 @@ interface MedidasCorporaisInfoProps {
 export function MedidasCorporaisInfo({ resultado }: MedidasCorporaisInfoProps) {
   // Debug: Log dos dados recebidos
   console.log("🔍 MedidasCorporaisInfo - Dados recebidos:", resultado);
-  console.log("🔍 MedidasCorporaisInfo - dataAvaliacao:", resultado.dataAvaliacao);
+// ...existing code...
 
   const {
     peso,
@@ -70,7 +71,7 @@ export function MedidasCorporaisInfo({ resultado }: MedidasCorporaisInfoProps) {
     genero,
     circunferencias,
     diametros,
-    dataAvaliacao,
+// ...existing code...
     indices,
     // Valores diretos para compatibilidade
     imc: imcDireto,

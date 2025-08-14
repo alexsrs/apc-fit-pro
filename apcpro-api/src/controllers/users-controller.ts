@@ -1,4 +1,8 @@
 // Endpoint para buscar perfil do aluno via userPerfilId
+import { Request, Response, NextFunction } from "express";
+import { UsersService } from "../services/users-service";
+import { ok, created, noContent, notFound } from "../utils/http-helper";
+
 export const getUserProfileByPerfilId = async (
   req: Request,
   res: Response,
@@ -18,16 +22,6 @@ export const getUserProfileByPerfilId = async (
     next(error);
   }
 };
-import { Request, Response, NextFunction } from "express";
-import { UsersService } from "../services/users-service";
-import {
-  ok,
-  created,
-  noContent,
-  notFound,
-  badRequest,
-  internalError,
-} from "../utils/http-helper";
 
 export const usersService = new UsersService();
 

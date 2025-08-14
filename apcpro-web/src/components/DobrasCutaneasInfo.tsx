@@ -15,7 +15,7 @@ import {
   CheckCircle,
   Info,
 } from "lucide-react";
-import { PieChartAvaliacao } from "./PieChartAvaliacao";
+// ...existing code...
 import { ComposicaoCorporalCharts } from "./charts/ComposicaoCorporalCharts";
 import { DobrasCutaneasChart } from "./charts/DobrasCutaneasChart";
 
@@ -47,7 +47,7 @@ interface DobrasCutaneasInfoProps {
  * Componente para exibir resultados de dobras cutâneas de forma organizada
  */
 export function DobrasCutaneasInfo({ resultado }: DobrasCutaneasInfoProps) {
-  const { protocolo, medidas, dataAvaliacao, resultados, pesoAtual } = resultado;
+  const { protocolo, medidas, resultados, pesoAtual } = resultado;
 
   /**
    * Renderiza uma seção de medidas se houver dados

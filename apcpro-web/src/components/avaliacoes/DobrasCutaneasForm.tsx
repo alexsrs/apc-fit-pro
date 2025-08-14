@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
+// ...existing code...
 import { 
   Save, 
   Calculator, 
@@ -207,13 +207,15 @@ export function DobrasCutaneasForm({
   // Obter configuração do protocolo atual
   const protocoloConfig = PROTOCOLOS_CONFIG[protocoloSelecionado];
   
-  // Obter dobras necessárias para o protocolo
-  const dobrasNecessarias: string[] = Array.isArray(protocoloConfig.dobras) 
-    ? protocoloConfig.dobras
-    : protocoloConfig.dobras[dadosBasicos.genero] || [];
+  // Obter dobras necessárias para o protocolo (memoizado)
+  const dobrasNecessarias: string[] = useMemo(() => {
+    return Array.isArray(protocoloConfig.dobras)
+      ? protocoloConfig.dobras
+      : (protocoloConfig.dobras[dadosBasicos.genero] || []);
+  }, [protocoloConfig, dadosBasicos.genero]);
 
   // Validar protocolo com dados do usuário
-  const validarProtocolo = () => {
+  const validarProtocolo = useCallback(() => {
     const erros: string[] = [];
     
     // Verificar idade se obrigatória
@@ -225,10 +227,10 @@ export function DobrasCutaneasForm({
     }
     
     return erros;
-  };
+  }, [protocoloConfig, dadosBasicos.idade]);
 
   // Validar medidas obrigatórias
-  const validarMedidas = () => {
+  const validarMedidas = useCallback(() => {
     const erros: string[] = [];
     
     dobrasNecessarias.forEach(dobra => {
@@ -239,10 +241,10 @@ export function DobrasCutaneasForm({
     });
     
     return erros;
-  };
+  }, [dobrasNecessarias, medidas]);
 
   // Calcular resultados em tempo real
-  const calcularResultados = async () => {
+  const calcularResultados = useCallback(async () => {
     const errosValidacao = [...validarProtocolo(), ...validarMedidas()];
     if (errosValidacao.length > 0) {
       setErrors(errosValidacao);
@@ -276,7 +278,7 @@ export function DobrasCutaneasForm({
     } finally {
       setCalculando(false);
     }
-  };
+  }, [validarProtocolo, validarMedidas, protocoloSelecionado, dadosBasicos.genero, dadosBasicos.idade, dadosBasicos.peso, medidas]);
 
   // Salvar avaliação
   const salvarAvaliacao = async () => {
@@ -326,6 +328,7 @@ export function DobrasCutaneasForm({
   }, [protocoloSelecionado]);
 
   // Auto-calcular quando medidas estão completas
+  // useEffect ajustado conforme dependências necessárias
   useEffect(() => {
     const medidasCompletas = dobrasNecessarias.every(dobra => {
       const valor = medidas[dobra as keyof MedidasDobras];
@@ -338,7 +341,7 @@ export function DobrasCutaneasForm({
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [medidas, protocoloSelecionado]);
+  }, [medidas, protocoloSelecionado, calcularResultados, calculando, dobrasNecessarias]);
 
   return (
     <div className="space-y-6">

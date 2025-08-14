@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient as _PrismaClient } from '@prisma/client';
 
 // Mock do Prisma para testes
 export const mockPrisma = {

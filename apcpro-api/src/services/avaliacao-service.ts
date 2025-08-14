@@ -1,14 +1,6 @@
 // src/services/avaliacao-service.ts
-import {
-  processarMedidas,
-  MedidasInput,
-  classificarCA,
-  calcularIndicesMedidas,
-} from "../utils/avaliacaoMedidas";
-import {
-  CircunferenciaAbdominalInput,
-  CircunferenciaAbdominalResultado,
-} from "../models/ca-model";
+import { processarMedidas, MedidasInput, calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
+// Importações removidas por não uso: modelos de CA
 
 /**
  * Serviço para processar medidas corporais e calcular índices.

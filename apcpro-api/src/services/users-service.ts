@@ -9,7 +9,6 @@ import { grupoSchema } from "../validators/group.validator";
 import { classificarObjetivoAnamnese } from "../utils/avaliacaoProcessor";
 import { calcularIndicesMedidas } from "../utils/avaliacaoMedidas";
 import { Genero, isGenero } from "../models/genero-model";
-import { NovaAvaliacaoMessage } from "../utils/messaging";
 import { converterSexoParaGenero, isSexoValido, SexoInput } from "../utils/genero-converter";
 
 function handleServiceError(error: unknown, message: string): never {
@@ -542,7 +541,7 @@ export class UsersService {
           membrosSuperiores = {},
           tronco = {},
           membrosInferiores = {},
-          pescoco,
+          pescoco: _pescoco,
           ...principais
         } = dados.resultado;
 
@@ -678,13 +677,13 @@ export class UsersService {
         throw new Error("Avaliações insuficientes");
 
       // Se as medidas estão em resultado (JSON), extraia assim:
-      const medidasRecente = {
+  const _medidasRecente = {
         ...maisRecente,
         ...(typeof maisRecente.resultado === "object"
           ? maisRecente.resultado
           : {}),
       };
-      const medidasAnterior = {
+  const _medidasAnterior = {
         ...anterior,
         ...(typeof anterior.resultado === "object" ? anterior.resultado : {}),
       };
@@ -722,7 +721,7 @@ export class UsersService {
         validadeMeses: 2, // Padrão, já que agora calculamos a validade com base nas datas
         indices,
       };
-    } catch (error) {
+  } catch {
       throw new Error("Erro ao calcular próxima avaliação.");
     }
   }

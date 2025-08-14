@@ -27,7 +27,6 @@ getProximaAvaliacaoAluno,
 getEvolucaoFisica,
 aprovarAvaliacaoAluno,
 reprovarAvaliacaoAluno,
-usersService // Adiciona a importação do serviço
 } from "./controllers/users-controller";
 import { persistSession } from "./controllers/auth-controller";
 import { authenticateUser, requireProfessor } from "./middlewares/auth-middleware";
@@ -68,6 +67,90 @@ router.get("/health", (req: Request, res: Response) => {
 
   res.status(200).json(healthCheck);
 });
+
+// =====================
+// Dobras Cutâneas API
+// =====================
+// Listar protocolos disponíveis (auth básica)
+router.get(
+  "/dobras-cutaneas/protocolos",
+  authenticateUser,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await listarProtocolos(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Validar dados de dobras (somente professor)
+router.post(
+  "/dobras-cutaneas/validar",
+  authenticateUser,
+  requireProfessor,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await validarDadosDobrasCutaneas(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Calcular sem salvar (somente professor)
+router.post(
+  "/dobras-cutaneas/calcular",
+  authenticateUser,
+  requireProfessor,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await calcularDobrasCutaneas(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Criar avaliação e salvar (somente professor)
+router.post(
+  "/dobras-cutaneas",
+  authenticateUser,
+  requireProfessor,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await criarAvaliacaoDobrasCutaneas(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Buscar avaliações por usuário (auth básica)
+router.get(
+  "/dobras-cutaneas/usuario/:userPerfilId",
+  authenticateUser,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await buscarAvaliacoesPorUsuario(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Buscar avaliação por ID (auth básica)
+router.get(
+  "/dobras-cutaneas/:id",
+  authenticateUser,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await buscarAvaliacaoPorId(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 /**
  * @swagger
@@ -363,9 +446,7 @@ router.get("/users", authenticateUser, getAllUsers);
 router.get("/users/:id", authenticateUser, getUserById);
 router.post("/:userId/profile", authenticateUser, postUserProfileByUserId);
 router.get("/:userId/profile", authenticateUser, getUserProfileByUserId);
-// Desativada: use sempre /alunos/:userPerfilId/profile
-router.post(":userId/profile", authenticateUser, postUserProfileByUserId);
-router.get("/:userId/profile", authenticateUser, getUserProfileByUserId);
+// Rota legacy sem a barra inicial removida (evitar ambiguidade)
 router.get("/professores", getProfessores);
 router.get("/professor/:id", authenticateUser, getProfessorById);
 
@@ -1116,62 +1197,6 @@ router.post("/avaliar-ca", authenticateUser, async (req, res, next) => {
 router.post("/calcular-medidas", async (req, res, next) => {
   try {
     await calcularMedidasController(req, res, next);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// === ROTAS PARA DOBRAS CUTÂNEAS ===
-
-// Listar protocolos disponíveis
-router.get("/dobras-cutaneas/protocolos", async (req, res, next) => {
-  try {
-    await listarProtocolos(req, res, next);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Calcular dobras cutâneas sem salvar (APENAS PROFESSORES)
-router.post("/dobras-cutaneas/calcular", authenticateUser, requireProfessor, async (req, res, next) => {
-  try {
-    await calcularDobrasCutaneas(req, res, next);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Validar dados antes do cálculo (APENAS PROFESSORES)
-router.post("/dobras-cutaneas/validar", authenticateUser, requireProfessor, async (req, res, next) => {
-  try {
-    await validarDadosDobrasCutaneas(req, res, next);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Criar nova avaliação de dobras cutâneas (APENAS PROFESSORES)
-router.post("/dobras-cutaneas", authenticateUser, requireProfessor, async (req, res, next) => {
-  try {
-    await criarAvaliacaoDobrasCutaneas(req, res, next);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Buscar avaliação específica por ID
-router.get("/dobras-cutaneas/:id", authenticateUser, async (req, res, next) => {
-  try {
-    await buscarAvaliacaoPorId(req, res, next);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Buscar avaliações por usuário
-router.get("/dobras-cutaneas/usuario/:userPerfilId", authenticateUser, async (req, res, next) => {
-  try {
-    await buscarAvaliacoesPorUsuario(req, res, next);
   } catch (error) {
     next(error);
   }

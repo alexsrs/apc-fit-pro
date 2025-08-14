@@ -261,14 +261,9 @@ export function ModalAvaliacaoCompleta({
     }
   }, [userPerfilId]);
 
-  // FUNÇÃO DESABILITADA: aprovarUltimaAvaliacao 
-  // Motivo: Backend agora já cria avaliações de professores com status 'aprovada' automaticamente
-  const aprovarUltimaAvaliacao = async (tipoAvaliacao: string) => {
-    // Esta função não é mais necessária pois o backend já salva 
-    // avaliações de professores como 'aprovada' direto na criação
-    console.log(`[DESABILITADO] aprovarUltimaAvaliacao para ${tipoAvaliacao} - backend já salva como aprovada`);
-    return;
-  };
+  // FUNÇÃO DESABILITADA: aprovarUltimaAvaliacao
+  // Motivo: Backend agora já cria avaliações de professores com status 'aprovada' automaticamente.
+  // Observação: bloco removido para evitar código solto que quebrava o parser.
 
   useEffect(() => {
     if (open && userPerfilId) {
@@ -302,10 +297,10 @@ export function ModalAvaliacaoCompleta({
 
   // Calcular progresso
   const calcularProgresso = () => {
-    const etapasObrigatorias = etapas.filter(e => e.obrigatoria);
+    const etapasObrigatorias = etapas.filter((e: AvaliacaoEtapa) => e.obrigatoria);
     
     // Contar etapas que têm dados válidos (independente do perfil)
-    const etapasComDados = etapasObrigatorias.filter(etapa => {
+    const etapasComDados = etapasObrigatorias.filter((etapa: AvaliacaoEtapa) => {
       switch (etapa.id) {
         case 'triagem':
           return !!dadosTriagem;
@@ -340,7 +335,7 @@ export function ModalAvaliacaoCompleta({
   };
 
   const etapaAnterior = () => {
-    if (podeVoltar()) {
+    if (podeVoltar() && etapaAtual > 0) {
       setEtapaAtual(etapaAtual - 1);
     }
   };

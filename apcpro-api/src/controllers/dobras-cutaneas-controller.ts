@@ -3,8 +3,9 @@
  * Gerencia endpoints para criação, consulta e listagem de avaliações
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { DobrasCutaneasService } from '../services/dobras-cutaneas-service';
+import { PROTOCOLOS_INFO, type ProtocoloDisponivel } from '../utils/protocolos-dobras';
 import { DobrasCutaneasInput } from '../models/dobras-cutaneas-model';
 
 const dobrasCutaneasService = new DobrasCutaneasService();
@@ -57,6 +58,23 @@ export const criarAvaliacaoDobrasCutaneas = async (
 ) => {
   try {
     const input: DobrasCutaneasInput = req.body;
+    // Normaliza ID do protocolo (frontend pode enviar com hífen removido)
+    if (typeof input.protocolo === 'string') {
+      const p = (input.protocolo as string).toLowerCase();
+      // aceita variantes sem hífens
+      const mapa: Record<string, ProtocoloDisponivel> = {
+        faulkner: 'faulkner',
+        'pollock3homens': 'pollock-3-homens',
+        'pollock3mulheres': 'pollock-3-mulheres',
+        'pollock7': 'pollock-7',
+        'pollock9': 'pollock-9',
+        'guedes3mulher': 'guedes-3-mulher',
+        'guedes3homem': 'guedes-3-homem'
+      };
+      if (mapa[p]) {
+        (input as any).protocolo = mapa[p];
+      }
+    }
     input.dadosPessoais = normalizarDadosPessoais(input.dadosPessoais, req.body.aluno);
     if (
       isNaN(input.dadosPessoais.peso) ||
@@ -91,6 +109,22 @@ export const calcularDobrasCutaneas = async (
 ) => {
   try {
     const input: DobrasCutaneasInput = req.body;
+    // Normaliza ID do protocolo
+    if (typeof input.protocolo === 'string') {
+      const p = (input.protocolo as string).toLowerCase();
+      const mapa: Record<string, ProtocoloDisponivel> = {
+        faulkner: 'faulkner',
+        'pollock3homens': 'pollock-3-homens',
+        'pollock3mulheres': 'pollock-3-mulheres',
+        'pollock7': 'pollock-7',
+        'pollock9': 'pollock-9',
+        'guedes3mulher': 'guedes-3-mulher',
+        'guedes3homem': 'guedes-3-homem'
+      };
+      if (mapa[p]) {
+        (input as any).protocolo = mapa[p];
+      }
+    }
     input.dadosPessoais = normalizarDadosPessoais(input.dadosPessoais, req.body.aluno);
     if (
       isNaN(input.dadosPessoais.peso) ||
@@ -140,30 +174,21 @@ export const buscarAvaliacoesPorUsuario = async (
  * Buscar avaliação específica por ID
  * GET /api/dobras-cutaneas/:id
  */
-export const buscarAvaliacaoPorId = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const buscarAvaliacaoPorId: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
+    // Converta para número se o ID no banco for numérico
+    // const avaliacao = await avaliacoesService.buscarPorId(Number(id));
     const avaliacao = await dobrasCutaneasService.buscarAvaliacaoPorId(id);
-    
+
     if (!avaliacao) {
-      return res.status(404).json({
-        success: false,
-        message: 'Avaliação não encontrada'
-      });
+      res.status(404).json({ message: "Avaliação não encontrada" });
+      return;
     }
-    
-    return res.status(200).json({
-      success: true,
-      message: 'Avaliação encontrada',
-      data: avaliacao
-    });
-  } catch (error) {
-    next(error);
+
+    res.status(200).json(avaliacao); // não use 'return' aqui
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -177,13 +202,28 @@ export const listarProtocolos = (
   next: NextFunction
 ) => {
   try {
-    const protocolos = dobrasCutaneasService.listarProtocolosDisponiveis();
-    
-    return res.status(200).json({
-      success: true,
-      message: 'Protocolos disponíveis',
-      data: protocolos
-    });
+    // Resposta amigável ao frontend: lista com id, nome, descricao, dobrasNecessarias, numDobras, etc.
+    const protocolos = Object.entries(PROTOCOLOS_INFO).map(([id, info]) => ({
+      id,
+      nome: info.nome,
+      descricao: info.descricao,
+      numDobras: info.numDobras,
+      dobrasNecessarias: info.pontos.map(p => p)
+        .map(p => p
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, '')
+          .toLowerCase()
+          .replace('axilarmedia','axilarmedia')
+          .replace('peitoral','torax')
+        ),
+      requerIdade: info.requerIdade,
+      generoEspecifico: !!info.sexoEspecifico,
+      tempoMedio: info.numDobras <= 3 ? '3-4 min' : info.numDobras === 4 ? '5-6 min' : info.numDobras === 7 ? '7-10 min' : '10-12 min',
+      recomendado: info.indicacao
+    }));
+
+    return res.status(200).json({ success: true, message: 'Protocolos disponíveis', data: protocolos });
   } catch (error) {
     next(error);
   }

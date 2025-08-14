@@ -104,7 +104,7 @@ export function DobrasCutaneasModernas({ resultado, onResultado, modoCalculoApen
   useEffect(() => { (async () => {
     try {
       const resp = await apiClient.get('/api/dobras-cutaneas/protocolos');
-      let data: ProtocoloInfo[] = resp.data?.data || [];
+  const data: ProtocoloInfo[] = resp.data?.data || [];
       if (!data.find(p => p.id === 'pollock9')) {
         data.push({
           id: 'pollock9',
@@ -182,7 +182,7 @@ export function DobrasCutaneasModernas({ resultado, onResultado, modoCalculoApen
   // Normalização de resultado para exibição (seguro para null)
   const resultados = resultadoState?.resultados;
   const pesoCorporalReferencia = (peso && peso > 0) ? peso : undefined;
-  const pesoSomado = resultados ? (resultados.massaGorda + resultados.massaMagra) : undefined;
+  // ...existing code...
   const massaMuscular = resultados?.massaMuscular;
   const musculoEsqueletico = resultados?.musculoEsqueletico;
 
